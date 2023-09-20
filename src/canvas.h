@@ -121,7 +121,7 @@ static inline  bool  canvas_isnull(canvas c);
 
 // clamp (signed integer) coordinate variables to a canvas dimensions
 #define CANVAS_CLAMP(canvas, x,y) do        \
-        { assert((canvas));                 \
+        { CANVAS_ASSERT((canvas));          \
           UTIL_CLAMP((x), (canvas).width);  \
           UTIL_CLAMP((y), (canvas).height); \
         } while (0)
@@ -176,6 +176,37 @@ canvas_crop(canvas cvas, rect crop_area)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+
+
+#include <string.h> // memcpy
+#include "renderer.h" //tmp: TODO - remove this include
+
+static void
+canvas_scrollUp(canvas cvas)
+{  CANVAS_ASSERT(cvas);
+   uint64_t *end = cvas.glyphs + cvas.stride * (cvas.height - 1);
+   uint64_t *pos;
+   for (pos = cvas.glyphs; pos < end; pos += cvas.stride) {
+      memcpy(pos, pos + cvas.stride, cvas.stride * sizeof(uint64_t));
+      sleep_ms(100); render(); //DEBUG
+   }
+   memset(pos, 0, cvas.stride);
+}
+
+static void
+canvas_scrollUpPixels(canvas cvas)
+{  CANVAS_ASSERT(cvas);
+   uint64_t *g = cvas.glyphs;
+   for (int y = 0; y < cvas.height - 1; y++) {
+      for (int x = 0; x < cvas.width; x++, g++) {
+         //     scroll up each glyph  +  copy highest line from the below glyph to the last line
+         *g = (*g >> GLYPH_WIDTH)   |  ((*(g + cvas.stride) & 0xFFu) << 56);
+      }
+   }
+   for (int x = 0; x < cvas.width; x++, g++) {
+      *g = *g >> GLYPH_WIDTH;
+   }
+}
 
 // fill the canvas' grid with one glyph
 static inline void

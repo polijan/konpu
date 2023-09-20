@@ -31,7 +31,7 @@ static inline  void  render(void);
 /// @return  non-zero iff an error occurs while releasing the renderer.
 ///          (note: In a good design, *un*initialization should not fail.
 ///                 All the builtin renderers will always return 0)
-/// @details In case of an error: 
+/// @details In case of an error:
 /// * the return value is the type of the renderer
 /// * advanced: the renderer_getError() function can be also be queried to get
 ///             an extra error code set by the renderer.
@@ -54,6 +54,18 @@ static inline int renderer_getId(void);
 ///         * After a failed uninitialization from the drop function,
 ///           the value returned is an error code specific to the renderer.
 static inline int renderer_getError(void);
+
+
+//--- temporary: foreground/background color for the renderer-------------------
+
+#ifndef RENDERER_FG_R
+#   define RENDERER_FG_R 0xCC
+#   define RENDERER_FG_G 0xCC
+#   define RENDERER_FG_B 0x00
+#   define RENDERER_BG_R 0x00
+#   define RENDERER_BG_G 0x00
+#   define RENDERER_BG_B 0x80
+#endif
 
 
 //--- advanced: interface to define your own custom renderer -------------------

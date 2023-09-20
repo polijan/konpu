@@ -47,7 +47,7 @@ static int rendererSDL2_render(void)
            uint64_t glyph = canvas_glyph(screen, x, y / GLYPH_HEIGHT);
            unsigned char line = glyph_line(glyph, y % GLYPH_HEIGHT);
 
-           for (int i = (GLYPH_WIDTH - 1); i >= 0; i--) {
+           for (int i = 0; i < GLYPH_WIDTH; i++) {
                // TODO/FIXME: maybe endianess could cause us issues
                //             also pushing uint32_t ???, naaah prob. fine
                //             or should it be bytes (unsigned char) instead
@@ -55,10 +55,10 @@ static int rendererSDL2_render(void)
                // TODO:
                //       also in future, we'll have "attributes" here to
                //       determine the color
-               if (line & (1 << i)) {
-                  *pixels = UINT32_C(0x00cccc00); // pixel on
+               if (byte_isSetBit(line, i)) {
+                  *pixels = (uint32_t)(RENDERER_FG_R << 16 | RENDERER_FG_G << 8 | RENDERER_FG_B);
                } else {
-                  *pixels = UINT32_C(0x00000080); // pixel off
+                  *pixels = (uint32_t)(RENDERER_BG_R << 16 | RENDERER_BG_G << 8 | RENDERER_BG_B);
                }
                pixels++;
            }

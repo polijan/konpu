@@ -36,13 +36,18 @@ chr_quadrant_quad(unsigned char q)              // represent a 2x2 bitmap,
 static inline uint64_t
 chr(unsigned char code)
 {
-   // TODO/FIXME: just for now and until we define a proper font,
-   //             vertically stretch the corresponding widehalf
-   uint64_t w = chr_widehalf(code);
-   return uint_byteValue(w, 0) << 0*8 | uint_byteValue(w, 0) << 1*8 |
-          uint_byteValue(w, 1) << 2*8 | uint_byteValue(w, 1) << 3*8 |
-          uint_byteValue(w, 2) << 4*8 | uint_byteValue(w, 2) << 5*8 |
-          uint_byteValue(w, 3) << 6*8 | uint_byteValue(w, 3) << 7*8 ;
+   if (code >= 128) {
+      extern uint64_t sitelen_pona_font[];
+      return sitelen_pona_font[code - 128];
+   } else {
+      // TODO/FIXME: just for now and until we define a proper font,
+      //             vertically stretch the corresponding widehalf
+      uint64_t w = chr_widehalf(code);
+      return uint_byteValue(w, 0) << 0*8 | uint_byteValue(w, 0) << 1*8 |
+             uint_byteValue(w, 1) << 2*8 | uint_byteValue(w, 1) << 3*8 |
+             uint_byteValue(w, 2) << 4*8 | uint_byteValue(w, 2) << 5*8 |
+             uint_byteValue(w, 3) << 6*8 | uint_byteValue(w, 3) << 7*8 ;
+   }
 }
 
 static inline uint32_t
@@ -50,14 +55,22 @@ chr_widehalf(unsigned char code) {
    // TODO/FIXME: just for now and until we define a proper font,
    //             just horizontally center the corresponding quadrant
    uint32_t q = chr_quadrant(code);
-   return quadrant_line0(q) << (24 + 2) |
-          quadrant_line1(q) << (16 + 2) |
-          quadrant_line2(q) << ( 8 + 2) |
-          quadrant_line3(q) << (     2) ;
+   return quadrant_line0(q) << (WIDEHALF_WIDTH*0 + (WIDEHALF_WIDTH - QUADRANT_WIDTH)/2) |
+          quadrant_line1(q) << (WIDEHALF_WIDTH*1 + (WIDEHALF_WIDTH - QUADRANT_WIDTH)/2) |
+          quadrant_line2(q) << (WIDEHALF_WIDTH*2 + (WIDEHALF_WIDTH - QUADRANT_WIDTH)/2) |
+          quadrant_line3(q) << (WIDEHALF_WIDTH*3 + (WIDEHALF_WIDTH - QUADRANT_WIDTH)/2) ;
 }
 
 static inline uint32_t
-chr_tallhalf(unsigned char code) {
+chr_tallhalf(unsigned char code)
+{  extern uint32_t chr_tallhalf_font[];
+
+   if (code < 32 || code > 127)
+      return TALLHALF_PLACEHOLDER;
+   else
+      return chr_tallhalf_font[code];
+
+   /*
    // TODO/FIXME: just for now and until we define a proper font,
    //             just vertically stretch the corresponding quadrant
    uint32_t q = chr_quadrant(code);
@@ -65,6 +78,7 @@ chr_tallhalf(unsigned char code) {
           (quadrant_line1_H(q) | quadrant_line1(q)) << 16 |
           (quadrant_line2_H(q) | quadrant_line2(q)) <<  8 |
           (quadrant_line3_H(q) | quadrant_line3(q))       ;
+   */
 }
 
 static inline uint16_t

@@ -40,23 +40,18 @@ canvas_renderToPPM(const_canvas cvas, FILE* stream, int zoomx, int zoomy)
                uint64_t glyph = canvas_glyph(cvas, x, y/GLYPH_HEIGHT);
                unsigned char line = glyph_line(glyph, y%GLYPH_HEIGHT);
 
-               // TODO: read some color "attributes" for cell(x,y).
-               //       fake it for now.
-               static int FG_R = 0xFF, FG_G = 0xFF, FG_B = 0x00;
-               static int BG_R = 0x00, BG_G = 0x00, BG_B = 0x80;
-
-               for (int i = GLYPH_WIDTH - 1; i >= 0; i--) {
-                   if (line & (1 << i)) {
+               for (int i = 0; i < GLYPH_WIDTH; i++) {
+                   if (byte_isSetBit(line, i)) {
                       for (int nx = 0; nx < zoomx; nx++) {
-                        RENDERER_PPM_PUTC(FG_R, stream);
-                        RENDERER_PPM_PUTC(FG_G, stream);
-                        RENDERER_PPM_PUTC(FG_B, stream);
+                          RENDERER_PPM_PUTC(RENDERER_FG_R, stream);
+                          RENDERER_PPM_PUTC(RENDERER_FG_G, stream);
+                          RENDERER_PPM_PUTC(RENDERER_FG_B, stream);
                       }
                    } else {
                       for (int nx = 0; nx < zoomx; nx++) {
-                        RENDERER_PPM_PUTC(BG_R, stream);
-                        RENDERER_PPM_PUTC(BG_G, stream);
-                        RENDERER_PPM_PUTC(BG_B, stream);
+                          RENDERER_PPM_PUTC(RENDERER_BG_R, stream);
+                          RENDERER_PPM_PUTC(RENDERER_BG_G, stream);
+                          RENDERER_PPM_PUTC(RENDERER_BG_B, stream);
                       }
                    }
                }

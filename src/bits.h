@@ -24,7 +24,8 @@
 #define uint_bitValue(x, n)                     (((x) >> (n)) & 1U)
 
 // return x with all bits set to 0 the n-th bit which is left untouched
-#define uint_isolateBit(x, n)                   ((x) &   uint_fromBit((n)))
+#define   byte_isolateBit(x, n)                 ((x) &   uint_fromBit((n)))
+#define uint16_isolateBit(x, n)                 ((x) &   uint_fromBit((n)))
 #define uint32_isolateBit(x, n)                 ((x) & uint32_fromBit((n)))
 #define uint64_isolateBit(x, n)                 ((x) & uint64_fromBit((n)))
 
@@ -36,7 +37,8 @@
 //   because bitValue is `(x >> n) & 1`,
 //   where as isSetBit is `x & (1 << n)`,
 //   and if n is a constant, that can take one op less.
-#define uint_isSetBit(x, n)                     uint_isolateBit((x), (n))
+#define   byte_isSetBit(x, n)                     byte_isolateBit((x), (n))
+#define uint16_isSetBit(x, n)                   uint16_isolateBit((x), (n))
 #define uint32_isSetBit(x, n)                   uint32_isolateBit((x), (n))
 #define uint64_isSetBit(x, n)                   uint64_isolateBit((x), (n))
 

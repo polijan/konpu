@@ -135,8 +135,8 @@
                // scalar type... (but one shouldn't portably rely on this!)
                typedef union max_align_t {
                   intmax_t      big_int;
-#                 ifdef __SIZEOF_INT128__
-                     __int128   128bits_int;
+#                 if defined(__GNUC__) && defined(__SIZEOF_INT128__)
+                     __extension__  __int128   bigger_int;
 #                 endif
                   long double   big_double;
                   void         *pointer;
@@ -282,30 +282,29 @@
 // But anyway, starting with C23, extended integer types may be wider than
 // intmax_t, so introducing an extended int128_t isn't really breaking stuff.
 
-#if defined(__SIZEOF_INT128__) && !defined(INT128_MAX)
-    //        ^-- when this macro constant defined, we assume the compiler has
-    //            an __int128 type available (this is the case in gcc)
-    typedef  signed   __int128    int128_t;
-    typedef  unsigned __int128    uint128_t;
-    typedef  signed   __int128    int_fast128_t;
-    typedef  unsigned __int128    uint_fast128_t;
-    typedef  signed   __int128    int_least128_t;
-    typedef  unsigned __int128    uint_least128_t;
-#   define   UINT128_MAX          ((uint128_t)-1)
-#   define   INT128_MAX           ((int128_t)+(UINT128_MAX/2))
-#   define   INT128_MIN           (-INT128_MAX-1)
-#   define   UINT_LEAST128_MAX    UINT128_MAX
-#   define   INT_LEAST128_MAX     INT128_MAX
-#   define   INT_LEAST128_MIN     INT128_MIN
-#   define   UINT_FAST128_MAX     UINT128_MAX
-#   define   INT_FAST128_MAX      INT128_MAX
-#   define   INT_FAST128_MIN      INT128_MIN
-#   define   INT128_WIDTH         128
-#   define   UINT128_WIDTH        128
-#   define   INT_LEAST128_WIDTH   128
-#   define   UINT_LEAST128_WIDTH  128
-#   define   INT_FAST128_WIDTH    128
-#   define   UINT_FAST128_WIDTH   128
+#if defined(__GNUC__) && defined(__SIZEOF_INT128__) && !defined(INT128_MAX)
+    // using the extra __int128 type
+    __extension__  typedef  signed   __int128    int128_t;
+    __extension__  typedef  unsigned __int128    uint128_t;
+    __extension__  typedef  signed   __int128    int_fast128_t;
+    __extension__  typedef  unsigned __int128    uint_fast128_t;
+    __extension__  typedef  signed   __int128    int_least128_t;
+    __extension__  typedef  unsigned __int128    uint_least128_t;
+#   define   UINT128_MAX                         ((uint128_t)-1)
+#   define   INT128_MAX                          ((int128_t)+(UINT128_MAX/2))
+#   define   INT128_MIN                          (-INT128_MAX-1)
+#   define   UINT_LEAST128_MAX                   UINT128_MAX
+#   define   INT_LEAST128_MAX                    INT128_MAX
+#   define   INT_LEAST128_MIN                    INT128_MIN
+#   define   UINT_FAST128_MAX                    UINT128_MAX
+#   define   INT_FAST128_MAX                     INT128_MAX
+#   define   INT_FAST128_MIN                     INT128_MIN
+#   define   INT128_WIDTH                        128
+#   define   UINT128_WIDTH                       128
+#   define   INT_LEAST128_WIDTH                  128
+#   define   UINT_LEAST128_WIDTH                 128
+#   define   INT_FAST128_WIDTH                   128
+#   define   UINT_FAST128_WIDTH                  128
 #endif
 //===</ uint128_t >=============================================================
 
