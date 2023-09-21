@@ -1,7 +1,7 @@
 #include "renderer_ppm.h"
 #if RENDERER_PPM
 #include "renderer.h"
-#include "screen.h"
+#include "video.h"
 #include <stdio.h>
 
 // global variables for a PPM renderer:
@@ -74,9 +74,7 @@ canvas_renderToPPM(const_canvas cvas, FILE* stream, int zoomx, int zoomy)
 static int
 rendererPPM_render(void)
 {
-   // TODO: So, we're just forwarding ...
-   //       Maybe a `canvas_renderToPPM` function would make sense it we handle
-   //       PPM images somewhere else in the code. But will we?...
+   canvas screen = video_getScreenCanvas();
    return canvas_renderToPPM(screen, RENDERER_PPM_STREAM,
                              rendererPPM_zoomx, rendererPPM_zoomy);
 }

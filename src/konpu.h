@@ -2,6 +2,7 @@
 #define  KONPU_H
 
 // platform
+#include "config.h"
 #include "platform.h"
 #include "c.h"
 
@@ -13,7 +14,7 @@
 #include "glyph.h"
 #include "rect.h"
 #include "canvas.h"
-#include "screen.h"
+#include "video.h"
 #include "font.h"
 #include "print.h"
 
@@ -29,7 +30,7 @@
 ///       although nothing will be shown.
 static inline int renderer_initSimple()
 {  // TODO: this is more complex than this.
-   if (!rendererSDL2_init(NULL, 768, 432))
+   if (!rendererSDL2_init(NULL, 2 * video.width_px, 2 * video.height_px))
       return 0;
    if (!rendererPseudoGraphics_init(RENDERER_PSEUDOGRAPHICS_MODE_ENUMCOUNT))
       return 0;
@@ -47,7 +48,7 @@ static inline int renderer_initSimple()
 #ifdef   KONPU_IMPLEMENTATION
 #   include "util.c"
 #   include "canvas.c"
-#   include "screen.c"
+#   include "video.c"
 #   include "font.c"
 #   include "print.c"
 #   include "renderer.c"

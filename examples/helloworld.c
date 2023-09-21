@@ -11,6 +11,7 @@ int main(int argc, char **argv)
    renderer_initSimple();      // initialize a renderer
 
    // a very important message:
+   canvas screen = video_getScreenCanvas();
    print_quadrant(screen, 0,0, "Hello, World ...");
 
    // RENDERER_PSEUDOGRAPHICS_TTY_CLEAR();

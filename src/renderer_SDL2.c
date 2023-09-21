@@ -1,7 +1,7 @@
 #include "renderer_SDL2.h"
 #if RENDERER_SDL2
 #include "renderer.h"
-#include "screen.h"
+#include "video.h"
 
 // global state for a SDL2 renderer:
 static SDL_Window   *rendererSDL2_win  = NULL;
@@ -39,10 +39,11 @@ static int rendererSDL2_render(void)
    SDL_LockTexture(rendererSDL2_tex, NULL, &pixel_data, &pitch);
    uint32_t *pixels = pixel_data;
    assert(pixels != NULL);
-   assert(pitch == (sizeof(*pixels) * screen.width * GLYPH_WIDTH));
+   assert(pitch == (sizeof(*pixels) * video.width_px));
 
    // paint the canvas onto the texture's pixels
-   for (int y = 0; y < GLYPH_HEIGHT * screen.height; y++) {
+   canvas screen = video_getScreenCanvas();
+   for (int y = 0; y < screen.height * GLYPH_HEIGHT; y++) {
        for (int x = 0; x < screen.width; x++) {
            uint64_t glyph = canvas_glyph(screen, x, y / GLYPH_HEIGHT);
            unsigned char line = glyph_line(glyph, y % GLYPH_HEIGHT);
@@ -111,8 +112,7 @@ int rendererSDL2_init(const char* title, int win_width, int win_height)
    rendererSDL2_tex = SDL_CreateTexture(rendererSDL2_rndr,
                            SDL_PIXELFORMAT_ARGB8888,
                            SDL_TEXTUREACCESS_STREAMING,
-                           screen.width  * GLYPH_WIDTH,
-                           screen.height * GLYPH_HEIGHT);
+                           video.width_px, video.height_px);
    if (rendererSDL2_tex == NULL)   { ret = -1; goto error_texture; }
 
    // set the active render (and render() once, otherwise window is empty)

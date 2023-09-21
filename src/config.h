@@ -1,0 +1,11 @@
+#ifndef  KONPU_CONFIG_H
+#define  KONPU_CONFIG_H
+
+
+#define KONPU_PLATFORM_SDL2
+#define KONPU_PLATFORM_POSIX
+#define KONPU_PLATFORM_LIBC
+
+
+
+#endif //KONPU_PLATFORM_H

@@ -3,6 +3,8 @@
 // platform checks (and potential includes)
 
 
+#include "config.h"
+
 //===< PLATFORM SDL2 >==========================================================
 
 // normalize: set to 1 if symbol is defined but has no value

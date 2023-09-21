@@ -1,7 +1,7 @@
 #include "renderer_pseudographics.h"
 #if RENDERER_PSEUDOGRAPHICS
 #include "renderer.h"
-#include "screen.h"
+#include "video.h"
 #include <stdio.h>
 
 
@@ -68,7 +68,9 @@ rendererPseudoGraphics_fflush()
 
 // render screen using "1x1" blocks
 static int rendererPseudoGraphics_renderFullBlocks(void)
-{  CANVAS_ASSERT(screen);
+{  canvas screen = video_getScreenCanvas();
+   CANVAS_ASSERT(screen);
+
    for (int y = 0; y < GLYPH_WIDTH * screen.height; y++) {
        for (int x = 0; x < GLYPH_HEIGHT * screen.width; x++) {
 
@@ -92,7 +94,8 @@ static int rendererPseudoGraphics_renderFullBlocks(void)
 
 // render screen using "1x2" half blocks
 static int rendererPseudoGraphics_renderHorizontalHalfBlocks(void)
-{  CANVAS_ASSERT(screen);
+{  canvas screen = video_getScreenCanvas();
+   CANVAS_ASSERT(screen);
    for (int y = 0; y < GLYPH_WIDTH * screen.height; y += 2) {
        for (int x = 0; x < GLYPH_HEIGHT * screen.width; x++) {
 
@@ -120,7 +123,8 @@ static int rendererPseudoGraphics_renderHorizontalHalfBlocks(void)
 
 // render screen using "2x1" half blocks
 static int rendererPseudoGraphics_renderVerticalHalfBlocks(void)
-{  CANVAS_ASSERT(screen);
+{  canvas screen = video_getScreenCanvas();
+   CANVAS_ASSERT(screen);
    for (int y = 0; y < GLYPH_WIDTH * screen.height; y++) {
        for (int x = 0; x < GLYPH_HEIGHT * screen.width; x += 2) {
 
@@ -148,7 +152,8 @@ static int rendererPseudoGraphics_renderVerticalHalfBlocks(void)
 
 // render screen using "2x2" quadrant blocks
 static int rendererPseudoGraphics_renderQuadBlocks(void)
-{  CANVAS_ASSERT(screen);
+{  canvas screen = video_getScreenCanvas();
+   CANVAS_ASSERT(screen);
    for (int y = 0; y < GLYPH_WIDTH * screen.height; y += 2) {
        for (int x = 0; x < GLYPH_HEIGHT * screen.width; x += 2) {
 
@@ -178,7 +183,8 @@ static int rendererPseudoGraphics_renderQuadBlocks(void)
 
 // render screen using "2x4" braille dots
 static int rendererPseudoGraphics_renderBrailleDots(void)
-{  CANVAS_ASSERT(screen);
+{  canvas screen = video_getScreenCanvas();
+   CANVAS_ASSERT(screen);
    for (int y = 0; y < GLYPH_WIDTH * screen.height; y += 4) {
        for (int x = 0; x < GLYPH_HEIGHT * screen.width; x += 2) {
 
@@ -217,7 +223,8 @@ static int rendererPseudoGraphics_renderBrailleDots(void)
 //             especially, when the sextant must read "pixel" from two glyphs,
 //             this is not working properly.
 static int rendererPseudoGraphics_renderSextantBlocks(void)
-{  CANVAS_ASSERT(screen);
+{  canvas screen = video_getScreenCanvas();
+   CANVAS_ASSERT(screen);
    // The main issue with sextants is their height (3) isn't a divisor of the
    // glyph's height. The info to put in a sextant might come from TWO glyphs.
 

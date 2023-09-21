@@ -44,7 +44,9 @@ int main(int argc, char **argv)
 
    // init renderer
 #if RENDERER_SDL2
-   if (rendererSDL2_init("hello, world!", 768, 432)) return 1;
+   // if (rendererSDL2_init("hello, world!", 768, 432)) return 1;
+   if (rendererSDL2_init("hello, world!", 2 * video.width_px, 2 * video.height_px))
+      return 1;
 #elif RENDERER_PSEUDOGRAPHICS
    if (rendererPseudoGraphics_init(RENDERER_PSEUDOGRAPHICS_MODE_2x4)) return 1;
 #else
@@ -71,18 +73,22 @@ int main(int argc, char **argv)
       }
 #endif
 
+      canvas screen = video_getScreenCanvas();
       canvas_set(screen, 0); paint(DELAY);
 
       canvas_glyph(screen, 0,0) = GLYPH_SOWELI;  paint(DELAY);
 
-      canvas_glyph(screen, 1,0) = glyph4(chr_quadrant('I'), chr_quadrant('L'),
-                                         chr_quadrant('K'), chr_quadrant('O')) | GLYPH(ff);
+      canvas_glyph(screen, 1,0) = glyph_fromQuadrants(
+                                     chr_quadrant('I'), chr_quadrant('L'),
+                                     chr_quadrant('K'), chr_quadrant('O')) | GLYPH(ff);
       paint(DELAY);
-      canvas_glyph(screen, 2,0) = glyph4(chr_quadrant('O'), 0                ,
-                                         chr_quadrant('N'), chr_quadrant('P'));
+      canvas_glyph(screen, 2,0) = glyph_fromQuadrants(
+                                     chr_quadrant('O'), 0                ,
+                                     chr_quadrant('N'), chr_quadrant('P'));
       paint(DELAY);
-      canvas_glyph(screen, 3,0) = glyph4(0                , chr_quadrant('&'),
-                                         chr_quadrant('U'), 0);
+      canvas_glyph(screen, 3,0) = glyph_fromQuadrants(
+                                     0                , chr_quadrant('&'),
+                                     chr_quadrant('U'), 0);
       paint(DELAY);
 
       canvas_glyph(screen,  5,0) = chr('H');  paint(DELAY);

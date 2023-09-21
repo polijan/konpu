@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include "konpu.h"
 
+canvas screen;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static void quitOnError(void) {
@@ -77,18 +79,27 @@ static void show(const char* msg, uint64_t glyph)
    waitForAKey();
 }
 
+
+
+
+
+
 int main(int argc, char **argv)
 {  (void)argc; (void)argv; // not using argc/argv
 
+
    // init renderer
 #if RENDERER_SDL2
-   if (rendererSDL2_init("Glyphs Operations Demo", 768, 432)) return 1;
+   //if (rendererSDL2_init("Glyphs Operations Demo", 640, 480)) return 1;
+   if (rendererSDL2_init("Glyphs Operations Demo", 2 * video.width_px, 2 * video.height_px))
+      return 1;
 #elif RENDERER_PSEUDOGRAPHICS
    if (rendererPseudoGraphics_init(RENDERER_PSEUDOGRAPHICS_MODE_2x2)) return 1;
 #else
 #  error("no suitable renderer")
 #endif
 
+   screen = video_getScreenCanvas();
    uint64_t g = EXAMPLE;
    while(true) {
       //fixme: print! eats up the last character
