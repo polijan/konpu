@@ -135,11 +135,14 @@ static inline double stc64_randomf(stc64_rng* rng) {
 // `strlen` as a compile time constant for C string literals (BE CAREFUL)
 #define CSTR_LENGTH(cstr_lit)   (ARRAY_SIZE(cstr_lit) - 1)
 
+// min and max macros
+#define UTIL_MIN(x, y)          (((x) < (y)) ? (x) : (y))
+#define UTIL_MAX(x, y)          (((x) > (y)) ? (x) : (y))
 
 // clamp an *integer* variable of a *signed* type between 0 and a max value
-#define UTIL_CLAMP(x, max) do               \
-        { if ((x) < 0)        (x) = 0;      \
-          if ((x) >= (max))   (x) = (max);  \
+#define UTIL_CLAMP(x, max) do                  \
+        { if      ((x) < 0)      (x) = 0;      \
+          else if ((x) > (max))  (x) = (max);  \
         } while (0)
 
 // The typical SWAP macro that swaps two values.
