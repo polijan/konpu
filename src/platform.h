@@ -22,7 +22,11 @@
 #endif
 // action if enabled: include "SDL.h"
 #if KONPU_PLATFORM_SDL2
-#   include "SDL.h"
+#   include <SDL2/SDL.h>
+//  ^-- NOTE: Reading "SDL2 common Mistakes and how to avoid them" from
+//  https://nullprogram.com/blog/2023/01/08/, I see it may be better to include
+//  "SDL.h" instead of <SDL2/SDL.h>. However even when configuring C/C++ config
+//  of VSCode (IncludePath), I don't get this to work well in VSCode.
 #endif
 //===</ PLATFORM SDL2 >=========================================================
 
