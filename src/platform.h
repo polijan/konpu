@@ -1,12 +1,18 @@
 #ifndef  KONPU_PLATFORM_H
 #define  KONPU_PLATFORM_H
+#include "config.h"
 // platform checks (and potential includes)
 
+////////////////////////////////////////////////////////////////////////////////
+// first of all, we set value for all KONPU_PLATFORM_*
+// later, we'll do all the necessary includes
+// -----------------------------------------------------------------------------
+// (Initially, I did it in one go [set value and immediately including stuff],
+// but this led to warnings as some POSIX macro constants were being redefined)
+////////////////////////////////////////////////////////////////////////////////
 
-#include "config.h"
 
-//===< PLATFORM SDL2 >==========================================================
-
+//---< VALUE FOR PLATFORM SDL2 >------------------------------------------------
 // normalize: set to 1 if symbol is defined but has no value
 #if defined(KONPU_PLATFORM_SDL2) && ~(~KONPU_PLATFORM_SDL2 + 0) == 0 && ~(~KONPU_PLATFORM_SDL2 + 1) == 1
 #   undef  KONPU_PLATFORM_SDL2
@@ -20,19 +26,10 @@
 #ifndef KONPU_PLATFORM_SDL2
 #   define KONPU_PLATFORM_SDL2        0
 #endif
-// action if enabled: include "SDL.h"
-#if KONPU_PLATFORM_SDL2
-#   include <SDL2/SDL.h>
-//  ^-- NOTE: Reading "SDL2 common Mistakes and how to avoid them" from
-//  https://nullprogram.com/blog/2023/01/08/, I see it may be better to include
-//  "SDL.h" instead of <SDL2/SDL.h>. However even when configuring C/C++ config
-//  of VSCode (IncludePath), I don't get this to work well in VSCode.
-#endif
-//===</ PLATFORM SDL2 >=========================================================
+//---</ VALUE FOR PLATFORM SDL2 >-----------------------------------------------
 
 
-
-//===< PLATFORM POSIX >=========================================================
+//---< VALUE FOR PLATFORM POSIX >-----------------------------------------------
 // (only checked a little bit on Linux with GNU's libc)
 
 // normalize: set to 1 if symbol is defined but has no value
@@ -60,8 +57,64 @@
 #      define KONPU_PLATFORM_POSIX    0
 #   endif
 #endif
-// action if enabled: setup some macro variables to enable C POSIX functions
-//                    (such as _POSIX_C_SOURCE, _X_OPEN_SOURCE, ...)
+//---</ VALUE FOR PLATFORM POSIX >----------------------------------------------
+
+
+//---< VALUE FOR PLATFORM WINDOWS >---------------------------------------------
+// (not tested and not supported / MAYBE in future)
+
+// normalize: set to 1 if symbol is defined but has no value
+#if defined(KONPU_PLATFORM_WINDOWS) && ~(~KONPU_PLATFORM_WINDOWS + 0) == 0 && ~(~KONPU_PLATFORM_WINDOWS + 1) == 1
+#   undef  KONPU_PLATFORM_WINDOWS
+#   define KONPU_PLATFORM_WINDOWS     1
+#endif
+// input value checks:
+#if defined(KONPU_PLATFORM_WINDOWS) && (KONPU_PLATFORM_WINDOWS != 0) && (KONPU_PLATFORM_WINDOWS != 1)
+#   error("KONPU_PLATFORM_WINDOWS defined but not set to 0 or 1")
+#endif
+// default value:
+#ifndef KONPU_PLATFORM_WINDOWS
+#   if KONPU_PLATFORM_SDL2
+#      define KONPU_PLATFORM_WINDOWS  0
+#   elif defined(_WIN32) && !defined(__CYGWIN__)
+#      define KONPU_PLATFORM_WINDOWS  1
+#   else
+#      define KONPU_PLATFORM_WINDOWS  0
+#   endif
+#endif
+//---</ VALUE FOR PLATFORM WINDOWS >--------------------------------------------
+
+//---< VALUE FOR PLATFORM LIBC >------------------------------------------------
+// normalize: set to 1 if symbol is defined but has no value
+#if defined(KONPU_PLATFORM_LIBC) && ~(~KONPU_PLATFORM_LIBC + 0) == 0 && ~(~KONPU_PLATFORM_LIBC + 1) == 1
+#   undef  KONPU_PLATFORM_LIBC
+#   define KONPU_PLATFORM_LIBC        1
+#endif
+// input value checks:
+#if defined(KONPU_PLATFORM_LIBC) && (KONPU_PLATFORM_LIBC != 0) && (KONPU_PLATFORM_LIBC != 1)
+#   error("KONPU_PLATFORM_LIBC defined but not set to 0 or 1")
+#endif
+// default value:
+#ifndef KONPU_PLATFORM_LIBC
+#   if KONPU_PLATFORM_SDL2
+#      define KONPU_PLATFORM_LIBC     0
+#   elif KONPU_PLATFORM_POSIX || KONPU_PLATFORM_WINDOWS
+#      define KONPU_PLATFORM_LIBC     1
+#   else
+#      define KONPU_PLATFORM_LIBC     0
+#   endif
+#endif
+//---</ PLATFORM LIBC >---------------------------------------------------------
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// now that we set the platforms, take actions (includes, etc.)
+////////////////////////////////////////////////////////////////////////////////
+
+//---- ACTIONS FOR PLATFORM POSIX ----------------------------------------------
+// setup some macro variables to enable C POSIX functions
+// (such as _POSIX_C_SOURCE, _X_OPEN_SOURCE, ...)
 #if KONPU_PLATFORM_POSIX
     // _POSIX_SOURCE macro: was sometimes used to specify/enable POSIX.1
     // It seems unused nowadays if _POSIX_C_SOURCE is defined > 0.
@@ -101,64 +154,23 @@
 #   endif
 
 #endif
-//===</ PLATFORM POSIX >========================================================
 
-
-
-//===< PLATFORM WINDOWS >=======================================================
-// (not tested and not supported / MAYBE in future)
-
-// normalize: set to 1 if symbol is defined but has no value
-#if defined(KONPU_PLATFORM_WINDOWS) && ~(~KONPU_PLATFORM_WINDOWS + 0) == 0 && ~(~KONPU_PLATFORM_WINDOWS + 1) == 1
-#   undef  KONPU_PLATFORM_WINDOWS
-#   define KONPU_PLATFORM_WINDOWS     1
-#endif
-// input value checks:
-#if defined(KONPU_PLATFORM_WINDOWS) && (KONPU_PLATFORM_WINDOWS != 0) && (KONPU_PLATFORM_WINDOWS != 1)
-#   error("KONPU_PLATFORM_WINDOWS defined but not set to 0 or 1")
-#endif
-// default value:
-#ifndef KONPU_PLATFORM_WINDOWS
-#   if KONPU_PLATFORM_SDL2
-#      define KONPU_PLATFORM_WINDOWS  0
-#   elif defined(_WIN32) && !defined(__CYGWIN__)
-#      define KONPU_PLATFORM_WINDOWS  1
-#   else
-#      define KONPU_PLATFORM_WINDOWS  0
-#   endif
-#endif
-// action if enabled: include <windows.h>
+//---- ACTIONS FOR PLATFORM WINDOWS --------------------------------------------
 #if KONPU_PLATFORM_WINDOWS
 #   define  WIN32_LEAN_AND_MEAN // <--  exclude inclusion of many APIs
 #   include <windows.h>
 #endif
-//===</ PLATFORM WINDOWS >======================================================
 
-
-
-//===< PLATFORM LIBC >==========================================================
-
-// normalize: set to 1 if symbol is defined but has no value
-#if defined(KONPU_PLATFORM_LIBC) && ~(~KONPU_PLATFORM_LIBC + 0) == 0 && ~(~KONPU_PLATFORM_LIBC + 1) == 1
-#   undef  KONPU_PLATFORM_LIBC
-#   define KONPU_PLATFORM_LIBC        1
+//---- ACTIONS FOR PLATFORM SDL2 -----------------------------------------------
+#if KONPU_PLATFORM_SDL2
+#   include <SDL2/SDL.h>
+//  ^-- NOTE: Reading "SDL2 common Mistakes and how to avoid them" from
+//  https://nullprogram.com/blog/2023/01/08/, I see it may be better to include
+//  "SDL.h" instead of <SDL2/SDL.h>. However even when configuring C/C++ config
+//  of VSCode (IncludePath), I don't get this to work well in VSCode.
 #endif
-// input value checks:
-#if defined(KONPU_PLATFORM_LIBC) && (KONPU_PLATFORM_LIBC != 0) && (KONPU_PLATFORM_LIBC != 1)
-#   error("KONPU_PLATFORM_LIBC defined but not set to 0 or 1")
-#endif
-// default value:
-#ifndef KONPU_PLATFORM_LIBC
-#   if KONPU_PLATFORM_SDL2
-#      define KONPU_PLATFORM_LIBC     0
-#   elif KONPU_PLATFORM_POSIX || KONPU_PLATFORM_WINDOWS
-#      define KONPU_PLATFORM_LIBC     1
-#   else
-#      define KONPU_PLATFORM_LIBC     0
-#   endif
-#endif
-// action if enabled: none
-//===</ PLATFORM LIBC >=========================================================
 
+//---- ACTIONS FOR PLATFORM LIBC -----------------------------------------------
+// no action needed
 
 #endif //KONPU_PLATFORM_H
