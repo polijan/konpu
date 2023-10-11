@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# Usage: $0 [TARGET] [ARGUMENTS]...
+#        where TARGET is a function with a "main"-like prototype
+#        which is present in the source (for example: waso_main)
+#
+# This will:
+# - compile Konpu, and if succesful...
+# - indicate to TARGET to test.c and create the executable 'test',
+# - and if succesful, launch 'test' with with the given ARGUMENTS
+
+
+[ $# -ne 0 ] || { echo 'you must define a main-like target.' >&2; exit 1; }
+EXTRA_CDEFS="$EXTRA_CDEFS -DKONPU_MAIN=$1"
+export EXTRA_CDEFS
+shift
+
+CC=gcc
+CDEFS="-DKONPU_PLATFORM_SDL2 -DKONPU_PLATFORM_POSIX -DKONPU_PLATFORM_LIBC $EXTRA_CDEFS"
+CWARN="-Wall -Wextra -pedantic $EXTRA_CWARN"
+CFLAGS="-std=c99 -O2 -I${PROJECY_HOME}/src $(sdl2-config --cflags) $CDEFS $CWARN $EXTRA_CFLAGS"
+LDFLAGS="-lm $(sdl2-config --libs)"
+
+echo 'compiling' && touch test.c && make &&
+echo 'linking test'   && $CC $CFLAGS -o test *.o $LDFLAGS &&
+echo 'launching test' && ./test "$@"
