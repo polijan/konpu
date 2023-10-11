@@ -128,11 +128,16 @@
 
 //#include  <stdalign.h>     // alignas/alignof
 #           if __STDC_VERSION__ < 201112L    // C99
-               // C99 doesn't have alignas/alignof :(
-               // but about alignement, at this point in the header, we can TRY
-               // to "polyfill" <stddef.h> up to C11-level, and provide
-               // max_align_t for C99: max_align_t would usually be the largest
-               // scalar type... (but one shouldn't portably rely on this!)
+               // C99 doesn't know alignof (& alignas), but compilers may know:
+#              if defined(__GNUC__)   // gcc:
+#                 define alignof(T)  __alignof__(T)
+#              elif defined(_MSC_VER) // microsoft:
+#                 define alignof(T)  __alignof(T)
+#              endif
+
+               // we can TRY to "polyfill" <stddef.h> up to C11-level, and
+               // define max_align_t for C99: max_align_t would usually be the
+               // largest scalar type... (but this is NOT portably reliable!)
                typedef union max_align_t {
                   intmax_t      big_int;
 #                 if defined(__GNUC__) && defined(__SIZEOF_INT128__)
@@ -142,6 +147,7 @@
                   void         *pointer;
                   void        (*function_pointer)();
                } max_align_t; // hopefully, that works
+
 #           elif __STDC_VERSION__ <= 201710L // C11 or C17: includes the header
 #              include <stdalign.h>
 #           endif                            // C23: has native alignas/alignof
@@ -429,8 +435,8 @@
 //                need to change the names if I seek C++ compatibility.
 
 #if defined(__GNUC__)
-#   define likely(...)          __builtin_expect((__VA_ARGS__), 1)
-#   define unlikely(...)        __builtin_expect((__VA_ARGS__), 0)
+#   define likely(...)          (__builtin_expect((__VA_ARGS__), 1))
+#   define unlikely(...)        (__builtin_expect((__VA_ARGS__), 0))
 #else
 #   define likely(...)          (__VA_ARGS__)
 #   define unlikely(...)        (__VA_ARGS__)
