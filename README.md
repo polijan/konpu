@@ -1,3 +1,5 @@
+(*o lukin e lipu ni lon toki pona: [OLUKIN.md](OLUKIN.md)*)
+
 **ilo Konpu** is a [retro](https://en.wikipedia.org/wiki/Home_computer "retro")-style computing environment with native support for [Toki Pona](https://en.wikipedia.org/wiki/Toki_Pona "Toki Pona").
 
 ## In Short
