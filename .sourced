@@ -1,0 +1,12 @@
+#!/bin/sh
+###########################################################
+# MAKE SURE THIS FILE IS SOURCED IN YOUR ENVIRONMENT, DO: #
+# . .sourced                                              #
+###########################################################
+# on my computer, this file gets sourced when my shell starts in this directory
+
+KONPU_HOME=$PWD
+
+PATH=$KONPU_HOME/bin:$KONPU_HOME/tests/bin:$KONPU_HOME/tools/bin:$PATH
+export KONPU_HOME
+export PATH
