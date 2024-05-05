@@ -12,6 +12,7 @@ tmp/
 
 # possible IDE or editors stuff
 .vscode
+*.code-workspace
 *.swp
 *~
 tags
