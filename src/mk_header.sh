@@ -23,4 +23,5 @@ headers() {
 }
 
 headers  config.h platform.h c.h \
+         options.h \
          heap.h
