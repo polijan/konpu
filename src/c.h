@@ -244,7 +244,7 @@ static_assert(sizeof(uint_least64_t) == 8);
    static inline void*
    memcpy(void *restrict dest, const void *restrict src, size_t count) {
       char *restrict d = dest;
-      char *restrict s = src;
+      const char *restrict s = src;
       while (count--) *d++ = *s++;
       return dest;
    }

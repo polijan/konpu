@@ -3,11 +3,13 @@
 // The allocator works using using the Buddy algorithm and thus assumes the
 // backing memory is a power-of-two in bytes.
 
+#include "heap.h"
+
 // TODO: from config.h or something?
 #define KONPU_DEBUG
-#define KONPU_TEST
-
-#include "heap.h"
+#if KONPU_PLATFORM_LIBC
+#   define KONPU_TEST
+#endif
 
 
 /* This memory allocator uses the following algorithm:

@@ -42,24 +42,27 @@ konpu: include/konpu.h lib/libkonpu.a lib/libkonpu.so bin/konpu
 -include $(KONPU_DEPS)
 
 include/konpu.h: src/mk_header.sh $(KONPU_HEADERS)
+	@printf "\033[32mcreating konpu.h header:\033[m "
 	@mkdir -p $(@D)
 	$<  >  $@
 
 lib/libkonpu.a: $(KONPU_OBJS)
+	@printf "\033[32mcreating static lib:\033[m "
 	@mkdir -p $(@D)
 	ar rcs $@ $^
 
 lib/libkonpu.so: $(KONPU_OBJS)
+	@printf "\033[32mcreating shared lib:\033[m "
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -fPIC -shared -o $@ $^ $(LDFLAGS)
 
-bin/konpu: $(KONPU_OBJS)
+bin/konpu: src/main/start.c $(KONPU_OBJS) src/platform.h src/config.h
+	@printf "\033[32mcreating konpu executable:\033[m "
 	@mkdir -p $(@D)
-	printf 'extern int KonpuMain(int c, char *v[]);\nint main(int c, char *v[]){return KonpuMain(c,v);}\n' > obj/generated_main.c
-	$(CC) -O2 -c obj/generated_main.c -o obj/generated_main.o
-	$(CC) $(CFLAGS) -o $@ $^ obj/generated_main.o $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $< $(KONPU_OBJS) $(LDFLAGS)
 
 obj/%.o: src/%.c
+	@printf "\033[34mcompiling %s:\033[m " $<
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -MMD -c $< -o $@
 
@@ -72,5 +75,6 @@ TESTS_BINS = $(patsubst tests/%.c, tests/bin/%, $(TESTS_SRCS))
 tests: $(TESTS_BINS)
 
 tests/bin/%: tests/%.c lib/libkonpu.a include/konpu.h tests/test.h
+	@printf "\033[34mcompiling %s:\033[m " $<
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -Iinclude -o $@ $< lib/libkonpu.a $(LDFLAGS)
