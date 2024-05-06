@@ -57,7 +57,22 @@
 
 // Includes for SDL2 platform
 #if KONPU_PLATFORM_SDL2
-#   include <SDL2/SDL.h>  // might need to be: #include "SDL.h"
+//  Normally, the file to include is "SDL.h" (when the project is built with
+//  `sdl2-config --libs` or `pkg-config sdl2 --libs`), but the system library
+//  is usually located in /usr/include/SDL2/SDL.h and thus also often
+//  included as <SDL2/SDL.h>. So, let's try both if possible (ie. if we have
+//  `__has_include` which is present in many compilers and is required by C23).
+#   if defined __has_include
+#      if __has_include ("SDL.h")
+#         include "SDL.h"
+#      elif __has_include (<SDL2/SDL.h>)
+#         include <SDL2/SDL.h>
+#      else
+#         error "Cannot find the header for SDL2"
+#     endif
+#   else
+#     include "SDL.h"
+#   endif
 #endif
 
 
