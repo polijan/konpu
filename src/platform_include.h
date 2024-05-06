@@ -1,6 +1,6 @@
 // Include system header files
-// This file should only be included by .c files (implementations) and not by
-// header files as we do not wish to expose the systems' APIs to Konpu's users.
+// This file should only be included by Konpu's project .c files, and not by
+// header files as we do not wish to expose platforms functions in the Konpu API
 
 #ifndef  KONPU_PLATFORM_INCLUDE_H
 #define  KONPU_PLATFORM_INCLUDE_H
@@ -8,16 +8,15 @@
 
 
 //-- POSIX platform ------------------------------------------------------------
-// No header includes specific to the C POSIX library (the .c file would do it
-// as needed). But we set up various "feature tests macros" that control what
-// definitions are being exposed. If POSIX platform is selected, then Konpu
-// ASSUMEs POSIX.1-2001 as the older minimum interface, or POSIX.1-2008 as the
-// default.
+// * We set up various "feature tests macros" that control what definitions are
+//   being exposed. If POSIX platform is selected, then Konpu will ASSUME
+//   POSIX.1-2001 as the minimum interface, and possibly POSIX.1-2008.
+// * Does not include POSIX-specific header directly.
 
 #if KONPU_PLATFORM_POSIX
-    // _POSIX_SOURCE: was used to enable POSIX.1 definitions
+    // _POSIX_SOURCE: was used to enable POSIX.1 definitions.
     // It appears obsolete when _POSIX_C_SOURCE is defined > 0.
-    // We'll define it anyway just in case.
+    // We define it anyway, just in case.
 #   ifndef _POSIX_SOURCE
 #      define _POSIX_SOURCE        1
 #   endif
@@ -50,7 +49,7 @@
 
 // Includes for Windows platform
 #if KONPU_PLATFORM_WINDOWS
-#   define  WIN32_LEAN_AND_MEAN // <--  exclude inclusion of many APIs
+#   define  WIN32_LEAN_AND_MEAN // <--  prevent the inclusion of many APIs
 #   include <windows.h>
 #endif
 
@@ -58,9 +57,9 @@
 // Includes for SDL2 platform
 #if KONPU_PLATFORM_SDL2
 //  Normally, the file to include is "SDL.h" (when the project is built with
-//  `sdl2-config --libs` or `pkg-config sdl2 --libs`), but the system library
-//  is usually located in /usr/include/SDL2/SDL.h and thus also often
-//  included as <SDL2/SDL.h>. So, let's try both if possible (ie. if we have
+//  `sdl2-config --libs` or `pkg-config sdl2 --libs`). But the header is often
+//  located in /usr/include/SDL2/SDL.h and thus also often included as
+//  <SDL2/SDL.h>, thus we try to include it if the main include fails (we use
 //  `__has_include` which is present in many compilers and is required by C23).
 #   if defined __has_include
 #      if __has_include ("SDL.h")
@@ -69,7 +68,7 @@
 #         include <SDL2/SDL.h>
 #      else
 #         error "Cannot find the header for SDL2"
-#     endif
+#      endif
 #   else
 #     include "SDL.h"
 #   endif
@@ -82,8 +81,8 @@
 #   include <string.h>    // string handling + memory functions
 #   include <stdio.h>     // input/output
 #   include <inttypes.h>  // format conversion of integer types
-#   include <stdlib.h>    // general utilities, malloc & co...
-    //  Disable stdlib's malloc:
+#   include <stdlib.h>    // general utilities and allocation functions
+    // Prevent the invocation of stdlib's allocation functions:
 #   if defined(KONPU_HEAP_H) && !defined(KONPU_SETTING_NO_STDLIB_INTERFACE)
 #      define malloc(sz)        static_assert("stdlib malloc disabled" , false);
 #      define calloc(n, sz)     static_assert("stdlib calloc disabled" , false);
