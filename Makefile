@@ -2,7 +2,7 @@ CC = gcc
 CDEFS = -DKONPU_PLATFORM_SDL2 -DKONPU_PLATFORM_POSIX $(CDEFS_EXTRA)
 CWARN = -Wall -Wextra -pedantic -Wformat=2 -Wno-unused-function # -fanalyzer # -Werror $(CWARN_EXTRA)
 ARCHFLAGS = $(ARCHFLAGS_EXTRA)
-CFLAGS  = -std=c11 -O2 $(shell sdl2-config --cflags) -fdiagnostics-color $(CDEFS) $(CWARN) $(ARCHFLAGS) $(CFLAGS_EXTRA) # -flto
+CFLAGS  = -g -std=c11 -O2 $(shell sdl2-config --cflags) -fdiagnostics-color $(CDEFS) $(CWARN) $(ARCHFLAGS) $(CFLAGS_EXTRA) # -flto
 LDFLAGS = -lm $(shell sdl2-config --libs) $(LDFLAGS_EXTRA)
 
 #===============================================================================
@@ -51,13 +51,13 @@ lib/libkonpu.a: $(KONPU_OBJS)
 
 lib/libkonpu.so: $(KONPU_OBJS)
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(LDFLAGS) -fPIC -shared -o $@ $^
+	$(CC) $(CFLAGS) -fPIC -shared -o $@ $^ $(LDFLAGS)
 
 bin/konpu: $(KONPU_OBJS)
 	@mkdir -p $(@D)
 	printf 'extern int KonpuMain(int c, char *v[]);\nint main(int c, char *v[]){return KonpuMain(c,v);}\n' > obj/generated_main.c
 	$(CC) -O2 -c obj/generated_main.c -o obj/generated_main.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ obj/generated_main.o
+	$(CC) $(CFLAGS) -o $@ $^ obj/generated_main.o $(LDFLAGS)
 
 obj/%.o: src/%.c
 	@mkdir -p $(@D)
@@ -73,4 +73,4 @@ tests: $(TESTS_BINS)
 
 tests/bin/%: tests/%.c lib/libkonpu.a include/konpu.h tests/test.h
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(LDFLAGS) -Iinclude -o $@ $< lib/libkonpu.a
+	$(CC) $(CFLAGS) -Iinclude -o $@ $< lib/libkonpu.a $(LDFLAGS)
