@@ -22,7 +22,7 @@
 #endif
 
 
-// Ensure a value for KONPU_PLATFORM_POSIX (0 [=disabled] or >0) 
+// Ensure a value for KONPU_PLATFORM_POSIX (0 [=disabled] or >0)
 // - Step 1) Normalize (i.e. set to 1 if the symbol is defined but has no value)
 #if defined(KONPU_PLATFORM_POSIX) && ~(~KONPU_PLATFORM_POSIX + 0) == 0 \
                                   && ~(~KONPU_PLATFORM_POSIX + 1) == 1
