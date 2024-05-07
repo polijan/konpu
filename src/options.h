@@ -52,21 +52,29 @@
  */
 
 typedef enum OptionsType {
-    OPTIONS_NO_ARGUMENT,
-    OPTIONS_REQUIRED_ARGUMENT,
-    OPTIONS_OPTIONAL_ARGUMENT,
+   OPTIONS_NO_ARGUMENT,
+   OPTIONS_REQUIRED_ARGUMENT,
+   OPTIONS_OPTIONAL_ARGUMENT,
 } OptionsType;
 
 typedef struct OptionsLong {
-    const char *name;
-    OptionsType type;
-    int val;
+   const char *name;
+   OptionsType type;
+   int val;
 } OptionsLong;
 
-typedef struct Options Options;
+typedef struct Options {
+   int ind;            /* equivalent to optind */
+   int opt;            /* equivalent to optopt */
+   const char *optstr; /* points to the option string */
+   const char *arg;    /* equivalent to optarg */
+   int _i, _pos, _nargs;
+   char _optstr[4];
+} Options;
 
 // Initialize
-static inline Options OptionsInit(void);
+static inline Options OptionsInit(void)
+{ return (Options){1, 0, NULL, NULL, 1, 0, 0, {'-', '?', '\0'}}; }
 
 /* @param opt   output; must be initialized to OptionsInit() on first call
  * @return      ASCII val for a short option; longopt.val for a long option;
@@ -76,22 +84,6 @@ static inline Options OptionsInit(void);
 int OptionsGet(Options *opt, int argc, char *argv[],
                 const char *shortopts, const OptionsLong *longopts);
 
-
-//--- implementation -----------------------------------------------------------
-
-struct Options {
-    int ind;            /* equivalent to optind */
-    int opt;            /* equivalent to optopt */
-    const char *optstr; /* points to the option string */
-    const char *arg;    /* equivalent to optarg */
-    int _i, _pos, _nargs;
-    char _optstr[4];
-};
-
-static inline Options OptionsInit(void) {
-     Options opt = {1, 0, NULL, NULL, 1, 0, 0, {'-', '?', '\0'}};
-     return opt;
-}
 
 /* MIT License
  *
