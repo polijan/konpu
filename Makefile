@@ -14,8 +14,6 @@ MAKEFLAGS += -rR
 
 all: konpu tests
 
-test: tests # just a synonym
-
 clean:
 	rm -f obj/* tests/bin/*
 
@@ -68,9 +66,15 @@ obj/%.o: src/%.c
 
 #-------------------------------------------------------------------------------
 # tests
+#
+# target test  => compile and run the tests
+# target tests => compile the tests
 #-------------------------------------------------------------------------------
 TESTS_SRCS = $(wildcard tests/*.c)
 TESTS_BINS = $(patsubst tests/%.c, tests/bin/%, $(TESTS_SRCS))
+
+test: tests
+	@run-tests
 
 tests: $(TESTS_BINS)
 

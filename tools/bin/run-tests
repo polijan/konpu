@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Usage: $0
+# run all tests
+
+die() { printf '\033[31%s\033[m\n' "$*" >&2; exit 3; }
+
+cd "$KONPU_HOME"/tests/bin || die 'cannot cd to test/bin directory'
+set -- *
+[ "$1" = '*' ] && die 'test/bin directory is empty'
+
+for i in "$@"; do
+    printf '\033[33m%s:\33[m ' "$i"
+    [ -x "$i" ] || die "not an executable file."
+    $i || exit 1
+done

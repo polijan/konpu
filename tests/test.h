@@ -36,43 +36,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define TestAssert(message, test)           \
-        do {                                \
-           if (!(test))                     \
-           return message;                  \
+#define TestAssert(message, test)              \
+        do {                                   \
+           if (!(test))                        \
+           return message;                     \
         } while (0)
 
-#define TestRun(testFunctionName)           \
-        do {                                \
-           char *msg = testFunctionName();  \
-           TestRun_++;                      \
-           if (msg) return msg;             \
+#define TestRun(testFunctionName)              \
+        do {                                   \
+           char *msg = testFunctionName();     \
+           TestRun_++;                         \
+           if (msg) return msg;                \
         } while (0)
 
 
-#define TEST_BEGIN                          \
-   int TestRun_ = 0;                        \
+#define TEST_BEGIN                             \
+   int TestRun_ = 0;                           \
    static char* TestRunAll_(void) {
 
-#define TEST_END                            \
-      return NULL;                          \
-   }                                        \
-                                            \
-   int main(int argc, char* argv[])         \
-   {  (void)argc; (void)argv;               \
-                                            \
-      char* result = TestRunAll_();         \
-      if (result != NULL)                   \
-         printf("%s\n", result);            \
-      else                                  \
-         printf("ALL TESTS PASSED\n");      \
-      printf("Tests run: %d\n", TestRun_);  \
-      if (result == NULL)                   \
-         return EXIT_SUCCESS;               \
-      return EXIT_FAILURE;                  \
+#define TEST_END                               \
+      return NULL;                             \
+   }                                           \
+                                               \
+   int main(int argc, char* argv[])            \
+   {  (void)argc; (void)argv;                  \
+                                               \
+      char* result = TestRunAll_();            \
+      if (result != NULL)                      \
+         printf("\033[31m%s\033[m\n", result); \
+      else                                     \
+         printf("\033[32mOK\033[m ");          \
+      printf("(tests run: %d)\n", TestRun_);   \
+      if (result == NULL)                      \
+         return EXIT_SUCCESS;                  \
+      return EXIT_FAILURE;                     \
    }
 
-//-------------------------------------------
+//----------------------------------------------
 
 #include <konpu.h>
 
