@@ -1,0 +1,16 @@
+CONTENT OF THE DIRECTORY:
+
+kmeans/
+   A k-means implementation in C with a simple and generic API.
+   from: https://github.com/pramsey/kmeans
+   (commit: 6eb304ee09b082fadc6a3e6e8426f059e5b1175d)
+
+ok_color.h
+   C++ header file containing the math related to OkLab perceptual color space.
+   It is kept as a reference, but not actually used. Rather I made a C99 port
+   of it (see: src/oklab.h).
+   The file contains code related to those articles:
+   - https://bottosson.github.io/posts/oklab/
+   - https://bottosson.github.io/posts/colorpicker/
+   This exact file can be found at:
+   https://raw.githubusercontent.com/bottosson/bottosson.github.io/d69831edb90ffdcd08b7e64da3c5405acd48ad2c/misc/ok_color.h
