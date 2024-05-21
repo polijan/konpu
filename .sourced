@@ -7,6 +7,6 @@
 
 KONPU_HOME=$PWD
 
-PATH=$KONPU_HOME/bin:$KONPU_HOME/tests/bin:$KONPU_HOME/tools/bin:$PATH
+PATH=$KONPU_HOME/bin:$KONPU_HOME/tests/bin:$KONPU_HOME/tools/bin:$KONPU_HOME/tools/kule/bin:$PATH
 export KONPU_HOME
 export PATH
