@@ -32,6 +32,7 @@ COLORS_LDFLAGS = $(LDFLAGS) -lm
 
 bin/%: src/%.c $(COLORS_DEPS)
 	@printf "\033[33mcreating tool %s:\033[m " $@
+	@mkdir -p $(@D)
 	$(CC) $(COLORS_CFLAGS) -o $@ $< $(COLORS_LDFLAGS)
 
 
@@ -46,10 +47,12 @@ STANDALONE_LDFLAGS = $(LDFLAGS)
 
 bin/%: src-standalone/%.c
 	@printf "\033[33mcreating tool %s:\033[m " $@
+	@mkdir -p $(@D)
 	$(CC) $(STANDALONE_CFLAGS) -o $@ $< $(STANDALONE_LDFLAGS)
 
 bin/%: src-standalone/%.sh
 	@printf "\033[33mcopying script %s:\033[m " $<
+	@mkdir -p $(@D)
 	cp $< $@
 
 
@@ -71,6 +74,7 @@ KMEANS_LDFLAGS = $(COLORS_LDFLAGS) $(KMEANS_MULTITHREAD_LDFLAGS)
 
 bin/%: src-kmeans/%.c $(KMEANS_DEPS)
 	@printf "\033[33mcreating tool %s:\033[m " $<
+	@mkdir -p $(@D)
 	$(CC) $(KMEANS_CFLAGS) -o $@ $< $(KMEANS_LDFLAGS)
 
 
