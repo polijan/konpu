@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 #include <assert.h>
 
 
@@ -283,10 +284,11 @@ void LabPrint_2_(Lab lab, unsigned printOptions)
       if (error_b) printf("\x1B[m");
       printf("  ");
    }
+
    if (printOptions & PRINT_OKLAB)  // print as Lab:(L,a,b)
-      printf("Lab(%.3f, %.3f, %.3f)  ", lab.L, lab.a, lab.b);
+      printf("Lab(%.3f, %+.3f, %+.3f)  ", lab.L, lab.a, lab.b);
    if (printOptions & PRINT_OKLCH)  // print as polar Lab:(L,C,h)
-      printf("LCh(%.3f, %.3f, %.3f)  ", lab.L, LabChroma(lab), LabHue(lab));
+      printf("LCh(%.3f, %.3f, %+.3f)  ", lab.L, LabChroma(lab), LabHue(lab));
 }
 
 
@@ -314,38 +316,77 @@ void PaletteDrop(Palette pal)
 Palette PaletteInitEmpty(int size)
 { return (Palette){ .color = CallocOrExit(size, sizeof(Lab)), .size = size }; }
 
+// Copy constructor (construct a Palette as a clone from another palette)
+// Exit the program if the allocation fails
+Palette PaletteClone(Palette pal)
+{
+   Palette clone = PaletteInitEmpty(pal.size);
+   memcpy(clone.color, pal.color, pal.size * sizeof(Lab));
+   return clone;
+}
+
 // Construct a Palette by reading it from a stream.
 // Exit the program if fails.
 Palette PaletteInitFromStream(FILE *stream)
 {  assert(stream != NULL);
-
-   // We don't know what the size should be, so just allocate a big temporary
    Palette tmp = PaletteInitEmpty(PALETTE_SIZE_MAX);
+   tmp.size = 0; // <-- keep the real count of colors read
 
-   // Read colors from the stream into the palette
-   for (tmp.size = 0; tmp.size < PALETTE_SIZE_MAX; tmp.size++) {
-      unsigned long c;
+   while (1) {
       errno = 0;
-      int ret = fscanf(stream, "%lx\n", &c);
-      if (errno != 0) {
-         perror("`fscanf`ing color from palette stream");
-         exit(EXIT_FAILURE);
-      } else if (ret == EOF) {
-         break;
-      } else if (ret == 0) {
-         break;
-      } else {
-         assert(ret == 1);
+      int c = fgetc(stream);
+      if (errno != 0)  goto stream_error;
+      switch (c) {
+      case ';': // Comments: if needed, read the stream until \n (or EOF)
+         while (1) {
+            errno = 0;
+            int i = fgetc(stream);
+            if (errno != 0) goto stream_error;
+            if (i == EOF)   goto end;
+            if (i == '\n')  break;
+         }
+         continue;
+
+      case '\n': // Empty line
+      case '#': // Optional # (in front of a color)
+         continue;
+
+      case EOF: // Reached EOF
+         goto end;
+
+      default:  // Read color
+         ;uint32_t color;
+         errno = 0;
+         if (fseek(stream, -1, SEEK_CUR) != 0)  goto stream_error;
+         errno = 0;
+         int scanned = fscanf(stream, "%06" SCNx32 "\n", &color);
+         if (errno != 0)  goto stream_error;
+         if (scanned == 1) {
+            if (tmp.size == PALETTE_SIZE_MAX) {
+               fprintf(stderr, "Too Many Entries\n");
+               goto error;
+            }
+            tmp.color[tmp.size] = LabFromSRGB(color);
+            tmp.size++;
+         } else {
+            fprintf(stderr, "Palette format incorrect\n");
+            goto error;
+         }
       }
-      tmp.color[tmp.size] = LabFromSRGB(c);
    }
 
-   // Copy the temporary into a properly sized palette
-   Palette pal = PaletteInitEmpty(tmp.size);
-   memcpy(pal.color, tmp.color, tmp.size * sizeof(Lab));
+end:
+   ;Palette pal = PaletteClone(tmp);
    PaletteDrop(tmp);
    return pal;
+
+stream_error:
+   perror("Error while reading palette stream");
+error:
+   PaletteDrop(tmp);
+   exit(EXIT_FAILURE);
 }
+
 
 // Construct a Palette by loading it from a file.
 // In case of failure, exit the program.
