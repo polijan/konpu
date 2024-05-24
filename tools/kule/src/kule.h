@@ -151,7 +151,7 @@ Lab LabFromSRGB(uint32_t rgb) {
              srgb_transfer_function_inv( ( rgb        & 0xFF) / 255.f ) });
 }
 
-// Create an okLab color from a string specifying a sRGB color. Format is
+// Create an OkLab color from a string specifying a sRGB color. Format is
 // similar to CSS, i.e. [#]xxxxxx or [#]xxx (with x is a 0-9 or {a,A}-{f,F})
 // Exit program if format is wrong
 Lab LabFromString(const char* str)
@@ -223,23 +223,13 @@ float LabDistance(Lab color1, Lab color2)
 Lab LabOpposite(Lab color)
 { return (Lab){ (1.f - color.L), - color.a, - color.b }; }
 
-
-// Options Flag for the LabPrint function
-#define PRINT_COLOR     (1U << 0)
-#define PRINT_SRGB      (1U << 1)
-#define PRINT_OKLAB     (1U << 2)
-#define PRINT_OKLCH     (1U << 3)
-#define PRINT_DEFAULT   PRINT_COLOR|PRINT_SRGB|PRINT_OKLAB
-// #define PRINT_DEFAULT   PRINT_COLOR|PRINT_SRGB
-
-// void LabPrint(Lab lab, unsigned PrintOptionsFlag = PRINT_DEFAULT)
-//
-// Print an okLab color on stdout (assuming a full-color terminal)
-#define LabPrint(...) \
-        OKLAB_UTIL_OVERLOAD(LabPrint, __VA_ARGS__)
-#       define LabPrint_1_(lab) \
-               LabPrint_2_(lab, PRINT_DEFAULT)
-void LabPrint_2_(Lab lab, unsigned printOptions)
+// Print an OkLab color on stdout.
+// What is printed depends on verbosity:
+//   < 0: just visually print the color
+//     0: print sRGB code
+//     1: similar to 0, but also visually print the color
+//  >= 2: same as 1 and also print OkLab details
+void LabPrint(Lab lab, int verbosity)
 {
    // Convert the Lab color to a gamma-encoded sRGB color.
    // Clamp the value and indicate over/underflows.
@@ -260,19 +250,24 @@ void LabPrint_2_(Lab lab, unsigned printOptions)
    else if (b > 255) b = 255;
    else error_b = 0;
 
-   // Print
-   if (printOptions == 0)            // we don't want to print nothing
-      printOptions = PRINT_DEFAULT;
-   if (printOptions & PRINT_COLOR) { // print as a color
-      printf("\x1B[48;2;%d;%d;%dm   \x1B[m", r,g,b);
+   // Print actual color
+   if (verbosity != 0) {
+      printf ("\x1B[48;2;%d;%d;%d", r,g,b);
       if (error_r || error_g || error_b) {
-         printf("\x1B[31m*\x1B[m ");
+         printf(";38;2;%sm *\x1B[m", (lab.L > 0.5f)? "0;0;0":"255;255;255");
       } else {
-         printf("  ");
+         printf ("m  \x1B[m");
       }
    }
-   if (printOptions & PRINT_SRGB) {  // print as #xxxxxxx
-      printf("#");
+   if (verbosity < 0) return;
+
+   // Print sRGB code #RRGGBB
+   if (verbosity == 0) {
+      printf("#%02x%02x%02x", (unsigned)r, (unsigned)g, (unsigned)b);
+      if (error_r || error_g || error_b)
+         printf("*");
+   } else {
+      printf(" #");
       if (error_r) printf("\x1B[31m");
       printf("%02x", (unsigned)r);
       if (error_r) printf("\x1B[m");
@@ -282,13 +277,16 @@ void LabPrint_2_(Lab lab, unsigned printOptions)
       if (error_b) printf("\x1B[31m");
       printf("%02x", (unsigned)b);
       if (error_b) printf("\x1B[m");
-      printf("  ");
    }
 
-   if (printOptions & PRINT_OKLAB)  // print as Lab:(L,a,b)
-      printf("Lab(%.3f, %+.3f, %+.3f)  ", lab.L, lab.a, lab.b);
-   if (printOptions & PRINT_OKLCH)  // print as polar Lab:(L,C,h)
-      printf("LCh(%.3f, %.3f, %+.3f)  ", lab.L, LabChroma(lab), LabHue(lab));
+   // Print OkLab details (L,a,b, Lr, Chroma, Hue[in radians])
+   // Lr: alt. lightness estimate assuming a reference white Y=1
+   if (verbosity > 1) {
+      printf(" > L:%.3f a:%+.3f b:%+.3f Lr:%.3f Chroma:%.3f Hue:%+.3f",
+                 lab.L, lab.a, lab.b, toe(lab.L), LabChroma(lab), LabHue(lab));
+   }
+
+   putchar('\n');
 }
 
 
@@ -305,6 +303,8 @@ typedef struct Palette {
    Lab *color; // colors of the palette
    int  size;  // the number of colors in the palette
 } Palette;
+
+#define PALETTE_NULL  ((Palette){.color=NULL, .size=0})
 
 
 // "Destructor" for Palettes
@@ -355,9 +355,10 @@ Palette PaletteInitFromStream(FILE *stream)
          goto end;
 
       default:  // Read color
-         ;uint32_t color;
          errno = 0;
-         if (fseek(stream, -1, SEEK_CUR) != 0)  goto stream_error;
+         //if (fseek(stream, -1, SEEK_CUR) != 0)  goto stream_error;
+         if (ungetc(c, stream) == EOF)  goto stream_error;
+         uint32_t color;
          errno = 0;
          int scanned = fscanf(stream, "%06" SCNx32 "\n", &color);
          if (errno != 0)  goto stream_error;
@@ -389,9 +390,14 @@ error:
 
 
 // Construct a Palette by loading it from a file.
+// If filename is "-", then load it from standard input instead.
 // In case of failure, exit the program.
 Palette PaletteInitFromFile(const char *filename)
 {
+   if (strcmp(filename, "-") == 0) {
+      return PaletteInitFromStream(stdin);
+   }
+
    errno = 0;
    FILE *stream = fopen(filename, "r");
    if (stream == NULL)  goto error;
@@ -406,23 +412,15 @@ error:
    exit(EXIT_FAILURE);
 }
 
-// Print a palette
-void PalettePrint(Palette palette)
-{
-   for (int i = 0; i < palette.size; i++) {
-      printf("%3d  ", i);
-      LabPrint(palette.color[i], PRINT_COLOR|PRINT_SRGB);
-      putchar('\n');
-   }
-}
-
 // Given a color, return the index of the perceptually closest palette entry
-int PaletteClosest(Palette palette, Lab color)
-{
+// If distanceOut is not NULL, assign the distance difference in it.
+int PaletteClosest(Palette palette, Lab color, float *distanceOut)
+{  assert(palette.color != NULL);
+   assert(palette.size > 0);
+
    // Iterate through the palette to find an entry with the minimum (squared)
    // distance. This is brute force (which is fine in the general case), and
    // obviously one would do better on specific palettes.
-
    float d2Min = 5.f; // init with < 1 (ie higher that what max distance can be)
    int closest = 0;
    for (int i = 0; i < palette.size; i++) {
@@ -432,7 +430,30 @@ int PaletteClosest(Palette palette, Lab color)
          d2Min = d2;
       }
    }
+
+   if (distanceOut != NULL)
+      *distanceOut = sqrtf(d2Min);
    return closest;
 }
+
+// Return a palette color index from a string.
+// If the string indicates an index that exists in the palette, return it.
+// Otherwise if the string represents a color, return the index of the palette
+// color that is perceptually closest.
+// In any other case, exit the program
+int PaletteIndexFromString(Palette pal, const char* str)
+{
+   char *fail;
+   long l = strtol(str, &fail, 10);
+   if (*fail != '\0' || l >= pal.size) {
+      return PaletteClosest(pal, LabFromString(str), NULL);
+   }
+   if (l < 0) {
+      fprintf(stderr, "Invalid color: %s\n", str);
+      exit(EXIT_FAILURE);
+   }
+   return l;
+}
+
 
 #endif //TOOLS_KULE_H

@@ -166,7 +166,10 @@ int main(int argc, char *argv[])
    kmeans_result returnValue = kmeans(&config);
 
    // Print the final palette, i.e. the centroids
-   PalettePrint((Palette){ .color = centers, .size = config.k});
+   for(unsigned i = 0; i < config.k; i++) {
+      LabPrint(centers[i], 0);
+   }
+
 
    // Cleanup and exit
    free(config.objs);
