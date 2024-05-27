@@ -92,24 +92,6 @@ char *ProgramName(const char *argv0)
 }
 
 
-//------------------------------------------------------------------------------
-// Functions related to gamma-encoded sRGB (represented as uint32_t)
-//
-// As a rule of thumb, when creating kule tools, input or output of colors
-// should be using gamma-encoded sRGB colors, but internally, the color
-// manipulation is meant to be done using OkLab (or OkLCh, OkHSV, OkHSL, etc.)
-//------------------------------------------------------------------------------
-
-// Print a sRGB color
-void sRGBPrint(uint32_t color)
-{
-   unsigned r = color >> 16;
-   unsigned g = (color >> 8) & 0xFF;
-   unsigned b = color & 0xFF;
-   printf ("\x1B[48;2;%d;%d;%dm  \x1B[m", r,g,b);
-}
-
-
 //--------------------------------------------------------------------------
 // Functions related to Lab Polar form (LCh)
 //
@@ -165,8 +147,8 @@ Lab LabFromString(const char* str)
    switch (strlen(str)) {
       case 3:; unsigned r,g,b;
                if (sscanf(str, "%1x%1x%1x", &r, &g, &b) != 3)  goto error;
-               sRGB = ((uint32_t)r << 20) + ((uint32_t)r << 16)
-                      + (g << 12) + (g << 8) + (b <<  4) + b;
+               sRGB = ((uint32_t)r << 20) | ((uint32_t)r << 16)
+                      | (g << 12) | (g << 8) | (b <<  4) | b;
                break;
 
       case 6:; unsigned long longRGB;
