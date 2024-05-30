@@ -9,16 +9,17 @@ void Usage(const char* argv0, int fail)
    fprintf(stderr, "Print the Palette with sorted entries.\n\n");
 
    fprintf(stderr, "General Options\n");
-   fprintf(stderr, "  -h, --help     : Print this help\n");
-   fprintf(stderr, "  -p, --palette  : Ignored\n");
-   fprintf(stderr, "  -v, --verbose  : Increase verbosity (print OkLab details)\n");
-   fprintf(stderr, "  -q, --quiet    : Print in palette format\n\n");
+   fprintf(stderr, "  -h, --help      : Print this help\n");
+   fprintf(stderr, "  -p, --palette   : Ignored\n");
+   fprintf(stderr, "  -v, --verbose   : Increase verbosity (print OkLab details)\n");
+   fprintf(stderr, "  -q, --quiet     : Print in palette format\n\n");
 
    fprintf(stderr, "Sorting Options (Use only one! Case matters!)\n");
    fprintf(stderr, "  -L, --lightness : Sort by ascending Oklab's perceptual lightness (default)\n");
    fprintf(stderr, "  -a              : Sort by ascending OkLab's a (green-to-redness)\n");
    fprintf(stderr, "  -b              : Sort by ascending OkLab's b (blue-to-yellowness)\n");
    fprintf(stderr, "  -C, --chroma    : Sort by ascending OkLab's Chroma\n");
+   fprintf(stderr, "  -S, --saturation: Sort by ascending Saturation (Chroma/Lightness)\n");
    fprintf(stderr, "  -H, --hue       : Sort by ascending OkLab's Hue\n");
    fprintf(stderr, "  -R, --red       : Sort by ascending sRGB red   component\n");
    fprintf(stderr, "  -G, --green     : Sort by ascending sRGB green component\n");
@@ -65,6 +66,9 @@ int SortByHue(Lab color1, Lab color2)
 int SortByChroma(Lab color1, Lab color2)
 { return (LabChroma(color1) < LabChroma(color2))? -1 : 1; }
 
+int SortBySaturation(Lab color1, Lab color2)
+{ return (LabSaturation(color1) < LabSaturation(color2))? -1 : 1; }
+
 int SortByRed(Lab color1, Lab color2) {
   RGB rgb1 = oklab_to_linear_srgb(color1);
   RGB rgb2 = oklab_to_linear_srgb(color2);
@@ -99,16 +103,17 @@ int main(int argc, char *argv[])
    int verbosity = 1;
    int flag;
    Options opt = OptionsInit();
-   const char *optstr = "hqpvLabCHRGBr0";
-   OptionsLong longopts[] = { {"help",      OPTIONS_NO_ARGUMENT, 'h'},
-                              {"palette",   OPTIONS_NO_ARGUMENT, 'p'},
-                              {"verbose",   OPTIONS_NO_ARGUMENT, 'v'},
-                              {"quiet",     OPTIONS_NO_ARGUMENT, 'q'},
-                              {"lightness", OPTIONS_NO_ARGUMENT, 'L'},
-                              {"chroma",    OPTIONS_NO_ARGUMENT, 'C'},
-                              {"hue",       OPTIONS_NO_ARGUMENT, 'H'},
-                              {"red",       OPTIONS_NO_ARGUMENT, 'R'},
-                              {"green",     OPTIONS_NO_ARGUMENT, 'G'},
+   const char *optstr = "hqpvLabCHSRGBr0";
+   OptionsLong longopts[] = { {"help",       OPTIONS_NO_ARGUMENT, 'h'},
+                              {"palette",    OPTIONS_NO_ARGUMENT, 'p'},
+                              {"verbose",    OPTIONS_NO_ARGUMENT, 'v'},
+                              {"quiet",      OPTIONS_NO_ARGUMENT, 'q'},
+                              {"lightness",  OPTIONS_NO_ARGUMENT, 'L'},
+                              {"chroma",     OPTIONS_NO_ARGUMENT, 'C'},
+                              {"hue",        OPTIONS_NO_ARGUMENT, 'H'},
+                              {"saturation", OPTIONS_NO_ARGUMENT, 'S'},
+                              {"red",        OPTIONS_NO_ARGUMENT, 'R'},
+                              {"green",      OPTIONS_NO_ARGUMENT, 'G'},
                               {"blue",      OPTIONS_NO_ARGUMENT, 'B'},
                               {"reverse",   OPTIONS_NO_ARGUMENT, 'r'},
                               {"nothing",   OPTIONS_NO_ARGUMENT, '0'},
@@ -125,6 +130,7 @@ int main(int argc, char *argv[])
          case 'b': ColorCompare = SortByB; break;
          case 'C': ColorCompare = SortByChroma; break;
          case 'H': ColorCompare = SortByHue; break;
+         case 'S': ColorCompare = SortBySaturation; break;
          case 'R': ColorCompare = SortByRed; break;
          case 'G': ColorCompare = SortByGreen; break;
          case 'B': ColorCompare = SortByBlue; break;
