@@ -108,17 +108,37 @@ char *ProgramName(const char *argv0)
 
 typedef struct LCh { float L, C, h; } LCh;
 
+// Saturation is Chroma / Lightness
+float LChSaturation(LCh color)
+{ return (color.L == 0)? INFINITY : (color.C / color.L); }
+
 float LabHue(Lab color)
 { return atan2f(color.b, color.a); }
 
 float LabChroma(Lab color)
 { return sqrtf(color.a * color.a + color.b * color.b); }
 
+float LabSaturation(Lab color)
+{ return (color.L == 0)? INFINITY : (LabChroma(color) / color.L); }
+
 LCh LabToLCh(Lab color)
 { return (LCh){ color.L, LabChroma(color), LabHue(color) }; }
 
 Lab LabFromLCh(LCh lch)
 { return (Lab){ lch.L, lch.C * cosf(lch.h), lch.C * sinf(lch.h), }; }
+
+// Return a color of the given hue that can be displayed in sRGB with
+// maximum lightness and chroma
+Lab LabBrightestTone(float hue)
+{
+   // normalize a and b so that a^2+b^2=1, which is expected by find_cusp
+   float a = cosf(hue);
+   float b = sinf(hue);
+   LC rgb_max = find_cusp(a, b);
+
+   // Lab color corresponding to LC and the given hue:
+   return (Lab) { rgb_max.L, rgb_max.C * a , rgb_max.C * b };
+}
 
 
 //------------------------------------------------------------------------------
@@ -236,7 +256,15 @@ void LabPrint(Lab lab, int verbosity)
    if (verbosity != 0) {
       printf ("\x1B[48;2;%d;%d;%d", r,g,b);
       if (error_r || error_g || error_b) {
-         printf(";38;2;%sm *\x1B[m", (lab.L > 0.5f)? "0;0;0":"255;255;255");
+         // display half as clamped color
+         printf(";38;2;%sm*\x1B[m", (lab.L > 0.5f)? "0;0;0":"255;255;255");
+         // display second half with gamut clipping
+         // (see: https://bottosson.github.io/posts/gamutclipping/)
+         RGB clip = gamut_clip_adaptive_L0_0_5(linear);
+         r = roundf(255.f * srgb_transfer_function(clip.r));
+         g = roundf(255.f * srgb_transfer_function(clip.g));
+         b = roundf(255.f * srgb_transfer_function(clip.b));
+         printf ("\x1B[48;2;%d;%d;%dm \x1B[m", r,g,b);
       } else {
          printf ("m  \x1B[m");
       }
@@ -263,11 +291,15 @@ void LabPrint(Lab lab, int verbosity)
 
    // Print OkLab details (L,a,b, Lr, Chroma, Hue[in radians])
    // Lr: alt. lightness estimate assuming a reference white Y=1
-   if (verbosity > 1) {
-      printf(" > L:%.3f a:%+.3f b:%+.3f Lr:%.3f Chroma:%.3f Hue:%+.3f",
-                 lab.L, lab.a, lab.b, toe(lab.L), LabChroma(lab), LabHue(lab));
+   if (verbosity == 2) {
+      printf(" > L:%.3f a:%+.3f b:%+.3f Chroma:%.3f Hue:%+.3f",
+                 lab.L, lab.a, lab.b, LabChroma(lab), LabHue(lab));
+   } else if (verbosity > 2) {
+      // same with more precision and some more fields...
+      printf(" > L:%f a:%+f b:%+f Chroma:%f Hue:%+f Lr:%f Sat.:%f",
+                 lab.L, lab.a, lab.b, LabChroma(lab), LabHue(lab),
+                 toe(lab.L), LabSaturation(lab));
    }
-
    putchar('\n');
 }
 
