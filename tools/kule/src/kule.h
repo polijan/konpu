@@ -145,18 +145,11 @@ Lab LabBrightestTone(float hue)
 // Functions on Lab colors
 //------------------------------------------------------------------------------
 
-// Create an okLab color from a (gamma-encoded) sRGB color (encoded as 0xRRGGBB)
-Lab LabFromSRGB(uint32_t rgb) {
-   return linear_srgb_to_oklab((RGB){
-             srgb_transfer_function_inv( ((rgb >> 16) & 0xFF) / 255.f ),
-             srgb_transfer_function_inv( ((rgb >>  8) & 0xFF) / 255.f ),
-             srgb_transfer_function_inv( ( rgb        & 0xFF) / 255.f ) });
-}
-
-// Create an OkLab color from a string specifying a sRGB color. Format is
-// similar to CSS, i.e. [#]xxxxxx or [#]xxx (with x is a 0-9 or {a,A}-{f,F})
+// Return a uint32_t sRGB colors from a string.
 // Exit program if format is wrong
-Lab LabFromString(const char* str)
+// Format for the string is similar to CSS, i.e. [#]xxxxxx or [#]xxx (with x is
+// a 0-9 or {a,A}-{f,F})
+uint32_t SRGBFromString(const char* str)
 {
    // Input string may start with a '#', skip it.
    if (str[0] == '#')  str++;
@@ -178,8 +171,7 @@ Lab LabFromString(const char* str)
 
       default: goto error;
    }
-
-   return LabFromSRGB(sRGB);
+   return sRGB;
 
 error:
    if (errno != 0) {
@@ -189,6 +181,19 @@ error:
    }
    exit(EXIT_FAILURE);
 }
+
+// Create an okLab color from a (gamma-encoded) sRGB color (encoded as 0xRRGGBB)
+Lab LabFromSRGB(uint32_t rgb) {
+   return linear_srgb_to_oklab((RGB){
+             srgb_transfer_function_inv( ((rgb >> 16) & 0xFF) / 255.f ),
+             srgb_transfer_function_inv( ((rgb >>  8) & 0xFF) / 255.f ),
+             srgb_transfer_function_inv( ( rgb        & 0xFF) / 255.f ) });
+}
+
+// Create an OkLab color from a string specifying a sRGB color.
+// Exit program if format is wrong
+Lab LabFromString(const char* str)
+{ return LabFromSRGB(SRGBFromString(str)); }
 
 // Linear interpolation between two OkLab colors
 // (ratio=0 gives the first color, ratio=1 gives the second color)
