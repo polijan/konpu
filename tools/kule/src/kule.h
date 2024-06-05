@@ -264,6 +264,12 @@ void LabPrint(Lab lab, int verbosity)
          r = roundf(255.f * srgb_transfer_function(clip.r));
          g = roundf(255.f * srgb_transfer_function(clip.g));
          b = roundf(255.f * srgb_transfer_function(clip.b));
+         if      (r < 0)   r = 0;
+         else if (r > 255) r = 255;
+         if      (g < 0)   g = 0;
+         else if (g > 255) g = 255;
+         if      (b < 0)   r = 0;
+         else if (b > 255) r = 255;
          printf ("\x1B[48;2;%d;%d;%dm \x1B[m", r,g,b);
       } else {
          printf ("m  \x1B[m");
