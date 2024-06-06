@@ -151,6 +151,11 @@ Lab LabBrightestTone(float hue)
 // a 0-9 or {a,A}-{f,F})
 uint32_t SRGBFromString(const char* str)
 {
+   if (str == NULL) {
+      fprintf(stderr, "Empty color string\n");
+      exit(EXIT_FAILURE);
+   }
+
    // Input string may start with a '#', skip it.
    if (str[0] == '#')  str++;
 
