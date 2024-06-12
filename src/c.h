@@ -14,7 +14,7 @@
 //   * some of the mem* functions similar to <string.h>
 // - Include common extensions:
 //   * macros UTIL_OVERLOAD for variadic overloading based on number of args.
-//   * likely(...)/unlikely(...) macros to give optimization hints
+//   * ASSUME(...)/likely(...)/unlikely(...) macros to give optimization hints
 
 #ifndef  KONPU_C_H
 #define  KONPU_C_H
@@ -140,18 +140,37 @@
 //------------------------------------------------------------------------------
 
 
+// void ASSUME(condition...); function-like macro
+// The boolean condition passed to this macro is defined to be true.
+// If the condition is violated during execution, the behavior is undefined.
+// The condition itself is never evaluated (contrarily to C's `assert`)
+// This macro is meant to provide additional information about the state of the
+// program to the compiler which then might be able to make optimizations.
+//
+// Implementation inspired by: https://stackoverflow.com/questions/63493968/reproducing-clangs-builtin-assume-for-gcc
+#ifdef __has_cpp_attribute  // C++23 has [[assume]] attribute
+#     if __has_cpp_attribute(assume) >= 202207L
+#        define ASSUME(...) [[assume(__VA_ARGS__)]]
+#     endif
+#elif defined(__clang__)
+#     define ASSUME(...)    do { __builtin_assume(__VA_ARGS__); } while(0)
+#elif defined(_MSC_VER)
+#     define ASSUME(...)    do { __assume(__VA_ARGS__); } while(0)
+#elif defined(__GNUC__)
+#     if __GNUC__ >= 13
+#        define ASSUME(...) __attribute__((__assume__(__VA_ARGS__)))
+#     endif
+#else
+#     define ASSUME(...)
+#endif
+
 // The `assert(...)` macro (similar to <assert.h>)
-// The macro (may) evaluates its arguments and terminates the program if the
+// The macro (may) evaluate its arguments and terminates the program if the
 // evaluation is zero.
 #ifdef NDEBUG
-#   if __STDC_VERSION__ > 201710L || defined(__GNUC__) || defined(_MSC_VER)
-       // If we have a "real" unreachable(), we can use it to allow the compiler
-       // to use the knowledge contained in the assertion to make potential
-       // optimizations
-#      define assert(...)   if (!(__VA_ARGS__))  unreachable()
-#   else
-#      define assert(...)   ((void)0)
-#   endif
+    // In release mode, turn assertions in ASSUMEptions, so that arguments
+    // never get evaluated, and may be used for potential further optimization.
+#   define assert(...)      ASSUME(__VA_ARGS__)
 #elif KONPU_PLATFORM_LIBC
 #   include <assert.h>      // libc's assert
 #elif defined(__GNUC__)     // with no platform, try to stop the execution
