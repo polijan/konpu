@@ -1,0 +1,66 @@
+This directory contains a tool used to define the resolution of Konpu's graphic
+modes according to the size of the framebuffer.
+
+
+=> The Analysis below establishes the following result:
+   With a size of N x 2880 bytes, Konpu's framebuffer can encode an integer
+   number of 8x8 pixels areas using the whole memory of the framebuffer in
+   almost-all(*) graphical modes.
+
+=> Given a factor N specify the size (N*2800 bytes), the `resfinder` tool lists
+   for each graphical mode all possible resolutions with an aspect ratio
+   between 1 and 2.
+
+
+(*) All modes except planar with 7 planes when N isn't a multiple of 7.
+
+
+--------------------------------------------------------------------------------
+
+ANALYSIS TO FINDING A SUITABLE SIZE OF THE KONPU VIDEO FRAMEBUFFER
+
+To find a suitable size for the framebuffer, let's examine how many bytes are
+required to hold graphical data in a 8x8-pixels area when using the different
+possible layout of the framebuffer (ie: glyph+attribute modes, bitmap pixel
+modes, and planar modes):
+
+
+ type of framebuffer  |bytes to  |
+ layout               |store 8x8/
+                      |pixels  /
+----------------------|-------/
+GLYPH + ATTRIBUTES    |      |
+glyph (no attributes) |    8 |
+glyph +  1 byte       |    9 |
+glyph +  2 bytes      |   10 |
+glyph +  4 bytes      |   12 |
+glyph +  8 bytes      |   16 |
+glyph + 16 bytes      |   24 |
+glyph + 32 bytes      |   40 |
+----------------------|------|
+    Lowest Common     |      |
+    Denominator (LCM) =  360 |
+----------------------.------|
+BITMAP PIXELS:        |      |
+pixels, 2 colors      |    8 |
+pixels, 4 colors      |   16 |
+pixels, 16 colors     |   32 |
+pixels, 256 colors    |   64 |
+----------------------'------|
+          Updated LCM =  2880|
+----------------------.------.
+PLANAR (GLYPH/PIXELS) |      |
+plane x1 ( 2  colors) |    8 |
+plane x2 ( 4  colors) |   16 |
+plane x3 ( 8  colors) |   24 |
+plane x4 (16  colors) |   32 |
+plane x5 (32  colors) |   40 |
+plane x6 (64  colors) |   48 |
+plane x8 (256 colors) |   64 |
+----------------------'------|
+          Updated LCM =  2880|
+----------------------.------.
+plane x7 (128 colors) |   56 |
+----------------------'------'
+      --> Updated LCM = 20160| (= 7 * 2880)
+-----------------------------'
