@@ -89,7 +89,7 @@ static void Show(int factor, const char *message, int size_8x8)
    int size_fb = factor * FRAMEBUFFER_LCM;
    if (size_fb % size_8x8 != 0)
       printf("\x1b[41m!\x1b[0m ");
-   printf("\x1b[33m%s:\x1b[0m\n", message);
+   printf("\x1b[33m%2d (%s)\x1b[0m\n", size_8x8, message);
    ResFinder(size_fb / size_8x8);
 }
 
