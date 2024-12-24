@@ -51,15 +51,15 @@
  * }
  */
 
-typedef enum OptionsType {
+enum OptionsType {
    OPTIONS_NO_ARGUMENT,
    OPTIONS_REQUIRED_ARGUMENT,
    OPTIONS_OPTIONAL_ARGUMENT,
-} OptionsType;
+};
 
 typedef struct OptionsLong {
    const char *name;
-   OptionsType type;
+   enum OptionsType type;
    int val;
 } OptionsLong;
 

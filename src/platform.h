@@ -1,9 +1,61 @@
-// Ensure values for the KONPU_PLATFORM_* feature macros
-
 #ifndef  KONPU_PLATFORM_H
 #define  KONPU_PLATFORM_H
 #include "config.h"
 
+//------------------------------------------------------------------------------
+// KONPU_VERSION_*
+// Note: It is also available in Konpu's ROM
+//
+// Ideally, the idea is for Konpu's version to follow the classic "semantic
+// version" scheme (although there might be some exceptions... especially as
+// long as both MAJOR and MINOR version are still 0)
+//
+// - MAJOR version: incompatible API changes
+// - MINOR version: added functionality in a backward compatible manner
+// - PATCH version: backward compatible fixes
+//------------------------------------------------------------------------------
+
+// Same as KONPU_VERSION_MAJOR, but it is constant
+// (thus it could be used in the preprocessor)
+#define KONPU_VERSION_MAJOR     0
+
+// Same as KONPU_VERSION_MINOR, but it is constant
+// (thus it could be used in the preprocessor)
+#define KONPU_VERSION_MINOR     0
+
+// Same as KONPU_VERSION_PATCH, but it is constant
+// (thus it could be used in the preprocessor)
+#define KONPU_VERSION_PATCH     1
+
+//------------------------------------------------------------------------------
+// Ensure values for the KONPU_PLATFORM_* feature macros
+//------------------------------------------------------------------------------
+// Eventually, we'd want to support
+// - SDL2 and SDL3 (libsdl.org) for native desktop and mobile.
+//   When using SDL3, no other platform will be used.
+//   When using SDL2,
+//
+// - EMSCRIPTEN for The web and WASM runtimes  (use either SDL compiled to WASM
+//              or the EmScripten Javascript reimplementation of the SDL1.2 API)
+// - POSIX / Linux when SDL is not available
+// - perhaps Windows (maybe/someday but not a priority)
+//------------------------------------------------------------------------------
+
+// Ensure a value for KONPU_PLATFORM_SDL3 (0 or 1)
+// - Step 1) Normalize (i.e. set to 1 if the symbol is defined but has no value)
+#if defined(KONPU_PLATFORM_SDL3) && ~(~KONPU_PLATFORM_SDL3 + 0) == 0 \
+                                 && ~(~KONPU_PLATFORM_SDL3 + 1) == 1
+#   undef  KONPU_PLATFORM_SDL3
+#   define KONPU_PLATFORM_SDL3        1
+#endif
+// - Step 2) If a value was provided, check its validity
+#if defined(KONPU_PLATFORM_SDL3) && (KONPU_PLATFORM_SDL3 != 0) && (KONPU_PLATFORM_SDL3 != 1)
+#   error("KONPU_PLATFORM_SDL3 defined but not set to 0 or 1")
+#endif
+// - Step 3) Set up a default value if none was provided (default: 0)
+#ifndef KONPU_PLATFORM_SDL3
+#   define KONPU_PLATFORM_SDL3        0
+#endif
 
 // Ensure a value for KONPU_PLATFORM_SDL2 (0 or 1)
 // - Step 1) Normalize (i.e. set to 1 if the symbol is defined but has no value)
@@ -21,6 +73,21 @@
 #   define KONPU_PLATFORM_SDL2        0
 #endif
 
+// Ensure a value for KONPU_PLATFORM_SDL1 (0 or 1)
+// - Step 1) Normalize (i.e. set to 1 if the symbol is defined but has no value)
+#if defined(KONPU_PLATFORM_SDL1) && ~(~KONPU_PLATFORM_SDL1 + 0) == 0 \
+                                 && ~(~KONPU_PLATFORM_SDL1 + 1) == 1
+#   undef  KONPU_PLATFORM_SDL1
+#   define KONPU_PLATFORM_SDL1        1
+#endif
+// - Step 2) If a value was provided, check its validity
+#if defined(KONPU_PLATFORM_SDL1) && (KONPU_PLATFORM_SDL1 != 0) && (KONPU_PLATFORM_SDL1 != 1)
+#   error("KONPU_PLATFORM_SDL2 defined but not set to 0 or 1")
+#endif
+// - Step 3) Set up a default value if none was provided (default: 0)
+#ifndef KONPU_PLATFORM_SDL1
+#   define KONPU_PLATFORM_SDL1        0
+#endif
 
 // Ensure a value for KONPU_PLATFORM_POSIX (0 [=disabled] or >0)
 // - Step 1) Normalize (i.e. set to 1 if the symbol is defined but has no value)

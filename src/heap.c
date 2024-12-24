@@ -1,15 +1,17 @@
 // Konpu's heap allocator works from a fixed block of memory.
-// It is based on the MEMSYS5 allocator from SQLite (which is public domain).
-// The allocator works using using the Buddy algorithm and thus assumes the
+// It is based on/inspired by the MEMSYS5 allocator from SQLite (which is public
+// domain). The allocator works using the Buddy algorithm and thus assumes the
 // backing memory is a power-of-two in bytes.
 
 #include "heap.h"
+#include "init.h"
 
-// TODO: from config.h or something?
-#define KONPU_DEBUG
-#if KONPU_PLATFORM_LIBC
-#   define KONPU_TEST
-#endif
+// Static checks of Heap memory addresses:
+MEMORY_STATIC_ASSERT(HEAP_ADDRESS, var);
+MEMORY_STATIC_ASSERT(HEAP_CTRL_ADDRESS, uint8_t);
+
+#include "var.h"
+#include <string.h>
 
 
 /* This memory allocator uses the following algorithm:
@@ -38,45 +40,52 @@
 ** that an application can, at any time, verify this constraint.
 */
 
+// Log base 2 of min allocation size in bytes
+#define LOGMIN        3
+
+// Log base 2 of max allocation size in bytes
+// Maximum size of any allocation is ((1<<LOGMAX)*HEAP_ALLOC_MIN)
+#define LOGMAX        16
+
+// Masks used for HEAP_CTRL[] elements.
+#define CTRL_LOGSIZE  0x1f    // Log2 Size of this block
+#define CTRL_FREE     0x20    // True if not checked out
+
+// Number of HEAP_ALLOC_MIN sized blocks in the heap available for allocation.
+//#define NBLOCK  ((1<<19) / (HEAP_ALLOC_MIN + 1))
+//#define NBLOCK  ((1 << LOGMAX)*HEAP_ALLOC_MIN / (HEAP_ALLOC_MIN + 1))
+//#define NBLOCK (UINT32_C(1) << 16)
+#define NBLOCK        65536
+// ---> nBlock = (nByte / (HEAP_ALLOC_MIN+sizeof(uint8_t)));
+
+
 
 // A minimum allocation is an instance of the following structure.
 // Larger allocations are an array of these structures where the
 // size of the array is a power of 2.
-//
-// The size of this object must be a power of two.  That fact is
-// verified in HeapInit().
-typedef struct HeapList {
+typedef struct HeapChunck {
    int32_t next;  // Index of next free chunk
    int32_t prev;  // Index of previous free chunk
-} HeapList;
+} HeapChunck;
+// The size of this object must be a power of two.
+static_assert(sizeof(HeapChunck) == HEAP_ALLOC_MIN);
 
-// The size of a HeapList object must be a power of two.
-// Verify that this is case.
-static_assert( (sizeof(HeapList)&(sizeof(HeapList)-1))==0 );
-// static_assert( alignof(HeapList) <= KONPU_DEFAULT_ALIGNMENT );
+// Assuming HEAP_MEMORY is divided up into an array of HeapChunck
+// structures, return a pointer to the idx-th such link.
+#define HeapChunkAt(idx) ((HeapChunck *)(&HEAP_MEMORY[(idx) * HEAP_ALLOC_MIN]))
 
 
-// Maximum size of any allocation is ((1<<LOGMAX)*heap.szAtom). Since
-// heap.szAtom is always at least 8 and 32-bit integers are used,
-// it is not actually possible to reach this limit.
-#define LOGMAX 30
+// Lists of free blocks. heap_freelist[0] is a list of free blocks of
+// size HEAP_ALLOC_MIN.  heap_freelist[1] holds blocks of size HEAP_ALLOC_MIN*2.
+// heap_freelist[2] holds free blocks of size HEAP_ALLOC_MIN*4. And so forth.
+//static uint16_t heap_freelist[LOGMAX + 1]; //MARCHE PAS
+static int32_t heap_freelist[LOGMAX + 1];
 
-// Masks used for heap.aCtrl[] elements.
-#define CTRL_LOGSIZE  0x1f    // Log2 Size of this block
-#define CTRL_FREE     0x20    // True if not checked out
 
-// All of the static variables used by this module are collected
-// into a single structure named "heap".  This is to keep the
-// static variables organized and to reduce namespace pollution
-// when this module is combined with other in the amalgamation.
-static struct Heap {
-   // Memory available for allocation
-   int32_t szAtom;      // Smallest possible allocation in bytes
-   int32_t nBlock;      // Number of szAtom sized blocks in zPool
-   uint8_t *zPool;  // Memory available to be allocated
-
-#if defined(KONPU_DEBUG) || defined(KONPU_TEST)
-   // Performance statistics
+// Performance statistics
+#if KONPU_PLATFORM_LIBC && !defined(NDEBUG)
+#define HEAP_STATS
+static struct {
    uint64_t nAlloc;        // Total number of calls to malloc
    uint64_t totalAlloc;    // Total of all malloc calls - includes internal frag
    uint64_t totalExcess;   // Total internal fragmentation
@@ -85,185 +94,178 @@ static struct Heap {
    uint32_t maxOut;        // Maximum instantaneous currentOut
    uint32_t maxCount;      // Maximum instantaneous currentCount
    uint32_t maxRequest;    // Largest allocation (exclusive of internal frag)
+} stats;
+
+// TODO <-- this is to prevent -Wmissing-protopypes for now
+void HeapDump(const char *zFilename);
 #endif
 
-   // Lists of free blocks.  aiFreelist[0] is a list of free blocks of
-   // size heap.szAtom.  aiFreelist[1] holds blocks of size szAtom*2.
-   // aiFreelist[2] holds free blocks of size szAtom*4.  And so forth.
-   int32_t aiFreelist[LOGMAX+1];
 
-   // Space for tracking which blocks are checked out and the size of each block.
-   // One byte per block.
-   uint8_t *aCtrl;
+// Unlink the i-th chunk from list it is currently on.
+// It should be found on heap_freelist[iLogsize].
+static void HeapUnlink(int32_t i, int iLogsize)
+{
+   assert(i >= 0 && i < NBLOCK);
+   assert(iLogsize >= 0 && iLogsize <= LOGMAX);
+   assert((HEAP_CTRL[i] & CTRL_LOGSIZE) == iLogsize);
 
-} heap;
-
-
-//------------------------------------
-
-Address  HeapAddress(void *ptr)
-{ return (uint8_t*)ptr - heap.zPool; }
-
-void *HeapPointer(Address address)
-{ return heap.zPool + address; }
-
-//------------------------------------
-
-
-// Assuming heap.zPool is divided up into an array of HeapList
-// structures, return a pointer to the idx-th such link.
-#define HEAPLIST(idx) ((HeapList *)(&heap.zPool[(idx) * heap.szAtom]))
-
-// Unlink the chunk at heap.aPool[i] from list it is currently on.
-// It should be found on heap.aiFreelist[iLogsize].
-static void HeapUnlink(int32_t i, int iLogsize) {
-   int32_t next, prev;
-   assert( i>=0 && i<heap.nBlock );
-   assert( iLogsize>=0 && iLogsize<=LOGMAX );
-   assert( (heap.aCtrl[i] & CTRL_LOGSIZE)==iLogsize );
-
-   next = HEAPLIST(i)->next;
-   prev = HEAPLIST(i)->prev;
+   int32_t next = HeapChunkAt(i)->next;
+   int32_t prev = HeapChunkAt(i)->prev;
    if (prev < 0) {
-      heap.aiFreelist[iLogsize] = next;
+      heap_freelist[iLogsize] = next;
    } else {
-      HEAPLIST(prev)->next = next;
+      HeapChunkAt(prev)->next = next;
    }
    if (next >= 0) {
-      HEAPLIST(next)->prev = prev;
+      HeapChunkAt(next)->prev = prev;
    }
 }
 
-// Link the chunk at heap.aPool[i] so that is on the iLogsize free list.
-static void HeapLink(int32_t i, int iLogsize) {
-//  assert( sqlite3_mutex_held(heap.mutex) );
-   assert( i>=0 && i<heap.nBlock );
-   assert( iLogsize>=0 && iLogsize<=LOGMAX );
-   assert( (heap.aCtrl[i] & CTRL_LOGSIZE)==iLogsize );
+// Link the n-th chunk so that is on the iLogsize free list.
+static void HeapLink(int32_t n, int iLogsize)
+{
+   assert(n >= 0 && n < NBLOCK);
+   assert(iLogsize >= 0 && iLogsize <= LOGMAX);
+   assert((HEAP_CTRL[n] & CTRL_LOGSIZE) == iLogsize);
 
-   int32_t x = HEAPLIST(i)->next = heap.aiFreelist[iLogsize];
-   HEAPLIST(i)->prev = -1;
+   int32_t x = HeapChunkAt(n)->next = heap_freelist[iLogsize];
+   HeapChunkAt(n)->prev = -1;
    if (x >= 0) {
-      assert( x<heap.nBlock );
-      HEAPLIST(x)->prev = i;
+      assert(x < NBLOCK);
+      HeapChunkAt(x)->prev = n;
    }
-   heap.aiFreelist[iLogsize] = i;
+   heap_freelist[iLogsize] = n;
 }
 
+void HeapInit(void)
+{
+   for (int i = 0; i <= LOGMAX; i++) {
+      heap_freelist[i] = -1;
+   }
+//   heap_freelist[LOGMAX] = 1; /// MARCHE PAS
+
+   int32_t iOffset = 0;  // An offset into HEAP_CTRL[]
+   for (int i = LOGMAX; i >=0; i--) {
+      int32_t nAlloc = (1 << i);
+      if ((iOffset + nAlloc) <= NBLOCK) {
+         HEAP_CTRL[iOffset] = i | CTRL_FREE;
+         HeapLink(iOffset, i);
+         iOffset += nAlloc;
+      }
+      assert((iOffset + nAlloc) > NBLOCK);
+   }
+}
+
+
+/*
 // Return the size of an outstanding allocation, in bytes.
 // This only works for chunks that are currently checked out.
-int32_t HeapCapacityOf(void *p) {
-   int32_t iSize, i;
+int32_t HeapCapacityOf(void *p)
+{
    assert( p!=0 );
-   i = (int32_t)(((uint8_t *)p-heap.zPool)/heap.szAtom);
-   assert( i>=0 && i<heap.nBlock );
-   iSize = heap.szAtom * (1 << (heap.aCtrl[i]&CTRL_LOGSIZE));
+   int32_t i = (int32_t)(((uint8_t *)p-HEAP_MEMORY)/HEAP_ALLOC_MIN);
+   assert(i>=0 && i< NBLOCK);
+   int32_t iSize = HEAP_ALLOC_MIN * (1 << (HEAP_CTRL[i]&CTRL_LOGSIZE));
    return iSize;
 }
+*/
+
 
 // Return a block of memory of at least nBytes in size.
 // Return NULL if unable.  Return NULL if nBytes<=0.
-void *HeapMalloc(int32_t nByte) {
-   int32_t i;       // Index of a heap.aPool[] slot
-   int32_t iBin;    // Index into heap.aiFreelist[]
-   int32_t iFullSz; // Size of allocation rounded up to power of 2
-   int iLogsize;    // Log2 of iFullSz/POW2_MIN
-
+void *HeapMalloc(int32_t nByte)
+{
    // nByte must be a positive
    if (nByte <= 0) return NULL;
 
-   // No more than 1GiB per allocation
-   if (nByte > 0x40000000) return 0;
+   // No more than 512Kb per allocation
+   if (nByte > ((INT32_C(1) << LOGMAX) * HEAP_ALLOC_MIN)) return NULL;
 
-#if defined(KONPU_DEBUG) || defined(KONPU_TEST)
+#ifdef HEAP_STATS
    // Keep track of the maximum allocation request.
    // Even unfulfilled requests are counted
-   if ((uint32_t)nByte > heap.maxRequest) {
-      heap.maxRequest = nByte;
+   if ((uint32_t)nByte > stats.maxRequest) {
+      stats.maxRequest = nByte;
    }
 #endif
 
-
    // Round nByte up to the next valid power of two
-   for (iFullSz = heap.szAtom, iLogsize = 0;
+   int32_t iFullSz; // Size of allocation rounded up to power of 2
+   int iLogsize;    // Log2 of iFullSz/POW2_MIN
+   for (iFullSz = HEAP_ALLOC_MIN, iLogsize = 0;
         iFullSz < nByte;
         iFullSz *= 2, iLogsize++) { }
 
-   // Make sure heap.aiFreelist[iLogsize] contains at least one free block.
+   // Make sure heap_freelist[iLogsize] contains at least one free block.
    // If not, then split a block of the next larger power of two in order
    // to create a new free block of size iLogsize.
-   for (iBin = iLogsize; iBin <= LOGMAX && heap.aiFreelist[iBin] < 0; iBin++) {}
-   if (iBin > LOGMAX) { // error
-      //testcase( sqlite3GlobalConfig.xLog!=0 );
-      //sqlite3_log(SQLITE_NOMEM, "failed to allocate %u bytes", nByte);
-      return 0;
-   }
-   i = heap.aiFreelist[iBin];
+   int32_t iBin;  // Index into heap_freelist[]
+   for (iBin = iLogsize; iBin <= LOGMAX && heap_freelist[iBin] < 0; iBin++) {}
+   if (iBin > LOGMAX) return NULL;
+   int32_t i = heap_freelist[iBin];  // Index of a chunck
    HeapUnlink(i, iBin);
    while (iBin > iLogsize) {
       int32_t newSize;
 
       iBin--;
       newSize = 1 << iBin;
-      heap.aCtrl[i + newSize] = CTRL_FREE | iBin;
+      HEAP_CTRL[i + newSize] = CTRL_FREE | iBin;
       HeapLink(i + newSize, iBin);
    }
-   heap.aCtrl[i] = iLogsize;
+   HEAP_CTRL[i] = iLogsize;
 
-#if defined(KONPU_DEBUG) || defined(KONPU_TEST)
+#ifdef HEAP_STATS
    // Update allocator performance statistics.
-   heap.nAlloc++;
-   heap.totalAlloc += iFullSz;
-   heap.totalExcess += iFullSz - nByte;
-   heap.currentCount++;
-   heap.currentOut += iFullSz;
-   if (heap.maxCount < heap.currentCount) heap.maxCount = heap.currentCount;
-   if (heap.maxOut < heap.currentOut) heap.maxOut = heap.currentOut;
+   stats.nAlloc++;
+   stats.totalAlloc += iFullSz;
+   stats.totalExcess += iFullSz - nByte;
+   stats.currentCount++;
+   stats.currentOut += iFullSz;
+   if (stats.maxCount < stats.currentCount) stats.maxCount = stats.currentCount;
+   if (stats.maxOut   < stats.currentOut)   stats.maxOut = stats.currentOut;
 #endif
 
-#ifdef KONPU_DEBUG
+#ifndef NDEBUG
    // Make sure the allocated memory does not assume that it is set to zero
    // or retains a value from a previous allocation
-   memset(&heap.zPool[i*heap.szAtom], 0xAA, iFullSz);
+   memset(&HEAP_MEMORY[i*HEAP_ALLOC_MIN], 0xAA, iFullSz);
 #endif
 
    // Return a pointer to the allocated memory.
-   return (void*)&heap.zPool[i*heap.szAtom];
+   return (void*)&HEAP_MEMORY[i*HEAP_ALLOC_MIN];
 }
 
 // Free an outstanding memory allocation.
-void HeapFree(void *pOld) {
+void HeapFree(void *pOld)
+{
    if (pOld == NULL) return;
 
-   uint32_t size, iLogsize;
-   int32_t iBlock;
-
    // Set iBlock to the index of the block pointed to by pOld in
-   // the array of heap.szAtom byte blocks pointed to by heap.zPool.
-   iBlock = (int32_t)(((uint8_t *)pOld-heap.zPool)/heap.szAtom);
+   // the array of HEAP_ALLOC_MIN byte blocks pointed to by HEAP_MEMORY.
+   int32_t iBlock = (int32_t)(((uint8_t *)pOld-HEAP_MEMORY)/HEAP_ALLOC_MIN);
 
    // Check that the pointer pOld points to a valid, non-free block.
-   assert( iBlock>=0 && iBlock<heap.nBlock );
-   assert( ((uint8_t *)pOld-heap.zPool)%heap.szAtom==0 );
-   assert( (heap.aCtrl[iBlock] & CTRL_FREE)==0 );
+   assert(iBlock>=0 && iBlock < NBLOCK);
+   assert(((uint8_t *)pOld-HEAP_MEMORY)%HEAP_ALLOC_MIN==0);
+   assert((HEAP_CTRL[iBlock] & CTRL_FREE) == 0);
 
-   iLogsize = heap.aCtrl[iBlock] & CTRL_LOGSIZE;
-   size = 1<<iLogsize;
-   assert( iBlock+size-1<(uint32_t)heap.nBlock );
+   uint32_t iLogsize = HEAP_CTRL[iBlock] & CTRL_LOGSIZE;
+   uint32_t size = 1 << iLogsize;
+   assert( iBlock+size-1<(uint32_t)NBLOCK );
 
-   heap.aCtrl[iBlock] |= CTRL_FREE;
-   heap.aCtrl[iBlock+size-1] |= CTRL_FREE;
+   HEAP_CTRL[iBlock] |= CTRL_FREE;
+   HEAP_CTRL[iBlock+size-1] |= CTRL_FREE;
 
-#if defined(KONPU_DEBUG) || defined(KONPU_TEST)
-   assert( heap.currentCount>0 );
-   assert( heap.currentOut>=(size*heap.szAtom) );
-   heap.currentCount--;
-   heap.currentOut -= size*heap.szAtom;
-   assert( heap.currentOut>0 || heap.currentCount==0 );
-   assert( heap.currentCount>0 || heap.currentOut==0 );
+#ifdef HEAP_STATS
+   assert( stats.currentCount>0 );
+   assert( stats.currentOut>=(size*HEAP_ALLOC_MIN) );
+   stats.currentCount--;
+   stats.currentOut -= size*HEAP_ALLOC_MIN;
+   assert( stats.currentOut>0 || stats.currentCount==0 );
+   assert( stats.currentCount>0 || stats.currentOut==0 );
 #endif
 
-   heap.aCtrl[iBlock] = CTRL_FREE | iLogsize;
+   HEAP_CTRL[iBlock] = CTRL_FREE | iLogsize;
    while (true) { //  while( ALWAYS(iLogsize<LOGMAX) ) {
       int32_t iBuddy;
       if ((iBlock >> iLogsize) & 1) {
@@ -271,26 +273,26 @@ void HeapFree(void *pOld) {
          assert( iBuddy>=0 );
       } else {
          iBuddy = iBlock + size;
-         if (iBuddy >= heap.nBlock) break;
+         if (iBuddy >= NBLOCK) break;
       }
-      if (heap.aCtrl[iBuddy] != (CTRL_FREE | iLogsize)) break;
+      if (HEAP_CTRL[iBuddy] != (CTRL_FREE | iLogsize)) break;
       HeapUnlink(iBuddy, iLogsize);
       iLogsize++;
       if (iBuddy < iBlock) {
-         heap.aCtrl[iBuddy] = CTRL_FREE | iLogsize;
-         heap.aCtrl[iBlock] = 0;
+         HEAP_CTRL[iBuddy] = CTRL_FREE | iLogsize;
+         HEAP_CTRL[iBlock] = 0;
          iBlock = iBuddy;
       } else {
-         heap.aCtrl[iBlock] = CTRL_FREE | iLogsize;
-         heap.aCtrl[iBuddy] = 0;
+         HEAP_CTRL[iBlock] = CTRL_FREE | iLogsize;
+         HEAP_CTRL[iBuddy] = 0;
       }
       size *= 2;
    }
 
-#ifdef KONPU_DEBUG
+#ifndef NDEBUG
    // Overwrite freed memory with the 0x55 bit pattern to verify that it is
    // not used after being freed
-   memset(&heap.zPool[iBlock*heap.szAtom], 0x55, size);
+   memset(&HEAP_MEMORY[iBlock*HEAP_ALLOC_MIN], 0x55, size);
 #endif
 
    HeapLink(iBlock, iLogsize);
@@ -330,7 +332,9 @@ void *HeapRealloc(void *pPrior, int32_t nBytes)
    }
 */
 
-   int32_t nOld = HeapCapacityOf(pPrior);
+//   int32_t nOld = HeapCapacityOf(pPrior);
+   int32_t nOld = HeapCapacityAt(HeapAddress(pPrior));
+
    if (nBytes <= nOld) {
       return pPrior;
    }
@@ -343,121 +347,42 @@ void *HeapRealloc(void *pPrior, int32_t nBytes)
    return p;
 }
 
-// Round up a request size to the next valid allocation size.  If
-// the allocation is too large to be handled by this allocation system,
-// return 0.
-//
-// All allocations must be a power of two and must be expressed by a
-// 32-bit signed integer.  Hence the largest allocation is 0x40000000
-// or 1073741824 bytes.
-static int32_t HeapRoundup(int32_t n) {
-   int32_t iFullSz;
-   if (n <= heap.szAtom * 2) {
-      if (n <= heap.szAtom) return heap.szAtom;
-         return heap.szAtom*2;
-   }
-   if (n > 0x10000000) {
-      if (n > 0x40000000) return 0;
-      if (n > 0x20000000) return 0x40000000;
-      return 0x20000000;
-   }
-   for (iFullSz = heap.szAtom*8; iFullSz < n; iFullSz *= 4);
-   if ((iFullSz / 2) >= (int64_t)n) return iFullSz/2;
-   return iFullSz;
-}
 
-// Return the ceiling of the logarithm base 2 of iValue.
-//
-// Examples:   HeapLog(1) -> 0
-//             HeapLog(2) -> 1
-//             HeapLog(4) -> 2
-//             HeapLog(5) -> 3
-//             HeapLog(8) -> 3
-//             HeapLog(9) -> 4
-static int HeapLog(int32_t iValue) {
-   int iLog;
-   for (iLog=0;
-        (iLog < (int)((sizeof(int) * 8) - 1)) && (1 << iLog) < iValue;
-        iLog++);
-   return iLog;
-}
-
-
-
-// Initialize the memory allocator.
-//
-// zByte: Memory usable by this allocator
-// nByte: Number of bytes of memory available to this allocator
-void HeapInit(uint8_t *zByte, Size nByte) {
-   assert(zByte != NULL);
-   assert(nByte > 0);
-
-   int nMinLog = 1/*???*/;   /* Log base 2 of minimum allocation size in bytes */
-   /* boundaries on sqlite3GlobalConfig.mnReq are enforced in sqlite3_config() */
-   //nMinLog = HeapLog(sqlite3GlobalConfig.mnReq);
-   heap.szAtom = (1 << nMinLog);
-   while ((int32_t)sizeof(HeapList) > heap.szAtom) {
-      heap.szAtom = heap.szAtom << 1;
-   }
-
-   heap.nBlock = (nByte / (heap.szAtom+sizeof(uint8_t)));
-   heap.zPool = zByte;
-   heap.aCtrl = (uint8_t *)&heap.zPool[heap.nBlock*heap.szAtom];
-
-   for (int ii=0; ii<=LOGMAX; ii++) {
-      heap.aiFreelist[ii] = -1;
-   }
-
-   int32_t iOffset = 0;  // An offset into heap.aCtrl[]
-   for (int ii=LOGMAX; ii>=0; ii--) {
-      int32_t nAlloc = (1<<ii);
-      if ((iOffset + nAlloc) <= heap.nBlock) {
-         heap.aCtrl[iOffset] = ii | CTRL_FREE;
-         HeapLink(iOffset, ii);
-         iOffset += nAlloc;
-      }
-      assert((iOffset + nAlloc) > heap.nBlock);
-   }
-}
-
-// Deinitialize this module.
-void HeapDrop(void)
-{ /* nothing to do */ }
-
-
-#ifdef KONPU_TEST
+#ifdef HEAP_STATS
 #include <stdio.h>
+#include <inttypes.h>
+
 // Open the file indicated and write a log of all unfreed memory
 // allocations into that log.
-void HeapDump(const char *zFilename) {
+void HeapDump(const char *zFilename)
+{
    FILE *out;
-   int i, j, n;
-   int nMinLog;
-
    if (zFilename == 0 || zFilename[0] == 0) {
       out = stdout;
    } else {
       out = fopen(zFilename, "w");
       if (out == 0) {
-        fprintf(stderr, "** Unable to output memory debug output log: %s **\n",
-                        zFilename);
-        return;
+         fprintf(stderr, "** Unable to output memory debug output log: %s **\n",
+                         zFilename);
+         return;
       }
    }
 
-   nMinLog = HeapLog(heap.szAtom);
-   for (i = 0; i <= LOGMAX && i + nMinLog < 32; i++) {
-      for (n = 0, j = heap.aiFreelist[i]; j >= 0; j = HEAPLIST(j)->next, n++) {}
-      fprintf(out, "freelist items of size %d: %d\n", heap.szAtom << i, n);
+   fprintf(out, "freelists (size -> # free blocks): ");
+   for (int i = 0; i <= LOGMAX && i + LOGMIN < 32; i++) {
+      int n = 0;
+      for (int j = heap_freelist[i]; j >= 0; j = HeapChunkAt(j)->next, n++) {}
+      //fprintf(out, "freelist items of size %d: %d\n", HEAP_ALLOC_MIN << i, n);
+      fprintf(out, "(%d -> %d) ", HEAP_ALLOC_MIN << i, n);
    }
-   fprintf(out, "heap.nAlloc       = %llu\n", heap.nAlloc);
-   fprintf(out, "heap.totalAlloc   = %llu\n", heap.totalAlloc);
-   fprintf(out, "heap.totalExcess  = %llu\n", heap.totalExcess);
-   fprintf(out, "heap.currentOut   = %u\n", heap.currentOut);
-   fprintf(out, "heap.currentCount = %u\n", heap.currentCount);
-   fprintf(out, "heap.maxOut       = %u\n", heap.maxOut);
-   fprintf(out, "heap.maxCount     = %u\n", heap.maxCount);
-   fprintf(out, "heap.maxRequest   = %u\n", heap.maxRequest);
+   fprintf(out, "\nstats.nAlloc       = %" PRIu64 "\n", stats.nAlloc);
+   fprintf(out, "stats.totalAlloc   = %"   PRIu64 "\n", stats.totalAlloc);
+   fprintf(out, "stats.totalExcess  = %"   PRIu64 "\n", stats.totalExcess);
+   fprintf(out, "stats.currentOut   = %"   PRIu32 "\n", stats.currentOut);
+   fprintf(out, "stats.currentCount = %"   PRIu32 "\n", stats.currentCount);
+   fprintf(out, "stats.maxOut       = %"   PRIu32 "\n", stats.maxOut);
+   fprintf(out, "stats.maxCount     = %"   PRIu32 "\n", stats.maxCount);
+   fprintf(out, "stats.maxRequest   = %"   PRIu32 "\n", stats.maxRequest);
 
    if (out == stdout) {
       fflush(stdout);
@@ -465,4 +390,4 @@ void HeapDump(const char *zFilename) {
       fclose(out);
    }
 }
-#endif
+#endif //HEAP_STATS

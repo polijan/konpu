@@ -3,14 +3,14 @@
 #include "test.h"
 
 // Test: ...
-static char *testPlaceHolder1(void)
+static const char *testPlaceHolder1(void)
 {
    TestAssert("true", true);
    return 0;
 }
 
 // Test: ...
-static char *testPlaceHolder2(void)
+static const char *testPlaceHolder2(void)
 {
    TestAssert("true", true);
    return 0;

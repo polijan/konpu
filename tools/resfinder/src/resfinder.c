@@ -77,8 +77,11 @@ static void ResFinder(int size)
       double ratio = (double)x / y;
       if ((ratio < 1.0) || (ratio > 2.0)) continue;
 
-      printf("resolution: %3dx%3d (-> glyph64: %2dx%2d) / ratio: %g\n",
-             8*x,8*y, x,y, ratio);
+      printf("resolution: %3dx%3d (-> glyph64: %2dx%2d)", 8*x, 8*y, x,y);
+      // Warn if dimension cannot fit an exact number of element > 8x8
+      // (ie: 8x16 or 16x16 Glyph or Tiles)
+      if (x%2 || y%2) printf("\033[30;43m!\033[m"); else printf(" ");
+      printf(" / ratio: %g\n", ratio);
    }
 }
 
@@ -88,7 +91,7 @@ static void Show(int factor, const char *message, int size_8x8)
 {
    int size_fb = factor * FRAMEBUFFER_LCM;
    if (size_fb % size_8x8 != 0)
-      printf("\x1b[41m!\x1b[0m ");
+      printf("\x1b[1;37;41m!\x1b[0m ");
    printf("\x1b[33m%2d (%s)\x1b[0m\n", size_8x8, message);
    ResFinder(size_fb / size_8x8);
 }

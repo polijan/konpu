@@ -3,7 +3,7 @@
 //
 // To create an automatic test file:
 //
-// 1. Define your test cases as functions like this: char *testCase(void);
+// 1. Define your test cases as functions like this: const char *testCase(void);
 //    Each test function would use the TestAssert("message", condition) macro,
 //    and return 0 at the end if all went well.
 //
@@ -48,14 +48,14 @@
                       UTIL_STRINGIFY(__LINE__) ": " message;  \
         } while (0)
 
-#define TestRun(testFunctionName)            \
-        do {                                 \
-            char *msg = testFunctionName();  \
-            TestRun_++;                      \
-            if (msg) return msg;             \
+#define TestRun(test_function_name)                  \
+        do {                                         \
+            const char *msg = test_function_name();  \
+            TestRun_++;                              \
+            if (msg) return msg;                     \
         } while (0)
 
-#define TEST_BEGIN   static char* TestRunAll_(void) {
+#define TEST_BEGIN   static const char* TestRunAll_(void) {
 
 #define TEST_END     return NULL; }
 
@@ -64,7 +64,7 @@
            do {                                                  \
                fprintf(stderr, "\033[34m%d:\033[m ", __LINE__);  \
                fprintf(stderr, __VA_ARGS__);                     \
-               putc('\n', stderr);                               \
+            /*   putc('\n', stderr);*/                               \
            } while (0)
 #else
 #   define TestTrace(...)
@@ -74,7 +74,7 @@
 // Numbers of test run
 int TestRun_ = 0;
 
-static char* TestRunAll_(void);
+static const char* TestRunAll_(void);
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
    fprintf(stderr, "\033[34m(TestTrace enabled)\033[m\n");
 #endif
 
-   char* result = TestRunAll_();
+   const char* result = TestRunAll_();
    if (result != NULL)
       printf("\033[31m%s\033[m\n", result);
    else

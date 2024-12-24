@@ -1,8 +1,7 @@
 obj/
 lib/
 include/
-bin/konpu
-tests/bin/
+bin/
 
 ###############################
 
