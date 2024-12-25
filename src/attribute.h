@@ -25,7 +25,7 @@
 // This return is 0 (for one-byte  attributes)
 //             or 1 (for "wide" two-bytes attributes),
 // and the number of required bytes is 1 << AttributeSizeofLog2().
-#define AttributeSizeofLog2()    ((VIDEO_MODE & 3) == ATTRIBUTE_256C)
+#define AttributeSizeofLog2()    ((VIDEO_MODE & 3) == ATTRIBUTE_COLORS_256)
 // TODO: maybe I should change name to: AttributeIsTwoBytes() [Is or Has]
 
 
@@ -46,11 +46,11 @@
 // Return the foreground color of an attribute
 static inline int AttributeGetForeground(const uint8_t *attr)
 {
-   switch (AttributeType()) {
-      case ATTRIBUTE_256C:   // fallthrough
-      case ATTRIBUTE_FG256C: return *attr;
-      case ATTRIBUTE_16C:    return *attr >> 4;
-      case ATTRIBUTE_BG256C: return COLOR_DEFAULT_FG;
+   switch (AttributeColorType()) {
+      case ATTRIBUTE_COLORS_256:   // fallthrough
+      case ATTRIBUTE_COLORS_FG256: return *attr;
+      case ATTRIBUTE_COLORS_16:    return *attr >> 4;
+      case ATTRIBUTE_COLORS_BG256: return COLOR_DEFAULT_FG;
       default: unreachable();
    }
 }
@@ -58,11 +58,11 @@ static inline int AttributeGetForeground(const uint8_t *attr)
 // Set the foreground color of an attribute
 static inline void AttributeSetForeground(uint8_t *attr, int color)
 {
-   switch (AttributeType()) {
-      case ATTRIBUTE_256C:   // fallthrough
-      case ATTRIBUTE_FG256C: *attr = color; break;
-      case ATTRIBUTE_16C:    *attr = (color << 4) | (*attr & 0xF); break;
-      case ATTRIBUTE_BG256C: break;
+   switch (AttributeColorType()) {
+      case ATTRIBUTE_COLORS_256:   // fallthrough
+      case ATTRIBUTE_COLORS_FG256: *attr = color; break;
+      case ATTRIBUTE_COLORS_16:    *attr = (color << 4) | (*attr & 0xF); break;
+      case ATTRIBUTE_COLORS_BG256: break;
       default: unreachable();
    }
 }
@@ -70,11 +70,11 @@ static inline void AttributeSetForeground(uint8_t *attr, int color)
 // Return the background color of an attribute
 static inline int AttributeGetBackground(const uint8_t *attr)
 {
-   switch (AttributeType()) {
-      case ATTRIBUTE_16C:    return *attr & 0xF;
-      case ATTRIBUTE_BG256C: return *attr;
-      case ATTRIBUTE_256C:   return attr[1];
-      case ATTRIBUTE_FG256C: return COLOR_DEFAULT_BG;
+   switch (AttributeColorType()) {
+      case ATTRIBUTE_COLORS_16:    return *attr & 0xF;
+      case ATTRIBUTE_COLORS_BG256: return *attr;
+      case ATTRIBUTE_COLORS_256:   return attr[1];
+      case ATTRIBUTE_COLORS_FG256: return COLOR_DEFAULT_BG;
       default: unreachable();
    }
 }
@@ -82,11 +82,11 @@ static inline int AttributeGetBackground(const uint8_t *attr)
 // Set the background color of an attribute
 static inline void AttributeSetBackground(uint8_t *attr, int color)
 {
-   switch (AttributeType()) {
-      case ATTRIBUTE_16C:    *attr = (*attr & 0xF0) | color; break;
-      case ATTRIBUTE_BG256C: *attr = color; break;
-      case ATTRIBUTE_256C:   attr[1] = color; break;
-      case ATTRIBUTE_FG256C: break;
+   switch (AttributeColorType()) {
+      case ATTRIBUTE_COLORS_16:    *attr = (*attr & 0xF0) | color; break;
+      case ATTRIBUTE_COLORS_BG256: *attr = color; break;
+      case ATTRIBUTE_COLORS_256:   attr[1] = color; break;
+      case ATTRIBUTE_COLORS_FG256: break;
       default: unreachable();
    }
 }
@@ -94,11 +94,11 @@ static inline void AttributeSetBackground(uint8_t *attr, int color)
 // Set the foreground and background colors of an attribute
 static inline void AttributeSet(uint8_t *attr, int fg_color, int bg_color)
 {
-   switch (AttributeType()) {
-      case ATTRIBUTE_16C:    *attr = (fg_color << 4) | bg_color; break;
-      case ATTRIBUTE_FG256C: *attr = fg_color; break;
-      case ATTRIBUTE_BG256C: *attr = bg_color; break;
-      case ATTRIBUTE_256C:    attr[0] = fg_color; attr[1] = bg_color; break;
+   switch (AttributeColorType()) {
+      case ATTRIBUTE_COLORS_16:    *attr = (fg_color << 4) | bg_color; break;
+      case ATTRIBUTE_COLORS_FG256: *attr = fg_color; break;
+      case ATTRIBUTE_COLORS_BG256: *attr = bg_color; break;
+      case ATTRIBUTE_COLORS_256:    attr[0] = fg_color; attr[1] = bg_color; break;
       default: unreachable();
    }
 }
@@ -107,13 +107,13 @@ static inline void AttributeSet(uint8_t *attr, int fg_color, int bg_color)
 static inline void AttributeReverse(uint8_t *attr)
 {
    uint8_t tmp;
-   switch (AttributeType()) {
-      case ATTRIBUTE_16C:    *attr = (*attr << 4) | (*attr >> 4); break;
-      case ATTRIBUTE_256C:    tmp = attr[0]; attr[1] = attr[0]; attr[0] = tmp;
+   switch (AttributeColorType()) {
+      case ATTRIBUTE_COLORS_16:    *attr = (*attr << 4) | (*attr >> 4); break;
+      case ATTRIBUTE_COLORS_256:    tmp = attr[0]; attr[1] = attr[0]; attr[0] = tmp;
                               break;
       // We can't video reverse those:
-      case ATTRIBUTE_FG256C:  break;
-      case ATTRIBUTE_BG256C:  break;
+      case ATTRIBUTE_COLORS_FG256:  break;
+      case ATTRIBUTE_COLORS_BG256:  break;
       default: unreachable();
    }
 }

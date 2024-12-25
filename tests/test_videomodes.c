@@ -5,11 +5,8 @@
 //       standard attribute.
 static const char *testDefaultVideoMode(void)
 {
-   TestTrace("default mode: %3d\n", VIDEO_MODE_DEFAULT);
-   TestTrace("mode Glyph32 + Glyp32-size one byte attr: %3d\n", VIDEO_MODE_ATTRIBUTE(PIXELS_4x8, PIXELS_4x8, ATTRIBUTE_16C));
-
-   TestAssert("VIDEO_MODE_DEFAULT should be 4x8 glyph and 16 color attributes",
-      VIDEO_MODE_DEFAULT == VIDEO_MODE_ATTRIBUTE(PIXELS_4x8, PIXELS_4x8, ATTRIBUTE_16C));
+   TestAssert("VIDEO_MODE_DEFAULT should be 4x8 glyphs with similar 16 color attributes",
+      VIDEO_MODE_DEFAULT == VIDEO_MODE_ATTRIBUTE(Glyph32));
    return 0;
 }
 

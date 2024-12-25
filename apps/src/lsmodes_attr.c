@@ -25,7 +25,7 @@ int AppInit(void)
          VideoAttributeOffset(),
          VIDEO_WIDTH  >> AttributeWidthLog2(), VIDEO_HEIGHT >> AttributeHeightLog2(),
          elem_size_str[VideoModeAttributePixelSize()],
-         attr_color_type[AttributeType()]
+         attr_color_type[AttributeColorType()]
       );
 
       if ( (VIDEO_WIDTH  % (1 << VideoGlyphLog2Width())) ||

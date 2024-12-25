@@ -23,14 +23,43 @@ enum VideoElementPixelSize {
    PIXELS       = 7,
 };
 
-// This enum is used to indicate the type of attributes in the framebuffer.
-enum AttributeType {      // Attributes size in byte(s) and description:
-   ATTRIBUTE_16C    = 0,  // 1 byte , each nibble specifies a fg and bg 16-color
-   ATTRIBUTE_FG256C = 1,  // 1 byte , byte specifies one foreground 256-color
-   ATTRIBUTE_BG256C = 2,  // 1 byte , byte specifies one backgorund 256-color
-   ATTRIBUTE_256C   = 3   // 2 bytes, each byte specifies a fg and bg 256-color
+// This enum is used to indicate the type of colors encoded by attributes in the
+// video framebuffer.           // Byte|
+enum AttributeColorType {       // size| Description
+   ATTRIBUTE_COLORS_16    = 0,  //   1 | Nibbles specify a fg and bg 16-color
+   ATTRIBUTE_COLORS_FG256 = 1,  //   1 | Byte specifies one foreground 256-color
+   ATTRIBUTE_COLORS_BG256 = 2,  //   1 | Byte specifies one background 256-color
+   ATTRIBUTE_COLORS_256   = 3   //   2 | Bytes specify a fg and bg 256-color
 };
 
+
+// The full list of the 16 possible Attributes type. It is nibble value which is
+// composed of two quarters: an VideoElementPixelSize (max. 8x8) and an
+// AttributeColorType.
+//                       .------ attributes px size (enum VideoElementPixelSize)
+//                       |  .--- attributes color type (enum AttributeColorType)
+//                       v  v
+//                      |..|..|
+//
+// In attribute modes, it is the low nibble of the video mode.
+enum AttributeType {
+  ATTRIBUTE_2x4_16    = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_16),
+  ATTRIBUTE_4x4_16    = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_16),
+  ATTRIBUTE_4x8_16    = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_16),
+  ATTRIBUTE_8x8_16    = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_16),
+  ATTRIBUTE_2x4_FG256 = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_FG256),
+  ATTRIBUTE_4x4_FG256 = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_FG256),
+  ATTRIBUTE_4x8_FG256 = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_FG256),
+  ATTRIBUTE_8x8_FG256 = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_FG256),
+  ATTRIBUTE_2x4_BG256 = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_BG256),
+  ATTRIBUTE_4x4_BG256 = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_BG256),
+  ATTRIBUTE_4x8_BG256 = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_BG256),
+  ATTRIBUTE_8x8_BG256 = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_BG256),
+  ATTRIBUTE_2x4_256   = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_256),
+  ATTRIBUTE_4x4_256   = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_256),
+  ATTRIBUTE_4x8_256   = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_256),
+  ATTRIBUTE_8x8_256   = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_256)
+};
 
 //------------------------------------------------------------------------------
 // Definition of the VIDEO_MODE
@@ -57,11 +86,12 @@ enum AttributeType {      // Attributes size in byte(s) and description:
 // * Low Nibble:
 //
 //   - If the Has Attribute bit is set, the low nibble describes an attribute
-//     grid as follow:
-//                          .------ attributes size (enum VideoElementPixelSize)
-//                          |  .--- attributes type (enum AttributeType)
-//                          v  v
-//                         |..|..|
+//     type (enum AttributeType). Reminder: this value is itself composed of two
+//     quarters:
+//                       .------ attributes px size (enum VideoElementPixelSize)
+//                       |  .--- attributes color type (enum AttributeColorType)
+//                       v  v
+//                      |..|..|
 //
 //   - Othwerwise, the low nibble can (only) take the following values:
 //
@@ -190,24 +220,36 @@ static inline int VIDEO_MODE_PIXEL(int bits_per_pixel) {
           VIDEO_MODE_GENERIC_(0, PIXELS, bits_per_pixel + 7);
 }
 
-// Return a (Glyph and) Attribute video mode.
-// (remember than attributes size should be <= PIXELS_8x8)
-static inline
-int VIDEO_MODE_ATTRIBUTE(enum VideoElementPixelSize glyph_size,
-                         enum VideoElementPixelSize attribute_size,
-                         enum AttributeType         attribute_type) {
-   assert(attribute_size <= PIXELS_8x8);
-   assert(glyph_size <= PIXELS_16x16);
-   return VIDEO_MODE_GENERIC_(1, glyph_size, attribute_size << 2 | attribute_type);
-}
-
-// Return an Attribute video mode where glyphs and attributes have the same
-// pixel size (size should be <= PIXELS_8x8)
-static inline
-int VIDEO_MODE_ATTRIBUTE_SIMPLE(enum VideoElementPixelSize size,
-                                enum AttributeType         attribute_type)
-{ return VIDEO_MODE_ATTRIBUTE(size, size, attribute_type); }
-
+// int VIDEO_MODE_ATTRIBUTE(GLYPH_TYPE, [enum AttributeType]);
+// Return a mode number based on a Glyph type and an enum AttributeType
+// If the Attribute if left unspecified, it will default to 16-color attributes
+// whose size in pixels is either same as the glyphs or at max 8x8.
+#define VIDEO_MODE_ATTRIBUTE(...)                               \
+   UTIL_OVERLOAD(VIDEO_MODE_ATTRIBUTE, __VA_ARGS__)
+   #define VIDEO_MODE_ATTRIBUTE_2_(GLYPH_TYPE, attribute_type)  \
+      VIDEO_MODE_GENERIC_(                                      \
+         1,                                                     \
+         _Generic((GLYPH_TYPE){0},                              \
+            Glyph8:   PIXELS_2x4,                               \
+            Glyph16:  PIXELS_4x4,                               \
+            Glyph32:  PIXELS_4x8,                               \
+            Glyph64:  PIXELS_8x8,                               \
+            Glyph128: PIXELS_8x16,                              \
+            Glyph256: PIXELS_16x16                              \
+         ),                                                     \
+         (attribute_type)                                       \
+      )
+   #define VIDEO_MODE_ATTRIBUTE_1_(GLYPH_TYPE)                  \
+      VIDEO_MODE_ATTRIBUTE_2_(GLYPH_TYPE, ATTRIBUTE_COLORS_16 | \
+         _Generic((GLYPH_TYPE){0},                              \
+            Glyph8:   PIXELS_2x4,                               \
+            Glyph16:  PIXELS_4x4,                               \
+            Glyph32:  PIXELS_4x8,                               \
+            Glyph64:  PIXELS_8x8,                               \
+            Glyph128: PIXELS_8x8,                               \
+            Glyph256: PIXELS_8x8                                \
+         ) << 2                                                 \
+      )
 
 
 //------------------------------------------------------------------------------
@@ -215,8 +257,8 @@ int VIDEO_MODE_ATTRIBUTE_SIMPLE(enum VideoElementPixelSize size,
 //------------------------------------------------------------------------------
 
 // In attribute modes, return the VIDEO_MODE attributes' type
-static inline enum AttributeType
-AttributeType(void) {
+static inline enum AttributeColorType
+AttributeColorType(void) {
    // assert(VideoModeHasAttributes());
    return VIDEO_MODE & 3;
 }
@@ -227,7 +269,7 @@ static inline int VideoModeLog2NumberOfColors()
 {
    // Attribute modes
    if (VideoModeHasAttributes())
-      return (AttributeType() == ATTRIBUTE_16C)? 4 : 8; // 16 or 256
+      return (AttributeColorType() == ATTRIBUTE_COLORS_16)? 4 : 8; // 16 or 256
 
    int n = VideoModeLowNibble();
    return (n <= 8)? n : (1 << (n - 8));
@@ -290,41 +332,16 @@ static inline int VideoModeLog2NumberOfColors()
    (VIDEO_MODE > 113 && VIDEO_MODE <= 120)
 
 
-
-
 // Return VIDEO_MODE's bit per pixel element
 // Notes: only valid in bitplanes modes (Glyph bitplanes or Pixels bitplanes)
 static inline int VideoModeNumberOfPlanes(void)
 {  assert(VideoModeHasBitPlanes());
    return VIDEO_MODE & 0xF; }
 
-
-/* TODO: REMOVE, see similar function color.h
-// Return the number of possible colors that can be put in the framebuffer
-static inline int VideoModeNumberOfColors()
-{
-   // Attribute modes
-   if (VideoModeHasAttributes())
-      return (AttributeType() == ATTRIBUTE_16C)? 16 : 256;
-
-   int n = VideoModeLowNibble();
-   return 1 << ((n <= 8)? n : (1 << (n - 8)));
-   // this is equivalent to:
-   // switch (n) {
-   //   1-8: planar mode give 2^n color  --> = 1 << n
-   //     9: quarter chunk ->   4 colors --> = 1 << (1<<1) = 1 << (1 << n-8)
-   //    10: nibble chunk  ->  16 colors --> = 1 << (1<<2) = 1 << (1 << n-8)
-   //    11: byte          -> 256 colors --> = 1 << (1<<3) = 1 << (1 << n-8)
-   // }
-}
-*/
-
 // Return VIDEO_MODE's log2 of bit per pixel of element
 // Notes: only valid in chunky modes (Tiles or Pixels)
 static inline int VideoModeBitsPerPixelLog2(void)
 { return (VIDEO_MODE & 0xF) - 8; }
-
-
 
 // Return VIDEO_MODE attributes' pixel size
 // Notes: - return is <= PIXEL_8x8

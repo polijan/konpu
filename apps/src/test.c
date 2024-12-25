@@ -1,3 +1,7 @@
+
+// FIXME: Seeting up the VIDEO_MODE doesn't work. Find Out why.
+// #define KONPU_OPTION_OPTIMIZE_VIDEO_MODE 221
+
 #include "konpu.h"
 int AppInit(void); // TODO: add this in the generated konpu.h ???
 
@@ -18,16 +22,11 @@ int AppInit(void)
    Glyph256 sstoki    = { 0xC131496A320418E0, 0x1F20404040201807,
                           0x00F00C028241C141, 0x00030C1013242724 };
 
-   // Change Border color for fun!
-
- // VideoSetMode(VIDEO_MODE_ATTRIBUTE(PIXELS_16x16, PIXELS_8x8, ATTRIBUTE_FG256C));
-VideoSetMode(217);
+VideoSetMode(VIDEO_MODE_ATTRIBUTE(Glyph256, ATTRIBUTE_8x8_FG256));
+//VideoSetMode(217);
 //VideoSetMode(223); // weird modes with 24x15 glyph256
-//VideoSetMode(221/ 222); // weird modes with 25x16 glyph256
-
 
 //VideoSetMode(209);
-
 
 //   VideoSetMode(185);
 //   VideoSetMode(176);

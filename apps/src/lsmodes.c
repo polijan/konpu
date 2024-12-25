@@ -37,7 +37,7 @@ int AppInit(void)
          Printer("glyphs(%d) & attributes(%d / %s)",
                   8 * (1 << elem_size),
                   8 * (1 << VideoModeAttributePixelSize()),
-                  attr_type[AttributeType()]
+                  attr_type[AttributeColorType()]
                );
 
       } else if ((VIDEO_MODE & 0xF) > 8) {
