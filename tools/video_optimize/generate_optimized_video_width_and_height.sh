@@ -19,7 +19,7 @@ define() {
 end() {
     echo   '#     else'
     echo   '#        error "KONPU_OPTION_OPTIMIZE_VIDEO_MODE has invalid value"'
-    echo   '#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO'
+    echo   '#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO_MODE'
     echo   '#  endif'
 }
 
