@@ -22,6 +22,7 @@ printf '// Single header file for ilo Konpu.\n\n'
 printf '#ifndef  KONPU_H\n'
 printf '#define  KONPU_H\n'
 
+# API Includes
 include  config.h platform.h c.h \
          util.h options.h \
          var.h memory.h \
@@ -30,6 +31,9 @@ include  config.h platform.h c.h \
          error.h heap.h stack.h \
          \
          printer.h
+
+# Extra Resources
+include  glyph_patterns_8x8.me.h
 
 hr
 printf '\n#endif //KONPU_H\n'
