@@ -271,27 +271,23 @@ static inline Glyph256 *VideoGlyph256_3_(int x, int y, int plane)
 // Access to Attributes
 //------------------------------------------------------------------------------
 
-// Return the offset in the VIDEO_FRAMEBUFFER at which starts the attributes.
-// Note: - Video must be in an attribute mode.
-//       - This also corresponds to size in bytes occupied by all the Glyphs.
-static inline int VideoAttributeOffset(void)
+// Same as `VideoAttributeOffset()`, but assumes video is in attribute mode.
+static inline int VideoAttributeOffset_(void)
 {
-
+   assert(VideoModeHasAttributes());
 #if INT_WIDTH <  32
    return ((int32_t)VIDEO_WIDTH * (int32_t)VIDEO_HEIGHT) >> 3;
 #else
    return (VIDEO_WIDTH * VIDEO_HEIGHT) >> 3;
 #endif
-
-/* this can be smaller if VIDEO_WIDTH or/and VIDEO_HEIGHT not dividble by 16
-   which means the glyph grid is not a fit for an integer number of Glyph128 or
-   Glyph256. Anyway (VIDEO_WIDTH * VIDEO_HEIGHT)/8 should be good.
-   assert(VideoModeHasAttributes());
-   return ( (VIDEO_WIDTH >> VideoGlyphLog2Width())
-          * (VIDEO_HEIGHT >> VideoGlyphLog2Height())
-          ) << VideoModeElementDescriptor();
-*/
 }
+
+// Return the offset in the VIDEO_FRAMEBUFFER where the attributes start, or
+// if not in attribute mode, return the end of the framebuffer.
+// Note: in attribute mode, the return value also corresponds to size in bytes
+//       occupied by all the Glyphs.
+static inline int VideoAttributeOffset(void)
+{ return VideoModeHasAttributes() ? VideoAttributeOffset_() : VIDEO_SIZE; }
 
 
 // Same as function `VideoAttribute`, but no bounds checking.
