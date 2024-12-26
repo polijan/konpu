@@ -96,7 +96,7 @@ static inline int32_t AddressOf(void *pointer)
 //------------------------------------------------------------------------------
 #define VIDEO_SIZE_LCM_                  2880 // (see: tools/resfinder)
 #ifndef VIDEO_SIZE_FACTOR_
-#   define VIDEO_SIZE_FACTOR_            5    // implemented: 7,6,5,4,3,2
+#   define VIDEO_SIZE_FACTOR_            4    // implemented: 7,6,5,4,3,2
 #endif
 #define VIDEO_SIZE                       (VIDEO_SIZE_FACTOR_ * VIDEO_SIZE_LCM_)
 //
