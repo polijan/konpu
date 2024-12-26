@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 
-#define DEFAULT_ZOOM  2
+#define DEFAULT_ZOOM  3
 #define DEFAULT_APP  "apps/lib/test.so"
    // "apps/lib/lsmodes.so"
 
