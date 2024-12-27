@@ -7,38 +7,38 @@
 // depending on the video mode (see: video_mode.h)
 #include "video_mode.h"
 
-// In attribute modes, returns the log2 of an attribute's pixel width.
+
+// In attribute modes, returns the attributes pixel size.
+// Note: Return value is one of: PIXELS_2x4, PIXELS_4x4, PIXELS_4x8, PIXELS_8x8.
+static inline enum VideoElementPixelSize
+AttributePixelSize(void)
+{ return (VIDEO_MODE >> 2) & 3; }
+
+// In attribute modes, returns the log2 of an attributes' pixel width.
 // Thus, the width of an attribute is: 1 << AttributeWidthLog2().
 #define AttributeWidthLog2()     (((VIDEO_MODE >> 2 & 3) + 3) >> 1)
    //                            VIDEO_MODE's attr size: |0|1|2|3|
    //                            log2(attribute height): |1|2|2|3|
    //                            thus, we apply (x+3)/2 to attr size.
 
-// In attribute modes, returns the log2 of an attribute's pixel height.
+// In attribute modes, returns the log2 of an attributes' pixel height.
 // Thus, the height of an attribute is: 1 << AttributeHeightLog2().
 #define AttributeHeightLog2()    (2 + (VIDEO_MODE >> 3 & 1))
    //                            VIDEO_MODE's attr size: |0|1|2|3|
    //                            log2(attribute height): |2|2|3|3|
    //                            thus, we apply 2+x/2 to attr size.
 
-// In attribute modes, returns the log2 of size in byte of an attribute.
-// This return is 0 (for one-byte  attributes)
-//             or 1 (for "wide" two-bytes attributes),
-// and the number of required bytes is 1 << AttributeSizeofLog2().
-#define AttributeSizeofLog2()    ((VIDEO_MODE & 3) == ATTRIBUTE_COLORS_256)
-// TODO: maybe I should change name to: AttributeIsTwoBytes() [Is or Has]
+// In attribute modes, returns 0 if attributes point to one byte,
+//                          or 1 if they point to two bytes.
+// Note: The return value also represents the log2 of the size in bytes
+//       that attributes point to.
+#define AttributeHasTwoBytes()   ((VIDEO_MODE & 3) == ATTRIBUTE_COLORS_256)
 
 
-// TODO
-//
-// - Are those Needed??? // faster than 1 << AttributeHeightLog2()
-//   #define AttributeHeight()        (4 << (VIDEO_MODE >> 3 & 1))
-//   #define AttributeWidth()         ???
-//   #define AttributeSizeof()        (VIDEO_MODE & 3)    ???
-//
-// - There is still in VideoModeAttributePixelSize() in video_mode.h
-
-
+// TODO - Are those Needed???
+// #define AttributeWidth()       ???
+// #define AttributeHeight()     (4 << (VIDEO_MODE >> 3 & 1))
+//                               // ^-- faster than 1 << AttributeHeightLog2()
 
 
 #include "color.h"
@@ -98,7 +98,7 @@ static inline void AttributeSet(uint8_t *attr, int fg_color, int bg_color)
       case ATTRIBUTE_COLORS_16:    *attr = (fg_color << 4) | bg_color; break;
       case ATTRIBUTE_COLORS_FG256: *attr = fg_color; break;
       case ATTRIBUTE_COLORS_BG256: *attr = bg_color; break;
-      case ATTRIBUTE_COLORS_256:    attr[0] = fg_color; attr[1] = bg_color; break;
+      case ATTRIBUTE_COLORS_256: attr[0] = fg_color; attr[1] = bg_color; break;
       default: unreachable();
    }
 }
@@ -108,9 +108,12 @@ static inline void AttributeReverse(uint8_t *attr)
 {
    uint8_t tmp;
    switch (AttributeColorType()) {
-      case ATTRIBUTE_COLORS_16:    *attr = (*attr << 4) | (*attr >> 4); break;
-      case ATTRIBUTE_COLORS_256:    tmp = attr[0]; attr[1] = attr[0]; attr[0] = tmp;
-                              break;
+      case ATTRIBUTE_COLORS_16:
+         *attr = (*attr << 4) | (*attr >> 4);
+         break;
+      case ATTRIBUTE_COLORS_256:
+         tmp = attr[0]; attr[1] = attr[0]; attr[0] = tmp;
+         break;
       // We can't video reverse those:
       case ATTRIBUTE_COLORS_FG256:  break;
       case ATTRIBUTE_COLORS_BG256:  break;

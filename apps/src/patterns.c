@@ -32,30 +32,23 @@ static const uint64_t pattern[] = {
 
 int AppInit(void)
 {
-   VideoSetMode(VIDEO_MODE_ATTRIBUTE(Glyph64, ATTRIBUTE_8x8_FG256));
+   VideoSetMode(VIDEO_MODE_ATTRIBUTE(Glyph64, ATTRIBUTE_8x8_16));
 
-   // Set Attributes
-   // (TODO, maybe we'd have and use a VideoClearAttributes() function instead)
-   int attr_offset = VideoAttributeOffset();
-   memset(VIDEO_FRAMEBUFFER + attr_offset, 172, VIDEO_SIZE - attr_offset);
-
+   // Set some Pattern as initial glyphs and show it
+   VideoAttributeSetAll();
+   VideoGlyphSetAll(GLYPH64_PATTERN_WAVES_ZIGZAG_BOLD_SHADED);
+   VideoRender();
+   SLEEP(2);
 
    int number_of_glyphs = (VIDEO_WIDTH  >> VideoGlyphLog2Width())
                         * (VIDEO_HEIGHT >> VideoGlyphLog2Height());
    Glyph64 soweli = 0x001515204054403E;
-   Glyph64 g = GLYPH64_PATTERN_WAVES_ZIGZAG_BOLD_SHADED;
-
-   // Set some Pattern as initial glyphs and show it
-   for (int j = 0; j < number_of_glyphs; j++) {
-      VIDEO_FRAMEBUFFER_AS(Glyph64)[j] = g;
-   }
-   VideoRender();
-   SLEEP(2);
 
    // Cycle through patterns
    for (int i = 0; i < 5 * UTIL_ARRAY_SIZE(pattern); i++) {
 
       // Select a Glyph pattern
+      Glyph64 g;
       int n = i % (2 * UTIL_ARRAY_SIZE(pattern));
       if (n < UTIL_ARRAY_SIZE(pattern)) {
          g = pattern[n];

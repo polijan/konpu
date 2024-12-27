@@ -11,15 +11,15 @@ int AppInit(void)
    const char *attr_type[] = {"fg16/bg16", "fg256", "bg256", "fg256+bg256"};
 
    int valid = 0;
-   Printer("Mode Sz8x8   Res.    Description\n");
-//   Printer("255   64   ...x...   ...\n");
+   Printer("Mode Sz8x8   Res.  #Colors Description\n");
    for (int i = 0; i < 255; i++) {
       int nbytes = VideoModeResolution(i);
       if (nbytes == 0) continue;
 
       valid++;
       VideoSetMode(i);
-      Printer("%3d   %2d   %3dx%3d   ", i, nbytes, VIDEO_WIDTH, VIDEO_HEIGHT);
+      Printer("%3d   %2d   %3dx%3d   %3d   ",
+         i, nbytes, VIDEO_WIDTH, VIDEO_HEIGHT, 1 << VideoColorDepth());
 
 
       unsigned elem_size = VideoModeElementDescriptor();
@@ -36,7 +36,7 @@ int AppInit(void)
       if (VideoModeHasAttributes()) {
          Printer("glyphs(%d) & attributes(%d / %s)",
                   8 * (1 << elem_size),
-                  8 * (1 << VideoModeAttributePixelSize()),
+                  8 * (1 << AttributePixelSize()),
                   attr_type[AttributeColorType()]
                );
 

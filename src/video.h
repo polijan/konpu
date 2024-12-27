@@ -44,6 +44,104 @@ static inline uint8_t *VideoPlane(int n)
 #define VideoPlaneAs(TYPE_NAME, n) ((TYPE_NAME *)VideoPlane((n)))
 
 //------------------------------------------------------------------------------
+// Access to Attributes
+//------------------------------------------------------------------------------
+
+// Same as `VideoAttributeOffset()`, but assumes video is in attribute mode.
+static inline int VideoAttributeOffset_(void)
+{
+   assert(VideoModeHasAttributes());
+#if INT_WIDTH < 32
+   return ((int32_t)VIDEO_WIDTH * (int32_t)VIDEO_HEIGHT) >> 3;
+#else
+   return (VIDEO_WIDTH * VIDEO_HEIGHT) >> 3;
+#endif
+}
+
+// Return the offset in the VIDEO_FRAMEBUFFER where the attributes start, or
+// if not in attribute mode, return the end of the framebuffer.
+// Note: in attribute mode, the return value also corresponds to size in bytes
+//       occupied by all the Glyphs.
+static inline int VideoAttributeOffset(void)
+{
+   return VideoModeHasAttributes() ? VideoAttributeOffset_() : VIDEO_SIZE;
+}
+
+// Same as function `VideoAttribute`, but no bounds checking.
+static inline uint8_t *VideoAttribute_(int x, int y)
+{
+   assert(x >= 0 && x < (VIDEO_WIDTH >> AttributeWidthLog2()));
+   assert(y >= 0 && y < (VIDEO_HEIGHT >> AttributeHeightLog2()));
+
+   int index = x + y * (VIDEO_WIDTH >> AttributeWidthLog2());
+   return VIDEO_FRAMEBUFFER + VideoAttributeOffset() + (index << AttributeHasTwoBytes());
+}
+
+// uint8_t *VideoAttribute(int x, int y);
+// Return the Attribute pointer at glyph coordinates (x,y) in the video
+// framebuffer.
+// - The video framebuffer should be in attribute modes.
+// - Bounds checking: if the (x,y) attribute coordinates are outside the bounds
+//   of the screen, they will be clamped to the nearest valid edge.
+static inline uint8_t *VideoAttribute(int x, int y)
+{
+   UtilClampCoordinate(&x, VIDEO_WIDTH >> AttributeWidthLog2());
+   UtilClampCoordinate(&y, VIDEO_HEIGHT >> AttributeHeightLog2());
+   return VideoAttribute_(x, y);
+}
+
+// Same as function `VideoAttributeAtPixel`, but no bounds checking.
+static inline uint8_t *VideoAttributeAtPixel_(int x, int y)
+{
+   assert(x >= 0 && x < VIDEO_WIDTH);
+   assert(y >= 0 && y < VIDEO_HEIGHT);
+   return VideoAttribute_(x >> AttributeWidthLog2(),
+                          y >> AttributeHeightLog2());
+}
+
+// Return a pointer to the attribute located under the pixel (x,y). If the pixel
+// (x,y) is out of the screen, it will first be clamped to the screen edge.
+static inline uint8_t *VideoAttributeAtPixel(int x, int y)
+{
+   UtilClampCoordinate(&x, VIDEO_WIDTH);
+   UtilClampCoordinate(&y, VIDEO_HEIGHT);
+   return VideoAttributeAtPixel_(x, y);
+}
+
+// void VideoAttributeSetAll();
+// void VideoAttributeSetAll(int attribute_byte);
+// void VideoAttributeSetAll(int fg, int bg);
+// Set all the attributes of the video framebuffer to a given value.
+// - no arguments: set to default fg and bg
+// - one argument: set to the given byte (Attribute must point to a single byte)
+// - two arguments: set to the given fg and bg colors.
+#define VideoAttributeSetAll(...) \
+   UTIL_OVERLOAD(VideoAttributeSetAll, __VA_ARGS__)
+static inline void VideoAttributeSetAll_1_(int byte)
+{
+   int start = VideoAttributeOffset();
+   memset(VIDEO_FRAMEBUFFER + start, byte, VIDEO_SIZE - start);
+}
+static inline void VideoAttributeSetAll_2_(int fg, int bg)
+{
+   if (AttributeHasTwoBytes()) {
+      union {
+         uint16_t u8[8];
+         uint64_t u64;
+      } mem = {.u8 = {fg, bg, fg, bg, fg, bg, fg, bg}};
+      int offset = VideoAttributeOffset();
+      uint8_t *attributes = VIDEO_FRAMEBUFFER + offset;
+      int end = (VIDEO_SIZE - offset) >> 3;
+      for (int i = 0; i < end; i++)
+         ((uint64_t *)attributes)[i] = mem.u64;
+   } else {
+      VideoAttributeSetAll_1_(fg << 4 | bg);
+   }
+}
+#define VideoAttributeSetAll_0_() \
+   VideoAttributeSetAll_2_(COLOR_DEFAULT_FG, COLOR_DEFAULT_BG)
+
+//------------------------------------------------------------------------------
 // Access to Glyphs
 //------------------------------------------------------------------------------
 
@@ -68,7 +166,6 @@ static inline uint8_t *VideoPlane(int n)
 // #define VideoGlyphLog2Height()  (2 + (VIDEO_MODE >> 5 & 3))
 // However, it's perhaps best to have the same operations than in the element
 // descriptor and Log2Width, so the compiler sees similarites and optimize?
-
 
 // Glyph *VideoGlyph(int x, int y, [plane[=0]]);
 // Return the Glyph at glyph coordinates (x,y) in the video framebuffer.
@@ -267,71 +364,69 @@ static inline Glyph256 *VideoGlyph256_3_(int x, int y, int plane)
    return VideoGlyph256__3_(x, y, plane);
 }
 
-//------------------------------------------------------------------------------
-// Access to Attributes
-//------------------------------------------------------------------------------
+// Clear the glyphs in the Framebuffer (ie set them all to zero)
+#define VideoGlyphClear() \
+   memset(VIDEO_FRAMEBUFFER, 0, VideoAttributeOffset());
 
-// Same as `VideoAttributeOffset()`, but assumes video is in attribute mode.
-static inline int VideoAttributeOffset_(void)
+// TODO, make it: void VideoGlyphSetAll([Glyph<...> glyph]), [int plane = 0]]);
+//       it could accept up to two args.
+//
+// void VideoGlyphSetAll([Glyph glyph)
+// Set all the glyphs of the video framebuffer to the given one.
+// If no argument is given, "clear" all the glyphs (ie. then set them all to 0).
+#define VideoGlyphSetAll(...) \
+   UTIL_OVERLOAD(VideoGlyphSetAll, __VA_ARGS__)
+#define VideoGlyphSetAll_0_() \
+   memset(VIDEO_FRAMEBUFFER, 0, VideoAttributeOffset())
+#define VideoGlyphSetAll_1_(glyph)        \
+   _Generic((glyph),                      \
+       uint8_t: VideoGlyphSetAll_1_8_,    \
+       uint16_t: VideoGlyphSetAll_1_16_,  \
+       uint32_t: VideoGlyphSetAll_1_32_,  \
+       uint64_t: VideoGlyphSetAll_1_64_,  \
+       Glyph128: VideoGlyphSetAll_1_128_, \
+       Glyph256: VideoGlyphSetAll_1_256_)((glyph))
+static inline void VideoGlyphSetAll_1_64_(uint64_t g)
 {
-   assert(VideoModeHasAttributes());
-#if INT_WIDTH <  32
-   return ((int32_t)VIDEO_WIDTH * (int32_t)VIDEO_HEIGHT) >> 3;
-#else
-   return (VIDEO_WIDTH * VIDEO_HEIGHT) >> 3;
-#endif
+   int end = VideoAttributeOffset() >> PIXELS_8x8;
+   for (int i = 0; i < end; i++)
+      VIDEO_FRAMEBUFFER_AS(uint64_t)[i] = g;
 }
-
-// Return the offset in the VIDEO_FRAMEBUFFER where the attributes start, or
-// if not in attribute mode, return the end of the framebuffer.
-// Note: in attribute mode, the return value also corresponds to size in bytes
-//       occupied by all the Glyphs.
-static inline int VideoAttributeOffset(void)
-{ return VideoModeHasAttributes() ? VideoAttributeOffset_() : VIDEO_SIZE; }
-
-
-// Same as function `VideoAttribute`, but no bounds checking.
-static inline uint8_t *VideoAttribute_(int x, int y)
+static inline void VideoGlyphSetAll_1_16_(uint16_t g)
 {
-   assert(x >= 0 && x < (VIDEO_WIDTH >> AttributeWidthLog2()));
-   assert(y >= 0 && y < (VIDEO_HEIGHT >> AttributeHeightLog2()));
-
-   int index = x + y * (VIDEO_WIDTH >> AttributeWidthLog2());
-   return VIDEO_FRAMEBUFFER + VideoAttributeOffset() + (index << AttributeSizeofLog2());
+   union {
+      uint16_t u16[4];
+      uint64_t u64;
+   } mem = {.u16 = {g, g, g, g}};
+   VideoGlyphSetAll_1_64_(mem.u64);
 }
-
-// uint8_t *VideoAttribute(int x, int y);
-// Return the Attribute pointer at glyph coordinates (x,y) in the video
-// framebuffer.
-// - The video framebuffer should be in attribute modes.
-// - Bounds checking: if the (x,y) attribute coordinates are outside the bounds
-//   of the screen, they will be clamped to the nearest valid edge.
-static inline uint8_t *VideoAttribute(int x, int y)
+static inline void VideoGlyphSetAll_1_32_(uint32_t g)
 {
-   UtilClampCoordinate(&x, VIDEO_WIDTH >> AttributeWidthLog2());
-   UtilClampCoordinate(&y, VIDEO_HEIGHT >> AttributeHeightLog2());
-   return VideoAttribute_(x, y);
+   union {
+      uint16_t u32[2];
+      uint64_t u64;
+   } mem = {.u32 = {g, g}};
+   VideoGlyphSetAll_1_64_(mem.u64);
 }
-
-
-// Same as function `VideoAttributeAtPixel`, but no bounds checking.
-static inline uint8_t *VideoAttributeAtPixel_(int x, int y)
+static inline void VideoGlyphSetAll_1_8_(uint8_t g)
 {
-   assert(x >= 0 && x < VIDEO_WIDTH);
-   assert(y >= 0 && y < VIDEO_HEIGHT);
-   return VideoAttribute_(x >> AttributeWidthLog2(),
-                          y >> AttributeHeightLog2());
+   // Would calling VideoGlyphSetAll_1_64_ be faster or slower than memset?
+   memset(VIDEO_FRAMEBUFFER, g, VideoAttributeOffset());
 }
-
-// Return a pointer to the attribute located under the pixel (x,y). If the pixel
-// (x,y) is out of the screen, it will first be clamped to the screen edge.
-static inline uint8_t *VideoAttributeAtPixel(int x, int y)
+static inline void VideoGlyphSetAll_1_128_(Glyph128 g)
 {
-   UtilClampCoordinate(&x, VIDEO_WIDTH);
-   UtilClampCoordinate(&y, VIDEO_HEIGHT);
-   return VideoAttributeAtPixel_(x, y);
+   // We're not 100% sure to have an exact number of Glyph128
+   int end = VideoAttributeOffset() >> PIXELS_8x16;
+   for (int i = 0; i < end; i++)
+      VIDEO_FRAMEBUFFER_AS(Glyph128)[i] = g;
 }
-
+static inline void VideoGlyphSetAll_1_256_(Glyph256 g)
+{
+   // We're not 100% sure to have an exact number of Glyph256
+   int end = VideoAttributeOffset() >> PIXELS_16x16;
+   for (int i = 0; i < end; i++)
+      VIDEO_FRAMEBUFFER_AS(Glyph256)[i] = g;
+}
 
 //------------------------------------------------------------------------------
 // Tile Modes (TODO)
@@ -339,21 +434,12 @@ static inline uint8_t *VideoAttributeAtPixel(int x, int y)
 
 // Tile *VideoTile(int x, int y, [int plane[=0]]);
 
-// TODO
+// VideoTileSetAll(...)
+
 
 //------------------------------------------------------------------------------
 // Access to Pixels bytes (in pixel modes)
 //------------------------------------------------------------------------------
-
-// Return the log2 of the pixel depth (aka bpp, or bit per pixel)
-static inline int VideoPixelsBppLog2(void)
-{
-   assert(VideoModeHasPixels());
-   int n = VideoModeLowNibble();
-   return (n <= 8) ? 0 : (n - 8);
-}
-
-
 
 #ifdef KONPU_OPTION_OPTIMIZE_VIDEO_MODE
 // Same as function `VideoGetPixel`, but no bounds checking.
@@ -498,7 +584,7 @@ static inline int VideoGetPixel_inline_(int x, int y)
       // Look for the attribute under the pixel
       w = AttributeWidthLog2();
       h = AttributeHeightLog2();
-      int s = AttributeSizeofLog2();
+      int s = AttributeHasTwoBytes();
       x >>= w;
       y >>= h;
       uint8_t *attr = VIDEO_FRAMEBUFFER + attr_offset
@@ -638,10 +724,8 @@ static inline void VideoRenderToARGB(uint32_t *frame_out, int alpha)
    const uint32_t A = (uint32_t)alpha << 24;
    const uint8_t *palette = ColorPalette();
 
-   for (int y = 0; y < VIDEO_HEIGHT; y++)
-   {
-      for (int x = 0; x < VIDEO_WIDTH; x++)
-      {
+   for (int y = 0; y < VIDEO_HEIGHT; y++) {
+      for (int x = 0; x < VIDEO_WIDTH; x++) {
          const int color = VideoGetPixel_(x, y);
          const uint8_t *rgb = COLOR_RGB((palette != NULL) ? palette[color] : color);
          *frame_out++ = A | (rgb[0] << 16) | (rgb[1] << 8) | rgb[2];
@@ -671,10 +755,8 @@ static inline void VideoRenderToRGB(void *buffer)
    uint8_t *frame = buffer;
    const uint8_t *palette = ColorPalette();
 
-   for (int y = 0; y < VIDEO_HEIGHT; y++)
-   {
-      for (int x = 0; x < VIDEO_WIDTH; x++)
-      {
+   for (int y = 0; y < VIDEO_HEIGHT; y++) {
+      for (int x = 0; x < VIDEO_WIDTH; x++) {
          const int color = VideoGetPixel_(x, y);
          const uint8_t *rgb = COLOR_RGB((palette != NULL) ? palette[color] : color);
          memcpy(frame, rgb, 3);

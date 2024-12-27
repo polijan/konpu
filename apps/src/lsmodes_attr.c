@@ -24,7 +24,7 @@ int AppInit(void)
          8 * (1 << elem_sz), (elem_sz == 0)? "  " : ((elem_sz < 4)? " " : ""),
          VideoAttributeOffset(),
          VIDEO_WIDTH  >> AttributeWidthLog2(), VIDEO_HEIGHT >> AttributeHeightLog2(),
-         elem_size_str[VideoModeAttributePixelSize()],
+         elem_size_str[AttributePixelSize()],
          attr_color_type[AttributeColorType()]
       );
 

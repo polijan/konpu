@@ -31,14 +31,14 @@ static const char *testVideoModes(void)
             glyph_sz
          );
          // ... and then the attributes
-         int attr_sz = (1 << AttributeSizeofLog2()) // <- 1 or 2 bytes
+         int attr_sz = (1 << AttributeHasTwoBytes()) // <- 1 or 2 bytes
                      * VIDEO_WIDTH   / (1 << AttributeWidthLog2())
                      * VIDEO_HEIGHT  / (1 << AttributeHeightLog2());
          TestTrace("+ attr%02d[%3dx%3d]x%d:%5d ",
-            8 * (1 << VideoModeAttributePixelSize()),
+            8 * (1 << AttributePixelSize()),
             VIDEO_WIDTH  / (1 << AttributeWidthLog2()),
             VIDEO_HEIGHT / (1 << AttributeHeightLog2()),
-            1 <<  AttributeSizeofLog2(),
+            1 <<  AttributeHasTwoBytes(),
             attr_sz
          );
 

@@ -31,10 +31,12 @@
 // ```
 static inline uint8_t *ColorPalette()
 {
-   int offset = VideoModeLog2NumberOfColors();
+   int offset = VideoColorDepth();
    switch(offset) {
       case 8:  return NULL;        // 256 colors
+#if (VIDEO_SIZE_FACTOR_ % 7 != 0)
       case 7:  offset  = 0; break; // 128 color palette
+#endif
       default: offset -= 2; break; // 2,4,8,16,32,64 color palettes
    }
    return KonpuMemory + COLOR_PALETTE_ADDRESS + offset;

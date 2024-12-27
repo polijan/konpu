@@ -13,7 +13,6 @@ int AppInit(void); // TODO: add this in the generated konpu.h ???
       (void)ignored;                      \
    } while(0)
 
-
 int AppInit(void)
 {
    Glyph64  soweli    = 0x001515204054403E;
@@ -23,6 +22,7 @@ int AppInit(void)
                           0x00F00C028241C141, 0x00030C1013242724 };
 
 VideoSetMode(VIDEO_MODE_ATTRIBUTE(Glyph256, ATTRIBUTE_8x8_FG256));
+ //VideoSetMode(VIDEO_MODE_GLYPH(Glyph128));
 //VideoSetMode(217);
 //VideoSetMode(223); // weird modes with 24x15 glyph256
 
@@ -36,16 +36,17 @@ VideoSetMode(VIDEO_MODE_ATTRIBUTE(Glyph256, ATTRIBUTE_8x8_FG256));
       VIDEO_SIZE_FACTOR_, VIDEO_MODE,
       VIDEO_WIDTH, VIDEO_HEIGHT,
       VIDEO_MODE_WIDTH_MAX, VIDEO_MODE_HEIGHT_MAX);
+   Printer("ColorDepth: %d\n", VideoColorDepth());
 
    Printer("Attributes: starts at %d\n", VideoAttributeOffset());
    Printer("  Log2(width) = %d, Log2(height) = %d, Log2Sizeof ) %d\n",
-      AttributeWidthLog2(), AttributeHeightLog2(), AttributeSizeofLog2());
+      AttributeWidthLog2(), AttributeHeightLog2(), AttributeHasTwoBytes());
    Printer("End       : %d\n", VIDEO_SIZE);
 
    COLOR_BORDER = 45;
-   for (int n = 0; n < VideoAttributeOffset(); n++) {
-      VIDEO_FRAMEBUFFER[n] = 0xff;
-   }
+   VideoGlyphSetAll(GLYPH8_FULL);
+   VideoGlyphSetAll(soweli);
+
    for (int n = VideoAttributeOffset(); n < VIDEO_SIZE; n++) {
       VIDEO_FRAMEBUFFER[n] = n % 256;
    }
@@ -62,11 +63,13 @@ VideoSetMode(VIDEO_MODE_ATTRIBUTE(Glyph256, ATTRIBUTE_8x8_FG256));
 
    COLOR_BORDER = 70;
    int number_of_attributes_bytes = ( (VIDEO_WIDTH  >> AttributeWidthLog2())
-                                  * (VIDEO_HEIGHT >> AttributeHeightLog2())
-                                  ) >> AttributeSizeofLog2();
+                                    * (VIDEO_HEIGHT >> AttributeHeightLog2())
+                                    ) >> AttributeHasTwoBytes();
    for (int n = 0; n < number_of_attributes_bytes; n++) {
       VIDEO_FRAMEBUFFER[n + VideoAttributeOffset()] = rand()%16 << 4;
-      if (n%8) VideoRender(); // SLEEP(0.1);
+      if (n % (VIDEO_WIDTH >> AttributeWidthLog2()) == 0) { // <-- once per line
+         VideoRender(); SLEEP(0.1);
+      }
       assert(n + VideoAttributeOffset() < VIDEO_SIZE);
    }
 
