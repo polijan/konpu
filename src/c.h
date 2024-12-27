@@ -196,11 +196,12 @@
       UTIL_HAS_COMMA(UTIL_PASTE5_(UTIL_IS_EMPTY_CASE_, _0, _1, _2, _3))
 
 // UTIL_COUNT_ARGUMENTS: Expands to the number of its arguments (works up to 50)
-#define  UTIL_COUNT_ARGUMENTS(...)                    \
-   UTIL_IF(UTIL_IS_EMPTY(__VA_ARGS__),                \
-      UTIL_IS_EMPTY, /* will return 0 in that case */ \
-      UTIL_COUNT_ARGUMENTS_NONZERO_    /* see below*/ \
+#define  UTIL_COUNT_ARGUMENTS(...)                 \
+   UTIL_IF(UTIL_IS_EMPTY(__VA_ARGS__),             \
+      UTIL_COUNT_ARGUMENTS_ZERO_,    /* 0 */       \
+      UTIL_COUNT_ARGUMENTS_NONZERO_  /*see below*/ \
    )(__VA_ARGS__)
+#  define UTIL_COUNT_ARGUMENTS_ZERO_()    0
    // This is what I used before, but it also outputs 1 in case of zero args, so
    // it's now supplemented by an IS_EMPTY utility borrowed from P99 (see below)
 #  define UTIL_COUNT_ARGUMENTS_NONZERO_(...)                                   \
