@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Usage: $0
+
+TTY=$(tty)
+[ -n "$TTY" ] || exit 1
+stty -echo
+
+printf '\033[H\033[2J'
+printf '\033[7mKonpu Printer\033[m - Use it with konpu --printer %s\n\n' "$TTY"
+
+sleep 31622400 # sleep for 366 days
