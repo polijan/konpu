@@ -11,8 +11,7 @@
 // In attribute modes, returns the attributes pixel size.
 // Note: Return value is one of: PIXELS_2x4, PIXELS_4x4, PIXELS_4x8, PIXELS_8x8.
 static inline enum VideoElementPixelSize
-AttributePixelSize(void)
-{ return (VIDEO_MODE >> 2) & 3; }
+AttributePixelSize(void)         { return (VIDEO_MODE >> 2) & 3; }
 
 // In attribute modes, returns the log2 of an attributes' pixel width.
 // Thus, the width of an attribute is: 1 << AttributeWidthLog2().
@@ -106,13 +105,12 @@ static inline void AttributeSet(uint8_t *attr, int fg_color, int bg_color)
 // Swap the foreground and background colors of an attribute (if it's possible)
 static inline void AttributeReverse(uint8_t *attr)
 {
-   uint8_t tmp;
    switch (AttributeColorType()) {
       case ATTRIBUTE_COLORS_16:
          *attr = (*attr << 4) | (*attr >> 4);
          break;
       case ATTRIBUTE_COLORS_256:
-         tmp = attr[0]; attr[1] = attr[0]; attr[0] = tmp;
+         ; uint8_t tmp = attr[0]; attr[1] = attr[0]; attr[0] = tmp;
          break;
       // We can't video reverse those:
       case ATTRIBUTE_COLORS_FG256:  break;
