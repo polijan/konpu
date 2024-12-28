@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# Usage: $0
+# 
+
+exists() { command -v "$@" > /dev/null ;}
+
+pager() {
+   if exists fzf; then
+      fzf --prompt "ilo Konpu's video modes > "    \
+          --header-lines 1 --reverse --inline-info \
+          "$@"
+   elif exists less; then less
+   elif exists more; then more
+   else cat
+   fi
+}
+
+
+APP=$KONPU_HOME/apps/lib/lsmodes.so
+[ -f "$APP" ] || { printf 'Cannot find app %s\n' >&2; exit 1; }
+
+konpu --novideo --stdout --app "$APP" |
+grep '^\ *[0-9]\|^Mode' |
+pager "$@"
