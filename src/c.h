@@ -373,9 +373,9 @@ static_assert(sizeof(uint_least64_t) == 8);
 // trust the compiler to do the right thing. Abusing ALWAYS_INLINE can result in
 // code bloat and no performance gain.
 #if defined(__GNUC__)
-#   define C_HINT_ALWAYS_INLINE    __attribute__((always_inline))
+#   define C_HINT_ALWAYS_INLINE    inline __attribute__((always_inline))
 #elif defined(_MSC_VER)
-#   define C_HINT_ALWAYS_INLINE    __forceinline
+#   define C_HINT_ALWAYS_INLINE    inline __forceinline
 #else
 #   define C_HINT_ALWAYS_INLINE    inline
 #endif
