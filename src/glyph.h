@@ -1,25 +1,7 @@
 #ifndef  KONPU_GLYPH_H
 #define  KONPU_GLYPH_H
-#include "c.h"
+#include "bits.h"
 #include "video_mode.h"
-//------------------------------------------------------------------------------
-// TODO: move or inline this in function here that use it
-
-
-// As usual, an 8-bits chunk (0-255) is called a byte
-// a 4-bits chunk [0-15] is called a nibble
-// a 2-bits chunk [0-3] will be called a quarter
-// a bit {0,1} remains a bit.
-
-// Unsigned integers as "chunk" arrays, ie arrays of bytes, nibbles
-// (= 4-bits value), quarter (= a 2-bits chunk), or bits:
-#define BitsByteAt(bits, index)             (((bits) >> ((index) << 3)) & 0xFFu)
-#define BitsNibbleAt(bits, index)           (((bits) >> ((index) << 2)) & 0xFu)
-#define BitsQuarterAt(bits, index)          (((bits) >> ((index) << 1)) & 3u)
-#define BitsBitAt(bits, index)              (((bits) >> ((index)     )) & 1u)
-//------------------------------------------------------------------------------
-
-
 
 //------------------------------------------------------------------------------
 // Glyphs types and typedefs

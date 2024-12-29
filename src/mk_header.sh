@@ -24,7 +24,7 @@ printf '#define  KONPU_H\n'
 
 # API Includes
 include  config.h platform.h c.h \
-         util.h options.h \
+         bits.h util.h options.h \
          var.h memory.h \
          video_mode.h video_mode_auto.h glyph.h tile.h color.h attribute.h \
          video.h \
