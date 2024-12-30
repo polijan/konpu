@@ -6,12 +6,15 @@
 int AppInit(void); // TODO: add this in the generated konpu.h ???
 
 
+static const char *attr_color_type_str[] = {"16", "FG256", "BG256", "256"};
+static const char *elem_pixel_size_str[] = {"2x4", "4x4", "4x8", "8x8", "8x16", "16x16"};
+static const char *bpp_chunk_str[] = {"Quarter", "Nibble", "Byte"};
+
+
 int AppInit(void)
 {
-   const char *attr_type[] = {"fg16/bg16", "fg256", "bg256", "fg256+bg256"};
-
    int valid = 0;
-   Printer("Mode Sz8x8   Res.  #Colors Description\n");
+   Printer("Mode Sz8x8   Res.  #Colors Framebuffer content and layout\n");
    for (int i = 0; i < 255; i++) {
       int nbytes = VideoModeResolution(i);
       if (nbytes == 0) continue;
@@ -21,57 +24,67 @@ int AppInit(void)
       Printer("%3d   %2d   %3dx%3d   %3d   ",
          i, nbytes, VIDEO_WIDTH, VIDEO_HEIGHT, 1 << VideoColorDepth());
 
+      enum VideoElementPixelSize elem_size = VideoModeElementDescriptor();
+      int low_nibble = VideoModeLowNibble();
 
-      unsigned elem_size = VideoModeElementDescriptor();
-      const char *elem_size_str = "";
-      switch (elem_size) {
-         case PIXELS_2x4:   elem_size_str = "2x4";   break;
-         case PIXELS_4x4:   elem_size_str = "4x4";   break;
-         case PIXELS_4x8:   elem_size_str = "4x8";   break;
-         case PIXELS_8x8:   elem_size_str = "8x8";   break;
-         case PIXELS_8x16:  elem_size_str = "8x16";  break;
-         case PIXELS_16x16: elem_size_str = "16x16"; break;
-      }
-
+      // Attribute Modes -------------------------------------------------------
       if (VideoModeHasAttributes()) {
-         Printer("glyphs(%d) & attributes(%d / %s)",
-                  8 * (1 << elem_size),
-                  8 * (1 << AttributePixelSize()),
-                  attr_type[AttributeColorType()]
-               );
-
-      } else if ((VIDEO_MODE & 0xF) > 8) {
-
-         // Chunky Modes:
-         int bpp = 1 << ((VIDEO_MODE & 0xF) - 8);
-         const char *chunk = "";
-         switch (bpp) {
-            case 2: chunk = "Quarter"; break;
-            case 4: chunk = "Nibble";  break;
-            case 8: chunk = "Byte";    break;
-            default: assert(0); // wrong chuck
-         }
          if (elem_size == PIXELS) {
-            Printer("Chunky Pixels");
-            Printer(" (%d bpp (\"%s\") -> %d colors)", bpp, chunk, 1 << bpp);
+            Printer("Bit-Pixels (as %dx%d bytes)",
+               VIDEO_WIDTH >> 3, VIDEO_HEIGHT);
          } else {
-            Printer("Tile%s%d", chunk, 8 * bpp * (1 << elem_size));
-            Printer("(%s px, %d colors)", elem_size_str, 1 << bpp);
+            Printer("Glyph%d (%dx%d)",
+               8 << elem_size,
+               VIDEO_WIDTH  >> VideoGlyphLog2Width(),
+               VIDEO_HEIGHT >> VideoGlyphLog2Height());
+         }
+         Printer(" + ATTRIBUTE_%s_%s (%dx%d @offset %d)",
+            elem_pixel_size_str[AttributePixelSize()] ,
+            attr_color_type_str[AttributeColorType()] ,
+            VIDEO_WIDTH  >> AttributeWidthLog2(),
+            VIDEO_HEIGHT >> AttributeHeightLog2(),
+            VideoAttributeOffset());
+
+      // Chunky Modes ----------------------------------------------------------
+      } else if (low_nibble > 8) {
+         int bpp = 1 << (low_nibble - 8);
+         const char *chunk = bpp_chunk_str[low_nibble - 9];
+         if (elem_size == PIXELS) {
+            Printer("%s-Pixels (as %dx%d bytes)",
+              chunk, VIDEO_WIDTH * bpp / 8, VIDEO_HEIGHT);
+         } else {
+            Printer("Tile%s%d[=%spx] (%dx%d)",
+               chunk, 8 * bpp * (1 << elem_size),
+               elem_pixel_size_str[elem_size],
+               // Tile width and height depends on the same element descriptor
+               // it's same as glyphs:
+               VIDEO_WIDTH  >> VideoGlyphLog2Width(),
+               VIDEO_HEIGHT >> VideoGlyphLog2Height());
          }
 
+      // Planar Modes ----------------------------------------------------------
       } else {
-
-         // Planar Modes:
-         Printer("planar(x%d) ", VIDEO_MODE & 0xF);
+         if (low_nibble > 1) Printer("%d ", low_nibble);
          if (elem_size == PIXELS) {
-            Printer("pixels");
+            Printer("Bit-Pixel%s(as %dx%d bytes",
+               (low_nibble > 1)? " Planes ":"s ",
+               VIDEO_WIDTH >> 3, VIDEO_HEIGHT);
          } else {
-            Printer("glyphs(%d)", 8 * (1 << elem_size));
+            Printer("Glyph%d%s (%dx%d",
+               8 << elem_size, (low_nibble > 1)? " Planes":"",
+               VIDEO_WIDTH  >> VideoGlyphLog2Width(),
+               VIDEO_HEIGHT >> VideoGlyphLog2Height());
          }
+         if (low_nibble > 1) {
+            Printer(" @offsets n x %d)", VIDEO_SIZE / low_nibble);
+         } else {
+            Printer(") [single bitplane]");
+         }
+
+      //------------------------------------------------------------------------
       }
       Printer("\n");
    }
-
    Printer("\nNumber of valid video modes: %d\n", valid);
    Printer("Default video mode: %d\n", VIDEO_MODE_DEFAULT);
    return 0;

@@ -21,7 +21,7 @@ int AppInit(void)
    Glyph256 sstoki    = { 0xC131496A320418E0, 0x1F20404040201807,
                           0x00F00C028241C141, 0x00030C1013242724 };
 
-VideoSetMode(VIDEO_MODE_ATTRIBUTE(Glyph256, ATTRIBUTE_8x8_FG256));
+VideoSetMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_8x8_FG256));
  //VideoSetMode(VIDEO_MODE_GLYPH(Glyph128));
 //VideoSetMode(217);
 //VideoSetMode(223); // weird modes with 24x15 glyph256

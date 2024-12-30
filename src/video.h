@@ -39,9 +39,41 @@ static inline uint8_t *VideoPlane(int n)
    return VIDEO_FRAMEBUFFER + n * (VIDEO_SIZE / VideoModeLowNibble());
 }
 
-// Return the start of the n-th plane cast as the given Glyph/Tile type.
+
+// Return the start of the n-th plane cast as the given Glyph type.
 // Note: Video should be in bitplanes mode and n should be in [0, # of planes[
 #define VideoPlaneAs(TYPE_NAME, n) ((TYPE_NAME *)VideoPlane((n)))
+
+
+// Same as `VideoPlaneOffset`, but no bounds checking.
+#define VideoPlaneOffset_(...) \
+   UTIL_OVERLOAD(VideoPlaneOffset_, __VA_ARGS__)
+   #define VideoPlaneOffset__0_(...)   (VIDEO_SIZE / VideoModeLowNibble())
+   static inline int VideoPlaneOffset__1_(int n) {
+      assert(n >= 0 && n < VideoModeLowNibble());
+      return n * (VIDEO_SIZE / VideoModeLowNibble());
+   }
+
+// int VideoPlaneOffset(void);
+// int VideoPlaneOffset(int plane_index);
+//
+// - Without no argument, return the length in bytes of a plane.
+// - Otherwise, return the offset from the start of VIDEO_FRAMEBUFFER where the
+//   given (zero-based)index plane starts.
+//
+// Note on safety and bounds checking:
+// - if not in planar mode, return 0.
+// - plane will be clamped between [0, max number of plane[
+// - Use `VidePlaneOffset_` for the same functionality with no bounds-checking
+// - Reminder: total number of planes is given by the VIDEO_MODE's low nibble
+#define VideoPlaneOffset(...) \
+   UTIL_OVERLOAD(VideoPlaneOffset, __VA_ARGS__)
+   #define VideoPlaneOffset_0_(...)   (VIDEO_SIZE / VideoModeLowNibble())
+   static inline int VideoPlaneOffset_1_(int n) {
+      UtilClampCoordinate(&n, VideoModeLowNibble());
+      return VideoPlaneOffset__1_(n);
+   }
+
 
 //------------------------------------------------------------------------------
 // Access to Attributes
@@ -210,15 +242,15 @@ static inline Glyph *VideoGlyph_3_(int x, int y, int plane)
 #define VideoGlyph8__2_(x, y) VideoGlyph8__3_((x), (y), 0)
 static inline Glyph8 *VideoGlyph8__3_(int x, int y, int plane)
 {
-   assert(x >= 0 && x < (VIDEO_WIDTH >> GLYPH8_WIDTH_LOG2));
+   assert(x >= 0 && x < (VIDEO_WIDTH  >> GLYPH8_WIDTH_LOG2));
    assert(y >= 0 && y < (VIDEO_HEIGHT >> GLYPH8_HEIGHT_LOG2));
-   int offset = x + y * (VIDEO_WIDTH >> GLYPH8_WIDTH_LOG2);
+   int offset = x + y * (VIDEO_WIDTH  >> GLYPH8_WIDTH_LOG2);
    return VideoPlane(plane) + offset;
 }
 #define VideoGlyph8_2_(x, y) VideoGlyph8_3_((x), (y), 0)
 static inline Glyph8 *VideoGlyph8_3_(int x, int y, int plane)
 {
-   UtilClampCoordinate(&x, VIDEO_WIDTH >> GLYPH8_WIDTH_LOG2);
+   UtilClampCoordinate(&x, VIDEO_WIDTH  >> GLYPH8_WIDTH_LOG2);
    UtilClampCoordinate(&y, VIDEO_HEIGHT >> GLYPH8_HEIGHT_LOG2);
    UtilClampCoordinate(&plane, VideoModeLowNibble());
    return VideoGlyph8__3_(x, y, plane);
@@ -453,10 +485,21 @@ int VideoGetPixel_(int x, int y);
 void VideoSetPixel_(int x, int y, int color);
 #endif
 // Use `VideoGetPixel` instead.
-static inline int VideoGetPixel_inline_(int x, int y)
+static C_HINT_ALWAYS_INLINE
+int VideoGetPixel_inline_(int x, int y)
 {
+   // Use the safe function for proper bounds checking.
    assert(x >= 0 && x < VIDEO_WIDTH);
    assert(y >= 0 && y < VIDEO_HEIGHT);
+
+   // How to react on an error condition (presumably this can only happen if the
+   // user has somehow inputed some invalid video mode with a poke).
+#ifndef KONPU_COMPILE_OPTION_USER_MUST_NOT_POKE_AROUND
+#  define VIDEO_ERROR()  return 0
+#else
+#  define VIDEO_ERROR()  unreachable()
+#endif
+
    enum VideoElementPixelSize elem = VideoModeElementDescriptor();
    int low_nibble = VideoModeLowNibble();
 
@@ -532,63 +575,73 @@ static inline int VideoGetPixel_inline_(int x, int y)
       // 3 8x8  | V<uint64_t>[x/8 + y/8 * V_WIDTH/8]  | x%8 , y%8      |
       // 4 8x16 | V<Glyph128>[x/8 + y/16 * V_WIDTH/16]| x%8 , y%16     |
       // 5 16x16| V<Glyph256>[x/16 +y/16 * V_WIDTH/16]| x%16, y%16     |
+      // 7 8x1  | V[x/8 + y * V_WIDTH/8]
 
       // int px = GlyphPixelAt(VideoGlyph_(x,y), x%glyph_width, y%glyph_height);
 
-      int px;          // the pixel
+      int px;          // the bit pixel
       int w;           // width of the glyph grid
       int h;           // height of the glyph grid
       int attr_offset; // offset for the start of the attributes
-      switch (elem)
-      {
-      case PIXELS_2x4:
-         w = VIDEO_WIDTH >> 1;
-         h = VIDEO_HEIGHT >> 2;
-         attr_offset = (w * h) << PIXELS_2x4;
-         px = GlyphPixelAt_8_(VIDEO_FRAMEBUFFER[(x >> 1) + (y >> 2) * w], x & 1, x & 3);
-         break;
-      case PIXELS_4x4:
-         w = VIDEO_WIDTH >> 2;
-         h = VIDEO_HEIGHT >> 2;
-         attr_offset = (w * h) << PIXELS_4x4;
-         px = GlyphPixelAt_16_(VIDEO_FRAMEBUFFER_AS(Glyph16)[(x >> 2) + (y >> 2) * w], x & 3, x & 3);
-         break;
-      case PIXELS_4x8:
-         w = VIDEO_WIDTH >> 2;
-         h = VIDEO_HEIGHT >> 3;
-         attr_offset = (w * h) << PIXELS_4x8;
-         px = GlyphPixelAt_32_(VIDEO_FRAMEBUFFER_AS(Glyph32)[(x >> 2) + (y >> 3) * w], x & 3, y & 7);
-         break;
-      case PIXELS_8x8:
-         w = VIDEO_WIDTH >> 3;
-         h = VIDEO_HEIGHT >> 3;
-         attr_offset = (w * h) << PIXELS_8x8;
-         px = GlyphPixelAt_64_(VIDEO_FRAMEBUFFER_AS(Glyph64)[(x >> 3) + (y >> 3) * w], x & 7, y & 7);
-         break;
-      case PIXELS_8x16:
-         w = VIDEO_WIDTH >> 3;
-         h = VIDEO_HEIGHT >> 4;
-         attr_offset = (w * h) << PIXELS_8x16;
-         px = GlyphPixelAt_128_(VIDEO_FRAMEBUFFER_AS(Glyph128)[(x >> 3) + (y >> 4) * w], x & 7, y % 15);
-         break;
-      case PIXELS_16x16:
-         w = VIDEO_WIDTH >> 4;
-         h = VIDEO_HEIGHT >> 4;
-         attr_offset = (w * h) << PIXELS_16x16;
-         px = GlyphPixelAt_256_(VIDEO_FRAMEBUFFER_AS(Glyph256)[(x >> 4) + (y >> 4) * w], x & 15, y & 15);
-         break;
-      default:
-         unreachable();
+      switch (elem) {
+         case PIXELS_2x4:
+            w = VIDEO_WIDTH  >> 1;
+            h = VIDEO_HEIGHT >> 2;
+            attr_offset = (w * h) << PIXELS_2x4;
+            px = GlyphPixelAt_8_(VIDEO_FRAMEBUFFER
+                  [(x >> 1) + (y >> 2) * w], x & 1, x & 3);
+            break;
+         case PIXELS_4x4:
+            w = VIDEO_WIDTH  >> 2;
+            h = VIDEO_HEIGHT >> 2;
+            attr_offset = (w * h) << PIXELS_4x4;
+            px = GlyphPixelAt_16_(VIDEO_FRAMEBUFFER_AS(Glyph16)
+                  [(x >> 2) + (y >> 2) * w], x & 3, x & 3);
+            break;
+         case PIXELS_4x8:
+            w = VIDEO_WIDTH  >> 2;
+            h = VIDEO_HEIGHT >> 3;
+            attr_offset = (w * h) << PIXELS_4x8;
+            px = GlyphPixelAt_32_(VIDEO_FRAMEBUFFER_AS(Glyph32)
+                  [(x >> 2) + (y >> 3) * w], x & 3, y & 7);
+            break;
+         case PIXELS_8x8:
+            w = VIDEO_WIDTH  >> 3;
+            h = VIDEO_HEIGHT >> 3;
+            attr_offset = (w * h) << PIXELS_8x8;
+            px = GlyphPixelAt_64_(VIDEO_FRAMEBUFFER_AS(Glyph64)
+                  [(x >> 3) + (y >> 3) * w], x & 7, y & 7);
+            break;
+         case PIXELS_8x16:
+            w = VIDEO_WIDTH  >> 3;
+            h = VIDEO_HEIGHT >> 4;
+            attr_offset = (w * h) << PIXELS_8x16;
+            px = GlyphPixelAt_128_(VIDEO_FRAMEBUFFER_AS(Glyph128)
+                  [(x >> 3) + (y >> 4) * w], x & 7, y & 15);
+            break;
+         case PIXELS_16x16:
+            w = VIDEO_WIDTH  >> 4;
+            h = VIDEO_HEIGHT >> 4;
+            attr_offset = (w * h) << PIXELS_16x16;
+            px = GlyphPixelAt_256_(VIDEO_FRAMEBUFFER_AS(Glyph256)
+                  [(x >> 4) + (y >> 4) * w], x & 15, y & 15);
+            break;
+         case PIXELS:
+            w = VIDEO_WIDTH >> 3;
+            h = VIDEO_HEIGHT;
+            attr_offset = w * h;
+            px = BitsBitAt(VIDEO_FRAMEBUFFER[(x >> 3) + y * w], x & 7);
+            break;
+         default:
+            VIDEO_ERROR();
       }
 
       // Look for the attribute under the pixel
       w = AttributeWidthLog2();
-      h = AttributeHeightLog2();
-      int s = AttributeHasTwoBytes();
       x >>= w;
-      y >>= h;
+      y >>= AttributeHeightLog2();
       uint8_t *attr = VIDEO_FRAMEBUFFER + attr_offset
-                    + ((x + y * (VIDEO_WIDTH >> w)) << s);
+                    + ((x + y * (VIDEO_WIDTH >> w)) << AttributeHasTwoBytes());
 
       // Return its fg or bg color depending on whether px is on or off.
       return (px) ? AttributeGetForeground(attr)
@@ -610,65 +663,63 @@ static inline int VideoGetPixel_inline_(int x, int y)
    // - several bitplanes:
    // access is same as 1 bit, but we have to iterate through every plane and
    // reconstruct the pixel color bit by bit. (hopefully loops are unrolled)
-   if (elem == PIXELS)
-   {
+   if (elem == PIXELS) {
       uint8_t *ptr = VIDEO_FRAMEBUFFER + y * VIDEO_WIDTH;
-      switch (low_nibble)
-      {
-      case 1:
-         return BitsBitAt(ptr[x >> 3], x & 7);
-      case 2: // fallthrough  //C_ATTRIBUTE_FALLTHROUGH;
-      case 3: // fallthrough  //C_ATTRIBUTE_FALLTHROUGH;
-      case 4: // fallthrough  //C_ATTRIBUTE_FALLTHROUGH;
-      case 5: // fallthrough  //C_ATTRIBUTE_FALLTHROUGH;
-      case 6: // fallthrough  //C_ATTRIBUTE_FALLTHROUGH;
-      case 7: // fallthrough  //C_ATTRIBUTE_FALLTHROUGH;
-      case 8:;
-         int color = 0;
-         int plane_size = VIDEO_SIZE / low_nibble;
-         for (int plane = 0; plane < low_nibble; plane++)
-         {
-            color |= BitsBitAt(ptr[x >> 3], x & 7) << plane;
-            ptr += plane_size;
-         }
-         return color;
-      case 9:
-         return BitsQuarterAt(ptr[x >> 2], x & 3);
-      case 10:
-         return BitsNibbleAt(ptr[x >> 1], x & 1);
-      case 11:
-         return ptr[x];
-      default:
-         unreachable();
+      switch (low_nibble) {
+         // Single-plane bit Pixels or Chunk Pixels
+         case  1: return BitsBitAt(ptr[x >> 3], x & 7);
+         case  9: return BitsQuarterAt(ptr[x >> 2], x & 3);
+         case 10: return BitsNibbleAt(ptr[x >> 1], x & 1);
+         case 11: return ptr[x];
+
+         // Several bitplanes
+         case  2: // fallthrough
+         case  3: // fallthrough
+         case  4: // fallthrough
+         case  5: // fallthrough
+         case  6: // fallthrough
+#if (VIDEO_SIZE_FACTOR_ % 7 == 0)
+         case  7: // fallthrough
+#endif
+         case  8: ;
+            int color = 0;
+            int plane_size = VIDEO_SIZE / low_nibble;
+            for (int plane = 0; plane < low_nibble; plane++) {
+               color |= BitsBitAt(ptr[x >> 3], x & 7) << plane;
+               ptr += plane_size;
+            }
+            return color;
+
+         default: VIDEO_ERROR();
       }
    }
 
    // Glyph bitplanes / Tile modes:
-   switch (low_nibble)
-   {
-   // One single glyph plane
-   case 1:
-      return 0; // TODO
-   // Several glyph bit planes (construct glyph)
-   case 2: // fallthrough  //C_ATTRIBUTE_FALLTHROUGH;
-   case 3: // fallthrough  //C_ATTRIBUTE_FALLTHROUGH;
-   case 4: // fallthrough  //C_ATTRIBUTE_FALLTHROUGH;
-   case 5: // fallthrough  //C_ATTRIBUTE_FALLTHROUGH;
-   case 6: // fallthrough  //C_ATTRIBUTE_FALLTHROUGH;
-   case 7: // fallthrough  //C_ATTRIBUTE_FALLTHROUGH;
-   case 8:;
-      return 0; // TODO
+   switch (low_nibble) {
+      // One single glyph plane
+      case  1: return 0; // TODO
 
-   // Tiles modes:
-   case 9:
-      return 0; // TODO
-   case 10:
-      return 0; // TODO
-   case 11:
-      return 0; // TODO
-   default:
-      unreachable();
+      // Several glyph bit planes (construct glyph)
+      case  2: // fallthrough
+      case  3: // fallthrough
+      case  4: // fallthrough
+      case  5: // fallthrough
+      case  6: // fallthrough
+#if (VIDEO_SIZE_FACTOR_ % 7 == 0)
+      case  7: // fallthrough
+#endif
+      case  8: ;
+         return 0; // TODO
+
+      // Tiles modes:
+      case  9: return 0; // TODO
+      case 10: return 0; // TODO
+      case 11: return 0; // TODO
+
+      default: VIDEO_ERROR();
    }
+
+#undef VIDEO_ERROR
 }
 
 // Internal only - Use or VideoSetPixel [or VideoSetPixel_] instead.

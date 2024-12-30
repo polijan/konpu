@@ -6,7 +6,7 @@
 static const char *testDefaultVideoMode(void)
 {
    TestAssert("VIDEO_MODE_DEFAULT should be 4x8 glyphs with similar 16 color attributes",
-      VIDEO_MODE_DEFAULT == VIDEO_MODE_ATTRIBUTE(Glyph32));
+      VIDEO_MODE_DEFAULT == VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph32));
    return 0;
 }
 

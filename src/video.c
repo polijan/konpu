@@ -51,10 +51,9 @@ int VideoModeResolution(uint8_t mode)
 
    // Glyph and Attribute mode
    if (attribute_bit) {
-      if (element_descriptor == 7) return 0; // shouldn't indicate pixels
-      int attr_nbytes  = ((low_nibble & 0x3) == 3) + 1; // 1 or 2 bytes
-      int attr_npixels = 1 << (low_nibble >> 2); // sizeof
-      return 8 + (8 / attr_npixels) * attr_nbytes;
+      int attr_nbytes_log2  = (low_nibble & 3) == ATTRIBUTE_COLORS_256;
+      int attr_npixels_log2 = low_nibble >> 2;
+      return 8 + ((8 >> attr_npixels_log2) << attr_nbytes_log2);
    }
 
    // Planar modes (and error case where low_nibble would be 0)

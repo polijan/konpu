@@ -32,7 +32,7 @@ static const uint64_t pattern[] = {
 
 int AppInit(void)
 {
-   VideoSetMode(VIDEO_MODE_ATTRIBUTE(Glyph64, ATTRIBUTE_8x8_16));
+   VideoSetMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph64, ATTRIBUTE_8x8_16));
 
    // Set some Pattern as initial glyphs and show it
    VideoAttributeSetAll();

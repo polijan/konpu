@@ -168,64 +168,111 @@ int VideoModeResolution(uint8_t mode);
 //------------------------------------------------------------------------------
 //
 //                              Layout chosen for coloring
-//             .-----------------.-------------------.--------------------------
-//             | BitPlanes       | "Chunky" element  | Attributes
-//-------------|-----------------|-------------------|--------------------------
-// Glyph/Tiles | GLYPH_BITPLANES | TILE              | ATTRIBUTE
-// Pixels      | PIXEL_BITPLANES | PIXEL             | TODO: PIXEL + ATTRIBUTE
-//             |                 |                   |       should be allowed!!
-//-------------'-----------------'-------------------'--------------------------
+//             .------------------.-------------------.-------------------------
+//             | BitPlanes        | "Chunky" element  | Attributes
+//-------------|------------------|-------------------|-------------------------
+// Glyph/Tiles | GLYPH PLANES     | TILES             | GLYPHS + ATTRIBUTES
+// Pixels      | BIT-PIXEL PLANES | PIXELS            | BIT-PIXELS + ATTRIBUTES
+//-------------'------------------'-------------------'-------------------------
 
-// Return a video mode based on attribute bit, element descriptor, low nibble
-#define VIDEO_MODE_GENERIC_(attribute_bit, element_descriptor, low_nibble) \
+//------------------------------------------------------------------------------
+// Various macros to create a video mode
+//------------------------------------------------------------------------------
+// VIDEO_MODE_FROM_PARTS_(int attribute_bit,
+//       enum VideoElementPixelSize element descriptor, int low_nibble)
+//
+// VIDEO_MODE_GLYPH(GLYPH_TYPE)
+// VIDEO_MODE_GLYPH_PLANES(GLYPH_TYPE, int number_of_planes)
+// VIDEO_MODE_GLYPH_ATTRIBUTES(GLYPH_TYPE, [enum AttributeType])
+//
+// VIDEO_MODE_PIXEL(int depth)                   // 1,2,4,8
+// VIDEO_MODE_PIXEL_PLANES(int number_of_plane)  // 1,2,3,4,5,6,8
+// VIDEO_MODE_PIXEL_ATTRIBUTES(enum AttributeType)
+//
+// VIDEO_MODE_TILE(TILE_TYPE)
+//------------------------------------------------------------------------------
+
+// Return a video mode based on its three parts (as explained in the doc):
+// - the attribute bit,
+// - the element descriptor (enum VideoElementPixelSize)
+// - the low_nibble
+#define VIDEO_MODE_FROM_PARTS_(attribute_bit, element_descriptor, low_nibble) \
    ((int)((attribute_bit) << 7 | (element_descriptor) << 4 | (low_nibble)))
 
+// int VIDEO_MODE_GLYPH(GLYPH_TYPE)
+// Return a mode number based on a Glyph type with a single bit plane
+#define VIDEO_MODE_GLYPH(GLYPH_TYPE) \
+   VIDEO_MODE_GLYPH_PLANES(GLYPH_TYPE, 1)
 
-// Returns a planar glyph video mode.
-// * glyph_size is an enum VideoElementPixelSize <= PIXELS_16x16
-// * number_of_planes must be in 1-8
-static inline
-int VIDEO_MODE_GLYPH_BITPLANES(enum VideoElementPixelSize glyph_size,
-                               int number_of_planes) {
-   assert(number_of_planes >=1 && number_of_planes <= 8);
-   return VIDEO_MODE_GENERIC_(0, glyph_size, number_of_planes);
-}
+// int VIDEO_MODE_GLYPH_PLANES(GLYPH_TYPE)
+// Return a mode number based on a Glyph type with the given amount of planes
+// The number of planes should be 1,2,3,4,5,6,or 8.
+#define VIDEO_MODE_GLYPH_PLANES(GLYPH_TYPE, number_of_planes) \
+   VIDEO_MODE_FROM_PARTS_(                                    \
+      0,                                                      \
+      _Generic((GLYPH_TYPE){0} ,                              \
+         Glyph8:   PIXELS_2x4  ,                              \
+         Glyph16:  PIXELS_4x4  ,                              \
+         Glyph32:  PIXELS_4x8  ,                              \
+         Glyph64:  PIXELS_8x8  ,                              \
+         Glyph128: PIXELS_8x16 ,                              \
+         Glyph256: PIXELS_16x16                               \
+      ),                                                      \
+      (number_of_planes)                                      \
+   )
 
-// TODO: merge VIDEO_MODE_GLYPH and VIDEO_MODE_GLYPH_BITPLANES
-
-// int VIDEO_MODE_GLYPH(GLYPH<N>, [int number_of_planes = 1]);
-// Returns a planar glyph video mode.
-#define VIDEO_MODE_GLYPH(...)                                \
-   UTIL_OVERLOAD(VIDEO_MODE_GLYPH, __VA_ARGS__)
-   #define VIDEO_MODE_GLYPH_1_(GLYPH_TYPE)                   \
-      VIDEO_MODE_GLYPH_2_(GLYPH_TYPE, 1)
-   #define VIDEO_MODE_GLYPH_2_(GLYPH_TYPE, number_of_planes) \
-      VIDEO_MODE_GENERIC_(                                   \
-         0,                                                  \
-         _Generic((GLYPH_TYPE){0},                           \
-            Glyph8:   PIXELS_2x4,                            \
-            Glyph16:  PIXELS_4x4,                            \
-            Glyph32:  PIXELS_4x8,                            \
-            Glyph64:  PIXELS_8x8,                            \
-            Glyph128: PIXELS_8x16,                           \
-            Glyph256: PIXELS_16x16                           \
-         ),                                                  \
-         (number_of_planes)                                  \
+// int VIDEO_MODE_GLYPH_ATTRIBUTES(GLYPH_TYPE, [enum AttributeType] attr_type);
+// Return a mode number based on a Glyph type and an enum AttributeType
+// If the Attribute if left unspecified, it will default to 16-color attributes
+// whose size in pixels is either same as the glyphs or at max 8x8.
+#define VIDEO_MODE_GLYPH_ATTRIBUTES(...)                                    \
+   UTIL_OVERLOAD(VIDEO_MODE_GLYPH_ATTRIBUTES, __VA_ARGS__)
+   #define VIDEO_MODE_GLYPH_ATTRIBUTES_2_(GLYPH_TYPE, enum_attribute_type)  \
+      VIDEO_MODE_FROM_PARTS_(                                               \
+         1,                                                                 \
+         _Generic((GLYPH_TYPE){0},                                          \
+            Glyph8:   PIXELS_2x4,                                           \
+            Glyph16:  PIXELS_4x4,                                           \
+            Glyph32:  PIXELS_4x8,                                           \
+            Glyph64:  PIXELS_8x8,                                           \
+            Glyph128: PIXELS_8x16,                                          \
+            Glyph256: PIXELS_16x16                                          \
+         ),                                                                 \
+         (enum_attribute_type)                                              \
+      )
+   #define VIDEO_MODE_GLYPH_ATTRIBUTES_1_(GLYPH_TYPE)                       \
+      VIDEO_MODE_GLYPH_ATTRIBUTES_2_(GLYPH_TYPE, ATTRIBUTE_COLORS_16 |       \
+         _Generic((GLYPH_TYPE){0},                                          \
+            Glyph8:   PIXELS_2x4,                                           \
+            Glyph16:  PIXELS_4x4,                                           \
+            Glyph32:  PIXELS_4x8,                                           \
+            Glyph64:  PIXELS_8x8,                                           \
+            Glyph128: PIXELS_8x8,                                           \
+            Glyph256: PIXELS_8x8                                            \
+         ) << 2                                                             \
       )
 
+// int VIDEO_MODE_PIXEL(int depth)
+// Return a mode number with chunk pixels (or a single plane of bit pixels)
+// based on the depth, which should be 1,2,4,8
+#define VIDEO_MODE_PIXEL(bit_depth)                        \
+   VIDEO_MODE_FROM_PARTS_(0, PIXELS,                       \
+      ((bit_depth) == 1) ? 1 : (9 + (bits_per_pixel >> 2)) )
 
+// int VIDEO_MODE_PIXEL_PLANES(number_of_planes)
+// Return a mode number based on bit pixels with the given amount of planes
+// The number of planes should be 1,2,3,4,5,6,or 8.
+#define VIDEO_MODE_PIXEL_PLANES(number_of_planes)      \
+   VIDEO_MODE_FROM_PARTS_(0, PIXELS, (number_of_planes))
 
+// int VIDEO_MODE_PIXEL_ATTRIBUTES(enum AttributeType attr_type);
+// Return a mode number with bit pixels and the bigven attribute type.
+#define VIDEO_MODE_PIXEL_ATTRIBUTES(enum_attribute_type)  \
+   VIDEO_MODE_FROM_PARTS_(1, PIXELS, (enum_attribute_type))
 
-
-
-// Returns a planar pixel video mode.
-static inline int VIDEO_MODE_PIXEL_BITPLANES(int number_of_planes) {
-   assert(number_of_planes >=1 && number_of_planes <= 8);
-   return VIDEO_MODE_GENERIC_(0, PIXELS, number_of_planes);
-}
-
-// Return a Tile mode with the given bits per pixel (if 2, 4, or 8),
-//     or a monochrome Glyph bitplane (if bit_per_pixel is 1).
+// Return a Tile mode with the given tile type
+#define VIDEO_MODE_TILE(TILE_TYPE)   // TODO
+/*
 static inline
 int VIDEO_MODE_TILE(enum VideoElementPixelSize tile_size, int bits_per_pixel) {
    assert( bits_per_pixel == 1                                   ||
@@ -236,49 +283,7 @@ int VIDEO_MODE_TILE(enum VideoElementPixelSize tile_size, int bits_per_pixel) {
           VIDEO_MODE_GLYPH_BITPLANES(tile_size, 1) :
           VIDEO_MODE_GENERIC_(0, tile_size, bits_per_pixel + 7);
 }
-
-// Return a pixel video mode with the given bits_per_pixel,
-// bits_per_pixel can be 1 (for 1 bitplane [aka monochrome/2 colors]),
-//                    or 2,4,8 for chunky pixel modes with 4, 16, 256 colors.
-static inline int VIDEO_MODE_PIXEL(int bits_per_pixel) {
-   assert(bits_per_pixel == 1 || bits_per_pixel == 2 ||
-          bits_per_pixel == 4 || bits_per_pixel == 8 );
-   return (bits_per_pixel == 1) ?
-          VIDEO_MODE_PIXEL_BITPLANES(1) :
-          VIDEO_MODE_GENERIC_(0, PIXELS, bits_per_pixel + 7);
-}
-
-// int VIDEO_MODE_ATTRIBUTE(GLYPH<N>, [enum AttributeType] attr_type);
-// Return a mode number based on a Glyph type and an enum AttributeType
-// If the Attribute if left unspecified, it will default to 16-color attributes
-// whose size in pixels is either same as the glyphs or at max 8x8.
-#define VIDEO_MODE_ATTRIBUTE(...)                               \
-   UTIL_OVERLOAD(VIDEO_MODE_ATTRIBUTE, __VA_ARGS__)
-   #define VIDEO_MODE_ATTRIBUTE_2_(GLYPH_TYPE, attribute_type)  \
-      VIDEO_MODE_GENERIC_(                                      \
-         1,                                                     \
-         _Generic((GLYPH_TYPE){0},                              \
-            Glyph8:   PIXELS_2x4,                               \
-            Glyph16:  PIXELS_4x4,                               \
-            Glyph32:  PIXELS_4x8,                               \
-            Glyph64:  PIXELS_8x8,                               \
-            Glyph128: PIXELS_8x16,                              \
-            Glyph256: PIXELS_16x16                              \
-         ),                                                     \
-         (attribute_type)                                       \
-      )
-   #define VIDEO_MODE_ATTRIBUTE_1_(GLYPH_TYPE)                  \
-      VIDEO_MODE_ATTRIBUTE_2_(GLYPH_TYPE, ATTRIBUTE_COLORS_16 | \
-         _Generic((GLYPH_TYPE){0},                              \
-            Glyph8:   PIXELS_2x4,                               \
-            Glyph16:  PIXELS_4x4,                               \
-            Glyph32:  PIXELS_4x8,                               \
-            Glyph64:  PIXELS_8x8,                               \
-            Glyph128: PIXELS_8x8,                               \
-            Glyph256: PIXELS_8x8                                \
-         ) << 2                                                 \
-      )
-
+*/
 
 //------------------------------------------------------------------------------
 // This would be better some place else, but because of the way we construct
