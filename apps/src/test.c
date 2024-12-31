@@ -44,7 +44,7 @@ VideoSetMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_8x8_FG256));
    Printer("End       : %d\n", VIDEO_SIZE);
 
    COLOR_BORDER = 45;
-   VideoGlyphSetAll(GLYPH8_FULL);
+   VideoGlyphSetAll(GLYPH8_PATTERN_FULL);
    VideoGlyphSetAll(soweli);
 
    for (int n = VideoAttributeOffset(); n < VIDEO_SIZE; n++) {

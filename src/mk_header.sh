@@ -33,7 +33,7 @@ include  config.h platform.h c.h \
          printer.h
 
 # Extra Resources
-include  glyph_patterns_8x8.me.h
+include  glyph_patterns_blocks.h glyph_patterns_8x8.me.h
 
 hr
 printf '\n#endif //KONPU_H\n'
