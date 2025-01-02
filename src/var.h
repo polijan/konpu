@@ -188,6 +188,29 @@ typedef Var var;
    typedef var ijo;
 #endif
 
+// A var value whose bits are set to zero, including the padding bits.
+#define VAR_ZERO  ((var){ .uint64 = 0 })
+
+// Return a 64-bits hash value from a var.
+// To work properly as a hash function, the value of the var should obey the
+// following rules:
+// - The value must only depend on the bits stored in the var union
+//   (note: this implies that the var must not be a heap object)
+// - If the value uses less then 64 bits, the unused padding bits of every vars
+//   you hash must be the same (so in practice, initialize vars you may want to
+//   hash from VAR_ZERO)
+static inline uint64_t VarHash(var value64)
+{
+   return value64.uint64 * 0xc6a4a7935bd1e99d;
+   // This is a fast hash as it uses a single operation. That multiplication is
+   // meant to "scatter" the bits around. I don't know how this constant was
+   // derived, it might represent some big prime number, I simply took it from
+   // the great (MIT-licensed) STC library: https://github.com/stclib/STC
+   // For other good options for a simple multiplicative factor, see:
+   // https://softwareengineering.stackexchange.com/questions/402542/where-do-magic-hashing-constants-like-0x9e3779b9-and-0x9e3779b1-come-from
+}
+
+
 // Print a Var
 void VarPrintTTY(var v, Type t);
 
