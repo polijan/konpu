@@ -5,14 +5,6 @@
 #include "konpu.h"
 int AppInit(void); // TODO: add this in the generated konpu.h ???
 
-// Booh, Ugly!
-#include <stdlib.h>
-#define SLEEP(n)                          \
-   do {                                   \
-      int ignored = system("sleep " #n);  \
-      (void)ignored;                      \
-   } while(0)
-
 int AppInit(void)
 {
    Glyph64  soweli    = 0x001515204054403E;
@@ -66,9 +58,9 @@ VideoSetMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_8x8_FG256));
                                     * (VIDEO_HEIGHT >> AttributeHeightLog2())
                                     ) >> AttributeHasTwoBytes();
    for (int n = 0; n < number_of_attributes_bytes; n++) {
-      VIDEO_FRAMEBUFFER[n + VideoAttributeOffset()] = rand()%16 << 4;
+      VIDEO_FRAMEBUFFER[n + VideoAttributeOffset()] = (n % 16) << 4;
       if (n % (VIDEO_WIDTH >> AttributeWidthLog2()) == 0) { // <-- once per line
-         VideoRender(); SLEEP(0.1);
+         VideoRender(); TimeSleep(100);
       }
       assert(n + VideoAttributeOffset() < VIDEO_SIZE);
    }
@@ -80,7 +72,7 @@ VideoSetMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_8x8_FG256));
       *VideoGlyph256(0,0) = GlyphRotate270(*VideoGlyph256(0,0));
       *VideoAttribute(4,4) = i%256;
 
-      VideoRender(); SLEEP(0.1);
+      VideoRender(); TimeSleep(100);
       COLOR_BORDER++;
    }
    return 0;

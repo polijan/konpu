@@ -3,22 +3,13 @@
 #include <konpu.h>
 int AppInit(void); // TODO: add this in the generated konpu.h ???
 
-// Booooh, Ugly!
-#include <stdlib.h>
-#define SLEEP(DELAY)                         \
-   do {                                      \
-      int ignored = system("sleep " #DELAY); \
-      (void)ignored;                         \
-   } while(0)
-
-
 static void SHOW(int mode, const char *msg)
 {
    int sz = VideoSetMode(mode);
    Printer("%3d x %3d - %2d bytes per 8x8 - %s\n",
       VIDEO_WIDTH, VIDEO_HEIGHT, sz, msg);
    VideoRender();
-   SLEEP(2.8);
+   TimeSleep(2800);
 }
 
 int AppInit(void)

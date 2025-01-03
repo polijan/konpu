@@ -1,14 +1,6 @@
 #include "konpu.h"
 int AppInit(void); // TODO: add this in the generated konpu.h ???
 
-// Booh, Ugly!
-#include <stdlib.h>
-#define SLEEP(n)                          \
-   do {                                   \
-      int ignored = system("sleep " #n);  \
-      (void)ignored;                      \
-   } while(0)
-
 int AppInit(void)
 {
    if (VideoSetMode(123) == 0)
@@ -32,6 +24,6 @@ int AppInit(void)
       VideoRender();
    }
 
-   SLEEP(2);
+   TimeSleep(2000);
    return 0;
 }
