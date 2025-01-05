@@ -17,6 +17,9 @@
 #  define PlatformDrop()
 #endif
 
+void    TimeInit(void);
+#define TimeDrop()
+
 void    ColorInit(void);
 #define ColorDrop()
 

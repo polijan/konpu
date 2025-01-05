@@ -139,6 +139,7 @@ cli_error:
 
    // Initialize subsystems (AFTER reading CLI arguments)
    PlatformInit();
+   TimeInit();
    ColorInit();
    HeapInit();
    StackInit();
@@ -171,6 +172,7 @@ clean: // De-Initialize subsystems
    StackDrop();
    HeapDrop();
    ColorDrop();
+   TimeDrop();
    PlatformDrop();
 clean_cli: // De-initialized subsystems initialized before reading CLI arguments
    PrinterDrop();
