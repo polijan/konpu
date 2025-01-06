@@ -148,6 +148,7 @@ cli_error:
       return_code = VideoBackendInit(max_desired_zoom);
       if (return_code != 0) goto clean;
    }
+   RandomInitAsRandom((uint64_t)argc + flag + ((app!=NULL)? strlen(app) : 0));
 
    // Loading "App"
    DEBUG("Loading App: %s\n", app);
@@ -167,6 +168,7 @@ cli_error:
 
 clean: // De-Initialize subsystems
    DEBUG("Shuting Down Up\n");
+   RandomDrop();
    if (video_output) VideoBackendDrop();
    VideoDrop();
    StackDrop();

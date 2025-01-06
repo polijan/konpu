@@ -3,8 +3,6 @@
 // Test: For each video mode, verify that the overall size of the elements that
 //       should be the framebuffer correspond to VIDEO_SIZE.
 
-static uint64_t Random(void) { return rand(); } //FIXME
-
 // A loop creating random glyph<8|16|...|256> named g<8|16|...|256>
 #define RANDOM_GLYPHS_BEGIN                                             \
         for (int i_ = 0; i_ < 100; i_++) {                              \

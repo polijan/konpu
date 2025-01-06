@@ -20,6 +20,10 @@
 void    TimeInit(void);
 #define TimeDrop()
 
+void    RandomInit(uint64_t seed);
+void    RandomInitAsRandom(uint64_t whatever);
+#define RandomDrop()
+
 void    ColorInit(void);
 #define ColorDrop()
 

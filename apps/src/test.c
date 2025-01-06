@@ -35,10 +35,16 @@ VideoSetMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_8x8_FG256));
       AttributeWidthLog2(), AttributeHeightLog2(), AttributeHasTwoBytes());
    Printer("End       : %d\n", VIDEO_SIZE);
 
-   COLOR_BORDER = 45;
-   VideoGlyphSetAll(GLYPH8_PATTERN_FULL);
-   VideoGlyphSetAll(soweli);
+   // 1.5 second of "tv static" effect...
+   COLOR_BORDER = 0;
+   for (int i = 0; i < 90; i++) {
+      for (int n = 0; n < VideoAttributeOffset(); n++) {
+         VIDEO_FRAMEBUFFER[n] = Random() % 256;
+      }
+      VideoRender();
+   }
 
+   VideoGlyphSetAll(soweli);
    for (int n = VideoAttributeOffset(); n < VIDEO_SIZE; n++) {
       VIDEO_FRAMEBUFFER[n] = n % 256;
    }
