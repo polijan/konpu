@@ -89,6 +89,11 @@
 #   define KONPU_PLATFORM_SDL1        0
 #endif
 
+// KONPU_PLATFORM_SDL_ANY as a logical OR of all existing KONPU_PLATFORM_SDLx
+#define KONPU_PLATFORM_SDL_ANY \
+   (KONPU_PLATFORM_SDL3 || KONPU_PLATFORM_SDL2 || KONPU_PLATFORM_SDL1)
+
+
 // Ensure a value for KONPU_PLATFORM_POSIX (0 [=disabled] or >0)
 // - Step 1) Normalize (i.e. set to 1 if the symbol is defined but has no value)
 #if defined(KONPU_PLATFORM_POSIX) && ~(~KONPU_PLATFORM_POSIX + 0) == 0 \

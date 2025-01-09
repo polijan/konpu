@@ -134,6 +134,20 @@ static inline int32_t AddressOf(void *pointer)
 #define COLOR_PALETTE_ADDRESS_CAP_       128
 
 //------------------------------------------------------------------------------
+// Keyboard
+// KEY_STATE: the state of each key on the keyboard (see keyboard.h)
+// KEY_PREVIOUS: a copy of the keyboard state prior to the previous update.
+//------------------------------------------------------------------------------
+#define KEY_MOD_ADDRESS             ADDRESS_AFTER(COLOR_PALETTE_ADDRESS)
+#define KEY_MOD_ADDRESS_CAP_        4 // make sure to pad so that
+                                    // KEY_STATE_ADDRESS is aligned for uint64s
+#define KEY_STATE_ADDRESS           ADDRESS_AFTER(KEY_MOD_ADDRESS)
+#define KEY_STATE_ADDRESS_CAP_      32 // 256 key states stored as bits
+#define KEY_PREVIOUS_ADDRESS        ADDRESS_AFTER(KEY_STATE_ADDRESS)
+#define KEY_PREVIOUS_ADDRESS_CAP_   KEY_STATE_ADDRESS_CAP_
+
+
+//------------------------------------------------------------------------------
 // The Stack
 //------------------------------------------------------------------------------
 // The "Stack" is a piece of Konpu's memory used to implement a stack

@@ -34,6 +34,9 @@ void    VideoReset(void); //TODO <-- should be public? (so move to video.h/c ?)
 int     VideoBackendInit(int desired_zoom_max);
 void    VideoBackendDrop(void);
 
+#define KeyInit()
+#define KeyDrop()
+
 #define PrinterInit()
 #define PrinterDrop()   KonpuDisconnectPrinter()
 
