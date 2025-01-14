@@ -4,6 +4,13 @@
 #define KONPU_UTIL_H
 #include "c.h" // c.h also defines many UTIL_* macros
 
+// Similar to the `container_of` macro as popularized by the Linux kernel. I.e:
+// Given the type T of a "container" struct and the name of the member the
+// pointer refers to, returns a pointer to the struct that contains that member.
+// For more info, see: https://radek.io/posts/magical-container_of-macro/
+#define UTIL_CONTAINER_OF(pointer, T, member) \
+   ((T*)((char*)(1 ? (pointer) : &((T*)0)->member) - offsetof(T, member)))
+
 // Clamp the value of `n` into [0..dimension[
 static inline void UtilClampCoordinate(int *n, int dimension) {
    if (*n < 0) {
