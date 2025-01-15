@@ -56,16 +56,50 @@
 //------------------------------------------------------------------------------
 #if KONPU_PLATFORM_LIBC
 #   include <errno.h>     // macros reporting error conditions
-#   include <string.h>    // string handling + memory functions
 #   include <stdio.h>     // input/output
 #   include <inttypes.h>  // format conversion of integer types
+#   include <string.h>    // string handling + memory functions
 #   include <stdlib.h>    // general utilities and allocation functions
-    // Prevent the accidental invocation of stdlib's allocation functions:
-//#   define malloc(sz)        static_assert(false, "stdlib malloc disabled");
-//#   define calloc(n, sz)     static_assert(false, "stdlib calloc disabled");
-//#   define realloc(ptr, sz)  static_assert(false, "stdlib realloc disabled");
-//#   define free(ptr)         static_assert(false, "stdlib free disabled");
+#elif __STDC_VERSION__ >= 202311L
+//  <string.h> is a *partially* freestanding header since C23.
+//  In freestanding mode, the following functions are NOT required:
+//  strdup, strndup, strcoll, strxfrm, strtok, and strerror.
+#   include <string.h>
+#   undef  strtok // perhaps we should forbid it all the time.
+#   define strtok(s, delim)  KONPU_PLATFORM_strtok_should_not_be_used_
+#   undef  strerror
+#   define strerror(errnum)  KONPU_PLATFORM_strerror_should_not_be_used_
+//  <stdlib.h> is also a (very) *partially* freestanding header since C23,
+//  see: https://en.cppreference.com/w/c/language/conformance.
+//  But for now, we will not include it anyway.
 #endif
+// Remove some more <string.h> functionality which might be unavailable in
+// freestanding mode and which we shouldn't use anyway because they're related
+// to locales or obviously perform some allocations.
+#undef  strdup
+#undef  strdnup
+#undef  strcoll
+#undef  strxfrm
+#define strdup(str)          KONPU_PLATFORM_strdup_should_not_be_used_
+#define strndup(str, n)      KONPU_PLATFORM_strndup_should_not_be_used_
+#define strcoll(str1, str2)  KONPU_PLATFORM_strcoll_should_not_be_used_
+#define strxfrm(dst, src, n) KONPU_PLATFORM_strxfrm_should_not_be_used_
+// Prevent accidental invocation of <stdlib.h>'s allocation functions
+#undef  malloc
+#undef  calloc
+#undef  realloc
+#undef  free
+#undef  aligned_alloc
+#undef  free_sized
+#undef  free_aligned_sized
+#define malloc(sz)           KONPU_PLATFORM_malloc_should_not_be_used_
+#define calloc(n, sz)        KONPU_PLATFORM_calloc_should_not_be_used_
+#define realloc(ptr, sz)     KONPU_PLATFORM_realloc_should_not_be_used_
+#define free(ptr)            KONPU_PLATFORM_free_should_not_be_used_
+#define aligned_alloc(a, sz) KONPU_PLATFORM_aligned_alloc_should_not_be_used_
+#define free_sized(ptr, sz)  KONPU_PLATFORM_free_sized_should_not_be_used_
+#define free_aligned_sized(ptr, a, sz) \
+   KONPU_PLATFORM_free_aligned_sized_should_not_be_used_
 
 
 //------------------------------------------------------------------------------
