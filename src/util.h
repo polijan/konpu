@@ -25,12 +25,11 @@ static inline void UtilClampCoordinate(int *n, int dimension) {
 
 // Return the (signed) size of a variable with an array type.
 // Note / Warning: Only works for arrays which have NOT decayed to a pointer.
-#define UTIL_ARRAY_SIZE(array)      ((int32_t)(sizeof(array) / sizeof *(array)))
-// TODO: convert to a signed int32_t
+#define UTIL_ARRAY_SIZE(array)      (C_SIZEOF(array) / C_SIZEOF(0[array]))
 
 // Return the (signed) length of a C string literal.
 #define UTIL_STRING_LITERAL_LENGTH(literal_string) \
-   (ssizeof(literal_string) - 1)
+   (C_SIZEOF(literal_string) - 1)
 
 // Return the maximum of a and b
 // Warning: No macro safety (a and b will be evaluated twice)

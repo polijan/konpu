@@ -27,7 +27,6 @@
 // - maybe C23 standard attribute are C_ATTRIBUTE_* and others attributes
 //   (or similar things) should be C_HINT_*
 // - maybe have C_HINT_GCC_PURE, C_HINT_GCC_... for GCC attributes (const, pure, ...)
-// - is `ssizeof` name OK? Or should it be C_SSIZEOF() / c_ssizeof
 
 
 
@@ -329,6 +328,38 @@ static_assert(sizeof(uint_least64_t) == 8);
 #   define UINT_LEAST64_WIDTH   64
 #endif
 
+//------------------------------------------------------------------------------
+// Signed vs Unsigned Integers in ilo Konpu
+//------------------------------------------------------------------------------
+// Konpu prefers to use signed integers for indices, sizes, and quantities.
+// Unsigned integers are used for performing bits operations. This approach
+// helps to prevent the subtle bugs that may occur during mixed unsigned-signed
+// calculations and comparisons.
+//
+// As Konpu sizes and indices are not meant to exceed 1048575 (2^20-1), they are
+// usually represented as `int32_t` or when a quantity (such as coordinates) is
+// not meant to go over 32767, they might be represented as `int`.
+//------------------------------------------------------------------------------
+
+// Similar to the `sizeof` operator, but returns a signed result (`int32_t`)
+#define C_SIZEOF(type_or_expression)       ((int32_t)sizeof(type_or_expression))
+
+// Similar to the `offsetof` operator, but returns a signed result (`int32_t`)
+#define C_OFFSETOF(T, Member)                     ((int32_t)offsetof(T, Member))
+
+// Similar to the `alignof` operator, but returns a signed result (`int32_t`)
+#define C_ALIGNOF(T)                                       ((int32_t)alignof(T))
+
+// Cast a signed integer to a `size_t`
+// Note: Konpu prefers to use signed sizes, so this is specifically for when
+//       there's a need to interact with outside parts which expect a `size_t`
+#define UTIL_UNSIGNED_SIZE(signed_integer)  ((size_t)(1? (signed_integer) : -1))
+
+// Cast a `size_t` to a Konpu size (`int32_t`)
+#define UTIL_SIGNED_SIZE(size)       (_Generic((size), size_t: (int32_t)(size)))
+
+//------------------------------------------------------------------------------
+
 // We provide macros for C23 standard attributes and try to provide fallback
 // for C11/C17
 #if __STDC_VERSION__ >= 202311L
@@ -434,12 +465,6 @@ static_assert(sizeof(uint_least64_t) == 8);
 #   endif
 #endif
 
-
-// a macro to use like the `sizeof` operator but returning a *signed* size (as a
-// int32_t) ... because it is good to use signed types for indexing and length.
-#define ssizeof(type_or_expression)    ((int32_t)sizeof(type_or_expression))
-// Note: a int32_t can fit a size up to 2Gb, anything more (or even close to
-// that would be totally unreasonnable for Konpu).
 
 // Memory functions from <string.h>. Making sure we have those:
 extern void *memset(void *dst, int ch, size_t count);

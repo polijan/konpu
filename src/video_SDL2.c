@@ -209,7 +209,7 @@ int VideoRender(void)
       if (sdl.texture == NULL)  return -1;
 
       // TODO: remove later, but useful for now to give us some info:
-      const char fmt[] = "ilo Konpu - nasin sitelen # %d ";
+      const char fmt[] = "ilo Konpu - nasin sitelen # %3d ";
       char title[UTIL_STRING_LITERAL_LENGTH(fmt) + 1];
       snprintf(title, UTIL_STRING_LITERAL_LENGTH(fmt), fmt, VIDEO_MODE);
                       // ^--- videomode as a string is no longer than "%d" in the title
@@ -232,7 +232,7 @@ int VideoRender(void)
    SDL_LockTexture(sdl.texture, NULL, &pixel_data, &pitch);
    uint32_t *pixels = pixel_data;
    assert(pixels != NULL);
-   assert(pitch == (ssizeof(*pixels) * VIDEO_WIDTH));
+   assert(pitch == (C_SIZEOF(*pixels) * VIDEO_WIDTH));
 
    // Render Konpu's frambuffer in to the locked texture, and as soon as we've
    // finnished drawing, release (unlock) the texture.
