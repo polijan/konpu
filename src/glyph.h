@@ -170,21 +170,72 @@ typedef void      Glyph;
         Glyph256: true                          )
 
 
+//------------------------------------------------------------------------------
+// GLYPH<N>(...): Construct a Glyph<N> from literals
+//
+// GLYPH<N> for N in {8,16,32,64}
+// - one argument: give the hexadecimal values of the glyph
+// - several arguments: give the values as binary literal, one value per line.
+// - can be used as integral constants
+//
+// GLYPH128
+// -  2 arguments: give the hex value of the two glyph64 (bottom, then up)
+// - 16 arguments: give the values as binary literal, one value per line.
+//
+// GLYPH256
+// - 32 arguments: give the values as binary literal, 2 values per line.
+//------------------------------------------------------------------------------
 
-// Construct Glyphs from literals (in hexadecimal):
-#define GLYPH8( hex_lit)     ((uint8_t) 0x##hex_lit##U)
-#define GLYPH16(hex_lit)     ((uint16_t)0x##hex_lit##U)
-#define GLYPH32(hex_lit)     ((uint32_t)0x##hex_lit##U)
-#define GLYPH64(hex_lit)     ((uint64_t)0x##hex_lit##U)
-#define GLYPH128(hex_bottom_lit, hex_top_lit)         \
-        ((Glyph128){ 0x##hex_top_lit, 0x##hex_bottom_lit })
-#define GLYPH256(hex_bottom_right_lit, hex_bottom_left_lit,          \
-                 hex_top_right_lit,    hex_top_left_lit)             \
-        ((Glyph256){ .bottom_right = GLYPH64(hex_bottom_right_lit) , \
-                     .bottom_left  = GLYPH64(hex_bottom_left_lit)  , \
-                     .top_right    = GLYPH64(hex_top_right_lit)    , \
-                     .top_left     = GLYPH64(hex_top_left_lit)     } )
+#define GLYPH8(...)                           UTIL_OVERLOAD(GLYPH8, __VA_ARGS__)
+#  define GLYPH8_1_(hex_lit)                          ((uint8_t) 0x##hex_lit##U)
+#  define GLYPH8_4_(quarter1, quarter2, quarter3, quarter4)        ((uint8_t)( \
+      BITS_REVERSED_1_(quarter4)      | BITS_REVERSED_1_(quarter3) >> 2 |      \
+      BITS_REVERSED_1_(quarter2) >> 4 | BITS_REVERSED_1_(quarter1) >> 6 )      )
 
+#define GLYPH16(...)                         UTIL_OVERLOAD(GLYPH16, __VA_ARGS__)
+#  define GLYPH16_1_(hex_lit)                         ((uint16_t)0x##hex_lit##U)
+#  define GLYPH16_4_(nibble1, nibble2, nibble3, nibble4)          ((uint16_t)( \
+      BITS_REVERSED_1_(nibble4) << 8 | BITS_REVERSED_1_(nibble3) << 4 |        \
+      BITS_REVERSED_1_(nibble2)      | BITS_REVERSED_1_(nibble1) >> 4 )        )
+
+#define GLYPH32(...)                         UTIL_OVERLOAD(GLYPH32, __VA_ARGS__)
+#  define GLYPH32_1_(hex_lit)                         ((uint32_t)0x##hex_lit##U)
+#  define GLYPH32_8_(nibble1, nibble2, nibble3, nibble4,                       \
+                     nibble5, nibble6, nibble7, nibble8)          ((uint32_t)( \
+      (uint32_t)BITS_REVERSED_1_(nibble8) << 24 |                              \
+      (uint32_t)BITS_REVERSED_1_(nibble7) << 20 |                              \
+      (uint32_t)BITS_REVERSED_1_(nibble6) << 16 |                              \
+      (uint32_t)BITS_REVERSED_1_(nibble5) << 12 |                              \
+      BITS_REVERSED_1_(nibble4) <<  8 | BITS_REVERSED_1_(nibble3) <<  4 |      \
+      BITS_REVERSED_1_(nibble2)       | BITS_REVERSED_1_(nibble1) >>  4 )      )
+
+#define GLYPH64(...)                         UTIL_OVERLOAD(GLYPH64, __VA_ARGS__)
+#  define GLYPH64_1_(hex_lit)                         ((uint64_t)0x##hex_lit##U)
+#  define GLYPH64_8_(byte1, byte2, byte3, byte4, byte5, byte6, byte7, byte8)   \
+      ((uint64_t) BITS_REVERSED_8_( byte1, byte2, byte3, byte4,                \
+                                    byte5, byte6, byte7, byte8 ))
+
+#define GLYPH128(...)                       UTIL_OVERLOAD(GLYPH128, __VA_ARGS__)
+#  define GLYPH128_2_(hex_bottom_lit,hex_top_lit)                              \
+      ((Glyph128){ 0x##hex_top_lit##U, 0x##hex_bottom_lit##U })
+#  define GLYPH128_16_(byte1, byte2, byte3, byte4, byte5, byte6, byte7, byte8, \
+                       byte9, byteA, byteB, byteC, byteD, byteE, byteF, byteG) \
+      ((Glyph128){                                                             \
+         GLYPH64_8_(byte1, byte2, byte3, byte4, byte5, byte6, byte7, byte8),   \
+         GLYPH64_8_(byte9, byteA, byteB, byteC, byteD, byteE, byteF, byteG)    \
+      })
+
+#define GLYPH256( byteL1, byteR1, byteL2, byteR2, byteL3, byteR3, byteL4,      \
+                  byteR4, byteL5, byteR5, byteL6, byteR6, byteL7, byteR7,      \
+                  byteL8, byteR8, byteL9, byteR9, byteLA, byteRA, byteLB,      \
+                  byteRB, byteLC, byteRC, byteLD, byteRD, byteLE, byteRE,      \
+                  byteLF, byteRF, byteLG, byteRG )                             \
+   ((Glyph256){                                                                \
+      GLYPH64_8_(byteL1,byteL2,byteL3,byteL4,byteL5,byteL6,byteL7,byteL8),     \
+      GLYPH64_8_(byteR1,byteR2,byteR3,byteR4,byteR5,byteR6,byteR7,byteR8),     \
+      GLYPH64_8_(byteL9,byteLA,byteLB,byteLC,byteLD,byteLE,byteLF,byteLG),     \
+      GLYPH64_8_(byteR9,byteRA,byteRB,byteRC,byteRD,byteRE,byteRF,byteRG)      \
+   })
 
 //------------------------------------------------------------------------------
 // Access to Pixels

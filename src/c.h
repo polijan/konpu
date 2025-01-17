@@ -9,7 +9,9 @@
 //   * static_assert(...) keyword (with one or two argument(s))
 //   * alignas/alignof keywords (<stdalign.h> in C11/17)
 //   * bool/true/false type/keywords (<stdbool.h> in C11/17)
-//   * most functionalities from C23's <stdbit.h> header (TODO)
+//   * bits functionalities like C23 (actually defined in the file "bits.h")
+//     - macros like in the <stdbit.h> header
+//     - the BITS(...) macro to write binary literals
 //   * UTIL_VA_OPT_COMMA(...) as a functional equivalent to __VA_OPT__(,)
 //   * misc...
 // - Include functionalities similar to other (non-freestanding) C headers
