@@ -26,8 +26,8 @@ typedef struct {
 // Comparison function for sorting an array of ColorPair with `qsort`
 static int ColorPairCompare(const void* pair1, const void* pair2)
 {
-   float d1 = ((ColorPair*)pair1)->distance;
-   float d2 = ((ColorPair*)pair2)->distance;
+   float d1 = ((const ColorPair*)pair1)->distance;
+   float d2 = ((const ColorPair*)pair2)->distance;
    return (d1 < d2)? -1 : 1;
 }
 

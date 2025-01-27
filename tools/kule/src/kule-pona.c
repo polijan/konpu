@@ -1,7 +1,7 @@
 #include "kule.h"
 
 // Basename of the program
-char* argv0;
+const char* argv0;
 
 // Usage function
 C_ATTRIBUTE_NORETURN
