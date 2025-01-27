@@ -1,0 +1,12 @@
+Simple home-made Color and Image tools
+--------------------------------------
+
+Tools that help the creation of ilo Konpu or complement it.
+They allow:
+
+- creation and analysis of "uniform" palettes,
+- creation of the "best" palette for a given image,
+- dithering an image in various ways,
+- etc.
+
+The tools work in the OkLab perceptual color space.
