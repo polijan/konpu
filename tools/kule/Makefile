@@ -1,7 +1,15 @@
 CC = gcc
-CWARN = -Wall -Wextra -pedantic -Wformat=2 # -Wno-unused-function -fanalyzer $(CWARN_EXTRA)
-CFLAGS  = -std=c99 -fdiagnostics-color $(CWARN) $(CFLAGS_EXTRA)
-LDFLAGS = $(LDFLAGS_EXTRA)
+
+CWARN = -Wall -Wextra -pedantic -Wformat=2                           \
+        -Wundef -Wcast-align                                         \
+        -Wmissing-format-attribute -Wnested-externs -Wpointer-arith  \
+        -Wreturn-type -Wswitch -Wcast-qual -Wwrite-strings           \
+        -Wformat=2 -Wpointer-sign -Wmissing-noreturn                 \
+        -Wvla
+#       -Wshadow (usually I ad that, but oklab.h does some shadowing)
+
+CFLAGS  = -std=c99 -fdiagnostics-color $(CWARN)
+LDFLAGS =
 
 #===============================================================================
 
@@ -27,7 +35,7 @@ print-%: # Use make print-<VARIABLE> to print out a variable from this Makefile
 COLORS_SRCS = $(wildcard src/*.c)
 COLORS_DEPS = $(wildcard src/*.h) $(KONPU_HOME)/src/options.h $(KONPU_HOME)/src/options.c
 COLORS_BINS = $(patsubst src/%.c, bin/%, $(COLORS_SRCS))
-COLORS_CFLAGS = $(CFLAGS) -O2
+COLORS_CFLAGS = $(CFLAGS) -O3
 COLORS_LDFLAGS = $(LDFLAGS) -lm
 
 bin/%: src/%.c $(COLORS_DEPS)

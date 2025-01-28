@@ -1,17 +1,7 @@
 // Partition a palette into clusters of similar color attributes.
 
+#define  KULE_OPTION_USE_KMEANS
 #include "../src/kule.h"
-
-// Include 'kmeans'
-// 1. Include the kmeans *implementation* in order to compile everything in a
-//    single program.
-// 2. Also temporarily disable warnings about comparing integer expressions of
-//    different signs. Such comparisons in 'kmeans' appear safe.
-#pragma  GCC diagnostic push
-#pragma  GCC diagnostic ignored "-Wsign-compare"
-#include "../external/kmeans/kmeans.c"
-#pragma  GCC diagnostic pop
-
 
 //------------------------------------------------------------------------------
 // The functions callback by K-Means (as per different the different criteria)
@@ -30,81 +20,47 @@
 //                           (already allocated)
 //------------------------------------------------------------------------------
 
-static double distance_by_similarity(const Pointer color1, const Pointer color2)
-{ return LabDistance(*(Lab*)color1, *(Lab*)color2); }
-
 static double distance_by_L(const Pointer color1, const Pointer color2)
-{ return fabs( ((Lab*)color1)->L - ((Lab*)color2)->L ); }
+{ return fabs( ((const Lab*)color1)->L - ((const Lab*)color2)->L ); }
 
 static double distance_by_a(const Pointer color1, const Pointer color2)
-{ return fabs( ((Lab*)color1)->a - ((Lab*)color2)->a ); }
+{ return fabs( ((const Lab*)color1)->a - ((const Lab*)color2)->a ); }
 
 static double distance_by_b(const Pointer color1, const Pointer color2)
-{ return fabs( ((Lab*)color1)->b - ((Lab*)color2)->b ); }
+{ return fabs( ((const Lab*)color1)->b - ((const Lab*)color2)->b ); }
 
 static double distance_by_Chroma(const Pointer color1, const Pointer color2)
-{ return fabs( LabChroma(*(Lab*)color1) - LabChroma(*(Lab*)color2) ); }
+{ return fabs(   LabChroma(*(const Lab*)color1)
+               - LabChroma(*(const Lab*)color2) ); }
 
 static double distance_by_Hue(const Pointer color1, const Pointer color2) {
-   float hue1 = LabHue(*(Lab*)color1);
-   float hue2 = LabHue(*(Lab*)color2);
+   float hue1 = LabHue(*(const Lab*)color1);
+   float hue2 = LabHue(*(const Lab*)color2);
    Lab c1 = { 0.5f, cosf(hue1), sinf(hue1) };
    Lab c2 = { 0.5f, cosf(hue2), sinf(hue2) };
    return LabDistance(c1, c2);
 }
 
 static double distance_by_Saturation(const Pointer color1, const Pointer color2)
-{ return fabs( LabSaturation(*(Lab*)color1) - LabSaturation(*(Lab*)color2) ); }
+{ return fabs(   LabSaturation(*(const Lab*)color1)
+               - LabSaturation(*(const Lab*)color2) ); }
 
 static double distance_by_R(const Pointer color1, const Pointer color2) {
-   RGB c1 = oklab_to_linear_srgb(*(Lab*)color1);
-   RGB c2 = oklab_to_linear_srgb(*(Lab*)color2);
+   RGB c1 = oklab_to_linear_srgb(*(const Lab*)color1);
+   RGB c2 = oklab_to_linear_srgb(*(const Lab*)color2);
    return fabs(c1.r - c2.r);
 }
 
 static double distance_by_G(const Pointer color1, const Pointer color2) {
-   RGB c1 = oklab_to_linear_srgb(*(Lab*)color1);
-   RGB c2 = oklab_to_linear_srgb(*(Lab*)color2);
+   RGB c1 = oklab_to_linear_srgb(*(const Lab*)color1);
+   RGB c2 = oklab_to_linear_srgb(*(const Lab*)color2);
    return fabs(c1.g - c2.g);
 }
 
 static double distance_by_B(const Pointer color1, const Pointer color2) {
-   RGB c1 = oklab_to_linear_srgb(*(Lab*)color1);
-   RGB c2 = oklab_to_linear_srgb(*(Lab*)color2);
+   RGB c1 = oklab_to_linear_srgb(*(const Lab*)color1);
+   RGB c2 = oklab_to_linear_srgb(*(const Lab*)color2);
    return fabs(c1.b - c2.b);
-}
-
-
-// Assign the centroid as the average of all colors in the cluster
-static void update_centroids_by_similarity(
-   const Pointer *objs, const int* clusters,
-   size_t num_objs, int cluster, Pointer centroid)
-{
-   if (num_objs <= 0) return;
-
-   Lab **color = (Lab**)objs;
-   Lab *center = (Lab*)centroid;
-
-   int n = 0;
-   double sum_L = 0.;
-   double sum_a = 0.;
-   double sum_b = 0.;
-
-   for (size_t i = 0; i < num_objs; i++) {
-      // Only process objects of interest
-      if (clusters[i] != cluster)
-         continue;
-
-      sum_L += color[i]->L;
-      sum_a += color[i]->a;
-      sum_b += color[i]->b;
-      n++;
-   }
-   if (n != 0) {
-      center->L = (float)(sum_L / n);
-      center->a = (float)(sum_a / n);
-      center->b = (float)(sum_b / n);
-   }
 }
 
 static void update_centroids_by_L(
@@ -112,7 +68,7 @@ static void update_centroids_by_L(
    size_t num_objs, int cluster, Pointer centroid)
 {
    if (num_objs <= 0) return;
-   Lab **color = (Lab**)objs;
+   Lab * const *color = (Lab * const *)objs;
    Lab *center = (Lab*)centroid;
    int n = 0;
    double sum_L = 0.;
@@ -134,7 +90,7 @@ static void update_centroids_by_a(
    size_t num_objs, int cluster, Pointer centroid)
 {
    if (num_objs <= 0) return;
-   Lab **color = (Lab**)objs;
+   Lab * const *color = (Lab * const *)objs;
    Lab *center = (Lab*)centroid;
    int n = 0;
    double sum_a = 0.;
@@ -156,7 +112,7 @@ static void update_centroids_by_b(
    size_t num_objs, int cluster, Pointer centroid)
 {
    if (num_objs <= 0) return;
-   Lab **color = (Lab**)objs;
+   Lab * const *color = (Lab * const *)objs;
    Lab *center = (Lab*)centroid;
    int n = 0;
    double sum_b = 0.;
@@ -178,7 +134,7 @@ static void update_centroids_by_Chroma(
    size_t num_objs, int cluster, Pointer centroid)
 {
    if (num_objs <= 0) return;
-   Lab **color = (Lab**)objs;
+   Lab * const *color = (Lab * const *)objs;
    Lab *center = (Lab*)centroid;
    int n = 0;
    double sum_chroma = 0.;
@@ -198,7 +154,7 @@ static void update_centroids_by_Saturation(
    size_t num_objs, int cluster, Pointer centroid)
 {
    if (num_objs <= 0) return;
-   Lab **color = (Lab**)objs;
+   Lab * const *color = (Lab * const *)objs;
    Lab *center = (Lab*)centroid;
    int n = 0;
    double sum_saturation = 0.;
@@ -219,7 +175,7 @@ static void update_centroids_by_Hue(
    size_t num_objs, int cluster, Pointer centroid)
 {
    if (num_objs <= 0) return;
-   Lab **color = (Lab**)objs;
+   Lab * const *color = (Lab * const *)objs;
    Lab *center = (Lab*)centroid;
    int n = 0;
    double sum_cos = 0.;
@@ -248,7 +204,7 @@ static void update_centroids_by_R(
    size_t num_objs, int cluster, Pointer centroid)
 {
    if (num_objs <= 0) return;
-   Lab **color = (Lab**)objs;
+   Lab * const *color = (Lab * const *)objs;
    Lab *center = (Lab*)centroid;
    int n = 0;
    double sum_R = 0.;
@@ -268,7 +224,7 @@ static void update_centroids_by_G(
    size_t num_objs, int cluster, Pointer centroid)
 {
    if (num_objs <= 0) return;
-   Lab **color = (Lab**)objs;
+   Lab * const *color = (Lab * const *)objs;
    Lab *center = (Lab*)centroid;
    int n = 0;
    double sum_G = 0.;
@@ -288,7 +244,7 @@ static void update_centroids_by_B(
    size_t num_objs, int cluster, Pointer centroid)
 {
    if (num_objs <= 0) return;
-   Lab **color = (Lab**)objs;
+   Lab * const *color = (Lab * const *)objs;
    Lab *center = (Lab*)centroid;
    int n = 0;
    double sum_B = 0.;
@@ -312,7 +268,7 @@ static void update_centroids_by_B(
 C_ATTRIBUTE_NORETURN
 void Usage(const char* argv0, int fail)
 {
-   fprintf(stderr, "Usage: %s [Options]... PALETTE N\n\n", ProgramName(argv0));
+   fprintf(stderr, "Usage: %s [Options]... N PALETTE\n\n", ProgramName(argv0));
 
    fprintf(stderr, "Partition a palette into N clusters of colors.\n");
    fprintf(stderr, "(Using k-Means algorithm and based on the OkLab perceptual distance)\n\n");
@@ -352,8 +308,8 @@ int main(int argc, char *argv[])
 {
    // K-Means objects
    kmeans_config km = {
-      .distance_method = distance_by_similarity,
-      .centroid_method = update_centroids_by_similarity,
+      .distance_method = KuleKM_LabDistance_,
+      .centroid_method = KuleKM_AverageLabCentroids_,
    };
    Lab *centers;  // k-Means cluster centroids
 
@@ -377,8 +333,8 @@ int main(int argc, char *argv[])
          default : Usage(argv[0], 1);
          case 'h': Usage(argv[0], argc != 2);
          case 'p': break;
-         case 'd': km.distance_method = distance_by_similarity;
-                   km.centroid_method = update_centroids_by_similarity;
+         case 'd': km.distance_method = KuleKM_LabDistance_;
+                   km.centroid_method = KuleKM_AverageLabCentroids_;
                    break;
          case 'L': km.distance_method = distance_by_L;
                    km.centroid_method = update_centroids_by_L;

@@ -1,23 +1,12 @@
 // Generate a uniform color palette by sampling the sRGB space and using k-Means
 // to partition those samples into clusters based on the OkLab distance.
 
-
+#define  KULE_OPTION_USE_KMEANS
 #include "../src/kule.h"
 
 // When sampling sRGB, the number of samples are (256/step)^3.
 // Thus sampling step should not be more than 256 / cbrt(PALETTE_SIZE_MAX)
 #define STEP_MAX  16
-
-// Include 'kmeans'
-// 1. Include the kmeans *implementation* in order to compile everything in a
-//    single program.
-// 2. Also temporarily disable warnings about comparing integer expressions of
-//    different signs. Such comparisons in 'kmeans' appear safe.
-#pragma  GCC diagnostic push
-#pragma  GCC diagnostic ignored "-Wsign-compare"
-#include "../external/kmeans/kmeans.c"
-#pragma  GCC diagnostic pop
-
 
 // Print usage and exit
 C_ATTRIBUTE_NORETURN
@@ -50,59 +39,15 @@ void Usage(const char* argv0, int fail)
 }
 
 
-// K-Means distance method = OkLab color distance
-static double Distance(const Pointer color1, const Pointer color2)
-{ return LabDistance(*(Lab*)color1, *(Lab*)color2); }
-
-// K-Means method assigning the centroids =
-// Assign the centroid as the average of all colors in the cluster
-//
-// Reminder about the parameters pass by k-Means:
-// @param objs      the list of all objects in the calculation
-// @param clusters  the list of cluster numbers for each object
-// @param num_objs  the number of objects/cluster numbers in the previous arrays
-// @param cluster   the cluster number we are actually generating a centroid for here
-// @param centroid  the object to write the centroid result into (already allocated)
-static void UpdateCentroids(const Pointer *objs, const int* clusters,
-                            size_t num_objs, int cluster, Pointer centroid)
-{
-   if (num_objs <= 0) return;
-
-   Lab **color = (Lab**)objs;
-   Lab *center = (Lab*)centroid;
-
-   int n = 0;
-   double sum_L = 0.;
-   double sum_a = 0.;
-   double sum_b = 0.;
-
-   for (size_t i = 0; i < num_objs; i++) {
-      // Only process objects of interest
-      if (clusters[i] != cluster)
-         continue;
-
-      sum_L += color[i]->L;
-      sum_a += color[i]->a;
-      sum_b += color[i]->b;
-      n++;
-   }
-   if (n != 0) {
-      center->L = (float)(sum_L / n);
-      center->a = (float)(sum_a / n);
-      center->b = (float)(sum_b / n);
-   }
-}
-
-
 int main(int argc, char *argv[])
 {
    // K-Means objects
    Lab *objs;     // k-Means samples = OkLab colors sampling sRGB)
    Lab *centers;  // k-Means cluster centroids = OkLab colors in our palette
-   kmeans_config config = { // The k-Means config object
+   kmeans_config km = { // The k-Means km object
       .max_iterations  = 0, //<-- library's default (change it if needed)
-      .distance_method = Distance,
-      .centroid_method = UpdateCentroids
+      .distance_method = KuleKM_LabDistance_,
+      .centroid_method = KuleKM_AverageLabCentroids_
    };
 
    // Read command line flags
@@ -124,8 +69,8 @@ int main(int argc, char *argv[])
 
    // Read command line argument(s)
    if (opt.ind != argc - 1)  Usage(argv[0], 1);
-   config.k = atoi(argv[opt.ind]);
-   if (config.k < 1 || config.k > PALETTE_SIZE_MAX)  Usage(argv[0], 1);
+   km.k = atoi(argv[opt.ind]);
+   if (km.k < 1 || km.k > PALETTE_SIZE_MAX)  Usage(argv[0], 1);
    // Size of the steps to take when sampling the gamma sRGB space
    // Now, we use the same step in the R,G,B components.
    // Someday/maybe we may wanna change when step is "large" (because human eyes
@@ -133,48 +78,46 @@ int main(int argc, char *argv[])
 #  define stepR   step
 #  define stepG   step
 #  define stepB   step
-   config.num_objs = 256/stepR * 256/stepG * 256/stepB;
+   km.num_objs = 256/stepR * 256/stepG * 256/stepB;
 
    // Allocate all k-Means objects
-   objs            = MallocOrExit(config.num_objs * sizeof(Lab));
-   centers         = MallocOrExit(config.k        * sizeof(Lab));
-   config.objs     = CallocOrExit(config.num_objs , sizeof(Pointer));
-   config.centers  = CallocOrExit(config.k        , sizeof(Pointer));
-   config.clusters = CallocOrExit(config.num_objs , sizeof(int));
+   objs        = MallocOrExit(km.num_objs * sizeof(Lab));
+   centers     = MallocOrExit(km.k        * sizeof(Lab));
+   km.objs     = CallocOrExit(km.num_objs , sizeof(Pointer));
+   km.centers  = CallocOrExit(km.k        , sizeof(Pointer));
+   km.clusters = CallocOrExit(km.num_objs , sizeof(int));
 
    // Create OkLab color k-Means objects by sampling the gamma sRGB space
    size_t index = 0;
-   for (int r = 0; r < 256; r += stepR) {
-      for (int g = 0; g < 256; g += stepG) {
-         for (int b = 0; b < 256; b += stepB) {
-            // Create color and populate it in config.objs:
-            objs[index] = LabFromSRGB( ((uint32_t)r)<<16 | g<<8 | b );
-            config.objs[index] = &objs[index];
-            index++;
-         }
-      }
+   for (int r = 0; r < 256; r += stepR)
+   for (int g = 0; g < 256; g += stepG)
+   for (int b = 0; b < 256; b += stepB) {
+      // Create color and populate it in km.objs:
+      objs[index] = LabFromSRGB(r, g, b);
+      km.objs[index] = &objs[index];
+      index++;
    }
-   assert(index == config.num_objs);
+   assert(index == km.num_objs);
 
    // Populate the centroids (equidistantly)
-   for (size_t i = 0; i < config.k; i++) {
-      centers[i] = objs[i * (config.num_objs / config.k)];
-      config.centers[i] = &centers[i];
+   for (size_t i = 0; i < km.k; i++) {
+      centers[i] = objs[i * (km.num_objs / km.k)];
+      km.centers[i] = &centers[i];
    }
 
    // Run k-Means partitioning
-   kmeans_result returnValue = kmeans(&config);
+   kmeans_result returnValue = kmeans(&km);
 
    // Print the final palette, i.e. the centroids
-   for(unsigned i = 0; i < config.k; i++) {
+   for(unsigned i = 0; i < km.k; i++) {
       LabPrint(centers[i], 0);
    }
 
 
    // Cleanup and exit
-   free(config.objs);
-   free(config.clusters);
-   free(config.centers);
+   free(km.objs);
+   free(km.clusters);
+   free(km.centers);
    free(objs);
    free(centers);
    return returnValue;
