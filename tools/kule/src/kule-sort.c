@@ -44,8 +44,8 @@ int (*ColorCompare)(Lab color1, Lab color2);
 // Adapter for calling the global ColorCompare in `qsort`
 static int QSortCompare(const void *elem1, const void *elem2)
 {
-   Lab l1 = ((ColorAndIndex*)elem1)->color;
-   Lab l2 = ((ColorAndIndex*)elem2)->color;
+   Lab l1 = ((const ColorAndIndex *)elem1)->color;
+   Lab l2 = ((const ColorAndIndex *)elem2)->color;
    return ColorCompare(l1, l2);
 }
 
@@ -114,9 +114,9 @@ int main(int argc, char *argv[])
                               {"saturation", OPTIONS_NO_ARGUMENT, 'S'},
                               {"red",        OPTIONS_NO_ARGUMENT, 'R'},
                               {"green",      OPTIONS_NO_ARGUMENT, 'G'},
-                              {"blue",      OPTIONS_NO_ARGUMENT, 'B'},
-                              {"reverse",   OPTIONS_NO_ARGUMENT, 'r'},
-                              {"nothing",   OPTIONS_NO_ARGUMENT, '0'},
+                              {"blue",       OPTIONS_NO_ARGUMENT, 'B'},
+                              {"reverse",    OPTIONS_NO_ARGUMENT, 'r'},
+                              {"nothing",    OPTIONS_NO_ARGUMENT, '0'},
                               {0} };
    while ((flag = OptionsGet(&opt, argc, argv, optstr, longopts)) != -1) {
       switch(flag) {
