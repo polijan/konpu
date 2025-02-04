@@ -8,8 +8,6 @@
 #define TOOLS_KULE_H
 
 
-
-
 // stb_image (https://github.com/nothings/stb)
 // Defining KULE_OPTION_USE_STB_IMAGE will include stb_image which allows the
 // function `ImageInitFromFile(filename)` to open different image file formats
@@ -115,6 +113,17 @@ void* ReallocOrExit(void *pointer, size_t size) {
 #else
 #   define C_ATTRIBUTE_NORETURN
 #   define C_ATTRIBUTE_MAYBE_UNUSED
+#endif
+
+#include <stddef.h>
+#ifndef unreachable
+#   if defined(__GNUC__)
+#      define unreachable()   (__builtin_unreachable())
+#   elif defined(_MSC_VER)
+#      define unreachable()   (__assume(false))
+#   else
+#      define unreachable()   ((void)0)
+#   endif
 #endif
 
 // Given main's argv[0], return the program's basename
