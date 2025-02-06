@@ -251,7 +251,15 @@ LC find_cusp(float a, float b)
 // a and b must be normalized so a^2 + b^2 == 1
 float find_gamut_intersection_6_(float a, float b, float L1, float C1, float L0, LC cusp)
 {
-	// Find the intersection for upper and lower half seprately
+// Porting Note: This function declares variables whose names
+//               shadowing the names of parameters, but it's safe.
+//               let's ignore potential warnings for that here.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+
+
+
+	// Find the intersection for upper and lower half separately
 	float t;
 	if (((L1 - L0) * cusp.C - (cusp.L - L0) * C1) <= 0.f)
 	{
@@ -332,6 +340,9 @@ float find_gamut_intersection_6_(float a, float b, float L1, float C1, float L0,
 	}
 
 	return t;
+
+// Restore warnings we may have ignored:
+#pragma GCC diagnostic pop
 }
 
 float find_gamut_intersection_5_(float a, float b, float L1, float C1, float L0)
