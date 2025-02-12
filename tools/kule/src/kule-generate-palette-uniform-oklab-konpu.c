@@ -66,8 +66,8 @@ uint32_t desired_colors[] = {
 int main(void)
 {
    // Pre-populate the result with some colors we desire to have in the palette
-   assert(UTIL_ARRAY_LENGTH(desired_colors) < PALETTE_SIZE_MAX);
-   for (; count < UTIL_ARRAY_LENGTH(desired_colors); count++) {
+   assert(UTIL_ARRAY_SIZE(desired_colors) < PALETTE_SIZE_MAX);
+   for (; count < UTIL_ARRAY_SIZE(desired_colors); count++) {
       colors[count] = LabFromSRGB(desired_colors[count]);
    }
 

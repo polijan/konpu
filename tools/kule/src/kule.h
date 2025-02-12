@@ -97,7 +97,27 @@ void* ReallocOrExit(void *pointer, size_t size) {
    return ptr;
 }
 
-// A few more things with the goal to harmonize C versions
+// Given main's argv[0], return the program's basename
+// Assume / as file spearator
+const char *ProgramName(const char *argv0)
+{
+#ifdef _WIN32
+#  define FILE_SEPARATOR  '\\'
+#else
+#  define FILE_SEPARATOR  '/'
+#endif
+   const char *last = argv0;
+   while (*argv0 != '\0') {
+      if (*argv0 == FILE_SEPARATOR)  last = argv0;
+      argv0++;
+   }
+   return last;
+}
+
+// A few more things with the goal to harmonize C versions. Only define those
+// when not already using Konpu API (they would otherwise be already be defined)
+#ifndef KONPU_UTIL_H
+                     // C API, only defined them
 #if __STDC_VERSION__ < 202311L
 #   include <stdbool.h>
 #endif
@@ -126,25 +146,8 @@ void* ReallocOrExit(void *pointer, size_t size) {
 #   endif
 #endif
 
-// Given main's argv[0], return the program's basename
-// Assume / as file spearator
-const char *ProgramName(const char *argv0)
-{
-#ifdef _WIN32
-#  define FILE_SEPARATOR  '\\'
-#else
-#  define FILE_SEPARATOR  '/'
-#endif
-   const char *last = argv0;
-   while (*argv0 != '\0') {
-      if (*argv0 == FILE_SEPARATOR)  last = argv0;
-      argv0++;
-   }
-   return last;
-}
-
 // Return the size of an array (note: as a `int32_t`, not a `size_t`)
-#define UTIL_ARRAY_LENGTH(x) ((int32_t)(sizeof(x) / sizeof((x)[0])))
+#define UTIL_ARRAY_SIZE(x) ((int32_t)(sizeof(x) / sizeof((x)[0])))
 
 // Clamp the value of `n` into [0..dimension[
 static inline void UtilClampCoordinate(int *n, int dimension) {
@@ -154,6 +157,8 @@ static inline void UtilClampCoordinate(int *n, int dimension) {
       *n = dimension - 1;
    }
 }
+#endif //KONPU_UTIL_H
+
 
 //------------------------------------------------------------------------------
 // Functions related to Lab Polar form (LCh)
@@ -703,7 +708,7 @@ Image ImageInitFromPPMStream(FILE *stream)
    // Skip any comment lines
    char buf[256]; // max line length
    do {
-      char *str = fgets(buf, UTIL_ARRAY_LENGTH(buf), stream);
+      char *str = fgets(buf, UTIL_ARRAY_SIZE(buf), stream);
       if (str == NULL) goto error;
    } while (buf[0] == '#');
 

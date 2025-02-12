@@ -244,13 +244,13 @@ int VideoRender(void)
    // Set/draw border when the border color has changed.
    if (sdl.border != COLOR_BORDER) {
       sdl.border = COLOR_BORDER;
-      const uint8_t *rgb = COLOR_RGB(sdl.border);
+      const uint8_t *rgb = ColorToRGB(sdl.border);
       SDL_SetRenderDrawColor(sdl.renderer, rgb[0], rgb[1], rgb[2], SDL_ALPHA_OPAQUE);
    }
-   // TODO/FIXME? Normally I'd guess this should be in the above if, only needed
+   // TODO/FIXME? Normally I'd guess this should be in the above, only needed
    // if the border changes, but for some reason, it seems needed all the time,
    // othwerwise the border just change color. WHY IS THAT? AND DOES IT IMPACT
-   // MY FPS or WAHT?
+   // MY FPS or WHAT?
       SDL_RenderClear(sdl.renderer);
 
 

@@ -272,10 +272,10 @@ static uint32_t PaletteKonpuSRGB[256] = {
 #include "kule.h"
 #ifdef TOOLS_KULE_H
 Palette PaletteKonpu(void) {
-   static Lab array[UTIL_ARRAY_LENGTH(PaletteKonpuSRGB)] = {0};
+   static Lab array[UTIL_ARRAY_SIZE(PaletteKonpuSRGB)] = {0};
    static Palette konpu_pal = { .color = array };
    if (konpu_pal.size == 0) {
-      konpu_pal.size = UTIL_ARRAY_LENGTH(PaletteKonpuSRGB);
+      konpu_pal.size = UTIL_ARRAY_SIZE(PaletteKonpuSRGB);
       for (int i = 0; i < konpu_pal.size; i++)
          konpu_pal.color[i] = LabFromSRGB(PaletteKonpuSRGB[i]);
    }

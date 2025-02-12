@@ -30,7 +30,7 @@
 #define KONPU_ROM_RESOLUTION           ADDRESS_AFTER(KONPU_ROM_VERSION)
 #define KONPU_ROM_RESOLUTION_CAP_      (2 * 11/*possible resolutions*/)
 #define KONPU_ROM_COLOR                ADDRESS_AFTER(KONPU_ROM_RESOLUTION)
-#define KONPU_ROM_COLOR_CAP_           (3/*R,G,B*/ * 256/*colors*/)
+#define KONPU_ROM_COLOR_CAP_           (256 /*colors*/ * 8 /*Lab + kd + RGB*/)
 #define KONPU_ROM_PALETTE              ADDRESS_AFTER(KONPU_ROM_COLOR)
 #define KONPU_ROM_PALETTE_CAP_         128
 #define KONPU_ROM_WAV_HEADER           ADDRESS_AFTER(KONPU_ROM_PALETTE)
