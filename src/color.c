@@ -86,10 +86,8 @@ int ColorFromLABf(struct ColorLABf lab)
    return result;
 }
 
-// Recursively find the closest Konpu color by performing a Nearest Neighbor
-// Seach using the color k-d tree information included in the ROM.
-// This is the function called by ColorFromLABf
-// The implementation is similar to tools/kule/kule-kdtree.h
+// Same as closest_color (ie Nearest Neighbor Serach via the k-d tree info
+// included in the ROM). This is the function called by ColorFromLABi.
 static void closest_color_i(  int color, int L, int a, int b, int *best_color,
                               int_fast32_t *best_distance2, int depth)
 {
