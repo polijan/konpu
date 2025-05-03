@@ -63,7 +63,7 @@ typedef void      Glyph;
 // glyph GlyphRotate<90|180|270>(glyph)
 //
 // // Access to Lines:
-// unsigned int GlyphLineAt(glyph)
+// unsigned int GlyphLineAt(glyph, n)
 // unsigned int GlyphFlatten(glyph)
 //
 // // Half/ Doubling glyphs
@@ -560,7 +560,7 @@ typedef void      Glyph;
            uint64_t: GlyphLineAt_64_ , \
            Glyph128: GlyphLineAt_128_, \
            Glyph256: GlyphLineAt_256_  \
-        )((glyph))
+        )((glyph), (n))
         static inline unsigned GlyphLineAt_8_( uint8_t  g, int n)
         { assert(n >= 0 && n < GLYPH8_HEIGHT);  return BitsQuarterAt(g, n); }
         static inline unsigned GlyphLineAt_16_(uint16_t g, int n)
@@ -576,10 +576,10 @@ typedef void      Glyph;
         static inline unsigned GlyphLineAt_256_(Glyph256 g, int n)
         { assert(n >= 0 && n < GLYPH256_HEIGHT);
           if (n < 8) {
-             return (GlyphLineAt_64_(g.top_left, n) << 8) | GlyphLineAt_64_(g.top_right, n);
+             return (GlyphLineAt_64_(g.top_right, n) << 8) | GlyphLineAt_64_(g.top_left, n);
           } else {
              n -= 8;
-             return (GlyphLineAt_64_(g.bottom_left, n) << 8) | GlyphLineAt_64_(g.bottom_right, n);
+             return (GlyphLineAt_64_(g.bottom_right, n) << 8) | GlyphLineAt_64_(g.bottom_left, n);
           }
         }
 
