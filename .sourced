@@ -5,8 +5,17 @@
 ###########################################################
 # on my computer, this file gets sourced when my shell starts in this directory
 
-KONPU_HOME=$PWD
+printf '\033[m\n'
+printf ' \033[30;48;5;9m%s\033[m\n'  "  _ _         _  __                        "
+printf ' \033[30;48;5;11m%s\033[m\n' " (_) | ___   | |/ /___  _ __  _ __  _   _  "
+printf ' \033[30;48;5;10m%s\033[m\n' " | | |/ _ \  | ' // _ \| '_ \| '_ \| | | | "
+printf ' \033[30;48;5;14m%s\033[m\n' " | | | (_) | | . \ (_) | | | | |_) | |_| | "
+printf ' \033[30;48;5;12m%s\033[m\n' " |_|_|\___/  |_|\_\___/|_| |_| .__/ \__,_| "
+printf ' \033[30;48;5;13m%s\033[m\n' "                             |_|           "
+printf ' ilo nanpa o pona - simple computing is back\n\n'
 
-PATH=$KONPU_HOME/bin:$KONPU_HOME/tests/bin:$KONPU_HOME/tools/bin:$KONPU_HOME/tools/kule/bin:$PATH
+KONPU_HOME=$PWD
+PATH=$KONPU_HOME/bin:$(ls -d "$KONPU_HOME"/tools/*/bin | tr '\n' ':')$PATH
+
 export KONPU_HOME
 export PATH
