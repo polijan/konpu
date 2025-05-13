@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# Usage: $0 file.fnt
-# Print on stdout an octant-based .flf FIGlet font corresponfing to file.fnt
+# Usage: $0 file.selo
+# Print on stdout an octant-based .flf FIGlet font corresponfing to file.selo
 
 . "$KONPU_HOME"/tools/dev/lib/common.sh
 requires glyph-print
@@ -46,7 +46,7 @@ printf 'flf2a$ %d 2 34 -1 4 0 0 %d\n' "$HEIGHT" "$CODETAG_COUNT"
 
 # The 4 lines of comments we decided to add:
 printf '#\n'
-printf '# Font %s (converted by fnt2flf tool)\n' "$(basename "$1")"
+printf '# Font %s (converted by selo-to-flf tool)\n' "$(basename "$1")"
 printf "# selo Konpu's (sub)project, see: %s\n" "$KONPU_URL"
 printf '#\n'
 
