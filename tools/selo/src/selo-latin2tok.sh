@@ -23,6 +23,7 @@
 #   ^ replaced* with  U+F1995 (STACKING JOINER)
 #   + replaced* with  U+F1996 (SCALING JOINER)
 
+. "$KONPU_HOME"/tools/dev/lib/common.sh
 
 LC_ALL=C                            \
 sed -e 's/\<a\>/󱤀/g'               \

@@ -12,6 +12,7 @@
 #   [  is replaced with  U+F1990  (START OF CARTOUCHE)
 #   ]  is replaced with  U+F1991  (END OF CARTOUCHE)
 
+. "$KONPU_HOME"/tools/dev/lib/common.sh
 
 LC_ALL=C                 \
 sed -e 's/\<a\>/󱱀/g'    \

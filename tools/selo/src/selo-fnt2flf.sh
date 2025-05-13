@@ -3,10 +3,7 @@
 # Usage: $0 file.fnt
 # Print on stdout an octant-based .flf FIGlet font corresponfing to file.fnt
 
-exists() { command -v "$@" > /dev/null; }
-die() { printf '%s\n' "$*" >&2; exit 1; }
-requires() { exists "$@" || die "Cannot find: $*"; }
-
+. "$KONPU_HOME"/tools/dev/lib/common.sh
 requires glyph-print
 
 # Print header: a figlet font starts like this:
