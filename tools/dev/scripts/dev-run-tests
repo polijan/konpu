@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Usage: $0
+# Run all Konpu tests
+
+. "$KONPU_HOME"/tools/dev/lib/common.sh
+
+cd "$KONPU_HOME"/tests/bin || die 'Cannot cd to tests/bin directory'
+set -- *
+[ "$1" = '*' ] && die 'tests/bin directory is empty'
+
+for i in "$@"; do
+    printf '\033[33m%s:\33[m ' "$i"
+    [ -x "$i" ] || die "not an executable file."
+    ./"$i" || exit 1
+done

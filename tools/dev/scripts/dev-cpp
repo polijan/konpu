@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# Usage: $0 [CPP_ARGS]...
+# Invoke the C preprocessor as a preprocessor for general use
+
+. "$KONPU_HOME"/tools/dev/lib/common.sh
+
+requires cpp
+
+cpp -P  -Wundef -Wtrigraphs -nostdinc -fdollars-in-identifiers "$@"

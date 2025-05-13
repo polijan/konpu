@@ -20,8 +20,8 @@ CWARN = -Wall -Wextra -pedantic  \
         \
         -Wno-cast-align -Wno-unused-function  \
         \
-        $(CWARN_EXTRA) \
-        -fanalyzer -fsanitize=address,undefined \
+#        $(CWARN_EXTRA) \
+#        -fanalyzer -fsanitize=address,undefined \
         # -fanalyzer -fsanitize=address,undefined # -Werror
 
 #CWARN += -Werror
@@ -43,7 +43,7 @@ CWARN = -Wall -Wextra -pedantic  \
 # -ggdb3 produces extra info, for example including macro definitions.
 #
 # For a release build do: CFLAGS_DEBUG = -DNDEBUG
-CDEBUG = -ggdb3 # -Werror #<-- don't build with warnings
+CDEBUG = #-ggdb3 # -Werror #<-- don't build with warnings
 
 # Optimization:
 # + -O2 or `-O3 -fexpensive-optimizations` or ...
@@ -140,7 +140,7 @@ TESTS_SRCS = $(wildcard tests/*.c)
 TESTS_BINS = $(patsubst tests/%.c, tests/bin/%, $(TESTS_SRCS))
 
 test: tests
-	@tools/run-tests/run-tests
+	@dev-run-tests
 
 tests: $(TESTS_BINS)
 

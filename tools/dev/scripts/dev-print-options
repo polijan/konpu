@@ -3,4 +3,6 @@
 # Usage: $0
 # show the KONPU_OPTION_* symbols
 
+. "$KONPU_HOME"/tools/dev/lib/common.sh
+
 grep -osh 'KONPU_OPTION_[a-zA-Z0-9_]*' "$KONPU_HOME"/src/* | sort | uniq
