@@ -1,0 +1,208 @@
+//------------------------------------------------------------------------------
+// Sitelen Pona Extra
+//------------------------------------------------------------------------------
+//
+// This file defines codepoints for Sitelen Pona glyphs not part of UCSUR.
+// When the glyphs may have a correspoding codepoints in the Fairfax font,
+// then we will use it. see: https://www.kreativekorp.com/charset/font/Fairfax/
+// Fairfax's PUA defines the following blocks:
+//   - Sitelen Pona (UCSR)               (U+F1900-FF)
+//   - Sitelen Pona Radicals             (U+F1C80-9F)
+//   - Sitelen Pona Presentation Forms A (U+FF900-ABF)
+//   - Sitelen Pona Presentation Forms B (U+FFAC0-BFF)
+//   - Sitelen Pona Presentation Forms C (U+FFD00-FF)
+//   - Sitelen Pona Presentation Forms D (U+FFE00-FF)
+//
+// If not possible to find a good mapping from Fairfax, we assign our
+// own codepoints (somewhere in the PUA... or we get "creative" somehow).
+// Reminder of the extent of Unicode's Private Areas:
+//   - PUA   (U+E000..U+F8FF)
+//   - PUA-A (U+F0000..U+FFFFD)
+//   - PUA-B (U+100000..U+10FFFD)
+//
+//------------------------------------------------------------------------------
+
+
+//------------------------------------------------------------------------------
+// Glyph VARIANTS for UCSUR Names
+// (variants for non-UCSUR names will be listed alongside the names)
+//------------------------------------------------------------------------------
+// variants for nimi pu (= chars 128-247)
+FFAA0   GLYPH64_TOKIPONA_KALA_WITH_EYES
+FFAA1   GLYPH64_TOKIPONA_MELI_VENUS
+FFAA2   GLYPH64_TOKIPONA_MIJE_MARS
+FFD68   GLYPH64_TOKIPONA_MOLI_NO_CIRCLE
+FFD70   GLYPH64_TOKIPONA_NI_UP_LEFT
+FFD71   GLYPH64_TOKIPONA_NI_UP_RIGHT
+FFD72   GLYPH64_TOKIPONA_NI_DOWN_RIGHT
+FFD73   GLYPH64_TOKIPONA_NI_DOWN_LEFT
+FFB00   GLYPH64_TOKIPONA_NI_LEFT
+FFB01   GLYPH64_TOKIPONA_NI_UP
+FFB02   GLYPH64_TOKIPONA_NI_RIGHT
+FFB03   GLYPH64_TOKIPONA_NI_DOWN
+FFAA3   GLYPH64_TOKIPONA_OLIN_EMITTERS
+FFAA4   GLYPH64_TOKIPONA_SEWI_SPIRITUAL // in Fairfax, alternate form is logical
+FFBAD   GLYPH64_TOKIPONA_TENPO_HOURGLASS // in Fairfax, it's "ten", but meh.
+FFAA5   GLYPH64_TOKIPONA_UTA_DOTLESS
+FFAA6   GLYPH64_TOKIPONA_WILE_REVERSED
+// variants for 248-250
+FFAA7   GLYPH64_TOKIPONA_NAMAKO_SIN_EXTENDED
+FFAA8   GLYPH64_TOKIPONA_NAMAKO_PEPPER
+// variants for other UCSUR names
+FFAB2   GLYPH64_TOKIPONA_MAJUNA_SIN_REVERSED
+FFAB3   GLYPH64_TOKIPONA_MAJUNA_LOTUS
+FFD6A   GLYPH64_TOKIPONA_MISIKEKE_MORTAR
+FFD65   GLYPH64_TOKIPONA_SOKO_THICK
+FFD66   GLYPH64_TOKIPONA_SOKO_THIN
+FFD67   GLYPH64_TOKIPONA_SOKO_CROSS
+
+//------------------------------------------------------------------------------
+// Common-ish names which are not (yet?) mapped in UCSUR Sitelen Pona
+//------------------------------------------------------------------------------
+FFAC4   GLYPH64_TOKIPONA_LINLUWI
+FFB2F   GLYPH64_TOKIPONA_SU
+// TODO GLYPH64_TOKIPONA_SU1
+// TODO GLYPH64_TOKIPONA_SU2
+
+//------------------------------------------------------------------------------
+// Long glyphs / Extended glyphs
+//------------------------------------------------------------------------------
+// particles
+FFA54  GLYPH64_TOKIPONA__ALA
+FFA55  GLYPH64_TOKIPONA__ALA_
+FFA7C  GLYPH64_TOKIPONA_PI_     // redundant with long glyph pi? (doesnt matter)
+// preverbs (common and more rare), extended rightwards
+   //  GLYPH64_TOKIPONA_ALASA_  // not in Fairfax, assigned below
+FFA56  GLYPH64_TOKIPONA_AWEN_
+   //  GLYPH64_TOKIPONA_KAMA_   // not in Fairfax, assigned below
+FFA5B  GLYPH64_TOKIPONA_KEN_
+   //  GLYPH64_TOKIPONA_LUKIN_  // not in Fairfax, assigned below
+   //  GLYPH64_TOKIPONA_SONA_   // not in Fairfax, assigned below
+FFA7D  GLYPH64_TOKIPONA_PINI_
+   //  GLYPH64_TOKIPONA_OPEN_   // not in Fairfax, assigned below
+FFA95  GLYPH64_TOKIPONA_OKO_
+// prepositions
+FFA5E  GLYPH64_TOKIPONA_KEPEKEN_
+FFA63  GLYPH64_TOKIPONA_LON_
+FFDFC  GLYPH64_TOKIPONA_SAMA_
+   //  GLYPH64_TOKIPONA_TAN_    // not in Fairfax, assigned below
+FFA8F  GLYPH64_TOKIPONA_TAWA_
+// kijetesantakalu
+FFAB9  GLYPH64_TOKIPONA_KIJETESANTAKALU_
+FFABA  GLYPH64_TOKIPONA__KIJETESANTAKALU_
+FFABB  GLYPH64_TOKIPONA__KIJETESANTAKALU
+
+//------------------------------------------------------------------------------
+// Punctuations (perhaps remapping to other FairFax codepoints) outside of UCSUR
+//------------------------------------------------------------------------------
+FFA50  GLYPH64_TOKIPONA__CARTOUCHE1_  // codepoint != UCSUR's combining cartouche extension
+FFAF0  GLYPH64_TOKIPONA_TE            // for Fairfax, this is really "te"
+FFAF1  GLYPH64_TOKIPONA_TO            // for Fairfax, this is really "to"
+FFB72  GLYPH64_TOKIPONA_ELLIPSIS      // Fairfax "particle we"
+F1C8D  GLYPH64_TOKIPONA_EMITTERS      // "radicals"
+FFAB8  GLYPH64_TOKIPONA_EMITTERS_SIDE
+   //  JOINER_DEFAULT                 // not in Fairfax, assigned below
+   //  JOINER_VERTICAL                // not in Fairfax, assigned below
+
+//------------------------------------------------------------------------------
+// Uncommon or Obscure Words (nimi panke)
+//------------------------------------------------------------------------------
+FFDCE  GLYPH64_TOKIPONA_ANTIKONTITUTONELEMA
+FFD8A  GLYPH64_TOKIPONA_APELO
+FFD8D  GLYPH64_TOKIPONA_KALAPISITUWI
+FFD93  GLYPH64_TOKIPONA_KOSIKOSA
+FFD8F  GLYPH64_TOKIPONA_KIKOLO
+FFD90  GLYPH64_TOKIPONA_KIKULO
+FFD91  GLYPH64_TOKIPONA_KOKOLIKO
+FFD94  GLYPH64_TOKIPONA_MASALO
+FFD98  GLYPH64_TOKIPONA_OLALA
+FFD9C  GLYPH64_TOKIPONA_PANKE
+FFD9E  GLYPH64_TOKIPONA_PIPOLO
+FFD9F  GLYPH64_TOKIPONA_SAPELIPOPE
+FFDA0  GLYPH64_TOKIPONA_SIKAKO
+FFDAB  GLYPH64_TOKIPONA_WIWI
+//------------------------------------------------------------------------------
+// Uncommon or Obscure Words
+//------------------------------------------------------------------------------
+FFD80  GLYPH64_TOKIPONA_ALENTE
+FFDAC  GLYPH64_TOKIPONA_ELIKI
+FFB47  GLYPH64_TOKIPONA_IKI
+FFB48  GLYPH64_TOKIPONA_IPI
+FFAC0  GLYPH64_TOKIPONA_ISIPIN
+FFB31  GLYPH64_TOKIPONA_JAMI
+FFD81  GLYPH64_TOKIPONA_JULE
+FFB74  GLYPH64_TOKIPONA_JUME
+FFB4F  GLYPH64_TOKIPONA_JONKE
+FFADA  GLYPH64_TOKIPONA_KAMALAWALA
+FFAC1  GLYPH64_TOKIPONA_KAPESI
+FFAC2  GLYPH64_TOKIPONA_KAPESI_TRIANGLE
+FFB55  GLYPH64_TOKIPONA_KI
+FFB56  GLYPH64_TOKIPONA_KI_
+FFBA1  GLYPH64_TOKIPONA_KIJOSIN
+FFAC3  GLYPH64_TOKIPONA_KIKI // = GLYPH64_TOKIPONA_KIKI_SPIKES
+FFD6F  GLYPH64_TOKIPONA_KIKI_TRIANGLE
+FFB58  GLYPH64_TOKIPONA_KONWE
+FFDCA  GLYPH64_TOKIPONA_KULASO
+FFAE1  GLYPH64_TOKIPONA_KULIJO
+FFAE2  GLYPH64_TOKIPONA_LIKUJO
+FFDCD  GLYPH64_TOKIPONA_MASENTA
+FFB32  GLYPH64_TOKIPONA_MELOME
+FFB36  GLYPH64_TOKIPONA_MIJOMI
+FFAD2  GLYPH64_TOKIPONA_MISA
+FFAC8  GLYPH64_TOKIPONA_MULAPISU
+FFD82  GLYPH64_TOKIPONA_NALANJA
+FFD96  GLYPH64_TOKIPONA_NIMISIN
+FFB60  GLYPH64_TOKIPONA_NJA
+FFAE4  GLYPH64_TOKIPONA_OKE
+FFB3B  GLYPH64_TOKIPONA_OMEKAPO
+F26AC  GLYPH64_TOKIPONA_OWE
+FFD9A  GLYPH64_TOKIPONA_PAKOLA
+FFDC9  GLYPH64_TOKIPONA_PENPO
+FFB6A  GLYPH64_TOKIPONA_PIKA
+FFAFD  GLYPH64_TOKIPONA_PINGO
+FFAE7  GLYPH64_TOKIPONA_PO
+FFDCC  GLYPH64_TOKIPONA_PULASO
+FFB3C  GLYPH64_TOKIPONA_PUWA
+FFAC9  GLYPH64_TOKIPONA_SAMU
+FFAEB  GLYPH64_TOKIPONA_SAN
+FFAEC  GLYPH64_TOKIPONA_SOTO
+FFDCB  GLYPH64_TOKIPONA_SULASO
+FFAFB  GLYPH64_TOKIPONA_SUTOPATIKUNA
+FFAEE  GLYPH64_TOKIPONA_TAKI_MAGNET
+FFAFF  GLYPH64_TOKIPONA_TAKI_YING_YANG
+FFAEF  GLYPH64_TOKIPONA_TEJE
+FFACA  GLYPH64_TOKIPONA_UNU
+FFAF6  GLYPH64_TOKIPONA_USAWI // not to confuse with FFD5A Usawi
+FFACB  GLYPH64_TOKIPONA_WA
+FFB71  GLYPH64_TOKIPONA_WAWAJETE
+FFAF7  GLYPH64_TOKIPONA_WASOWELI
+FFB3E  GLYPH64_TOKIPONA_WEKAMA
+// TODO  FFD86     GLYPH64_TOKIPONA_WUWOJITI1
+// TODO  FFD86     GLYPH64_TOKIPONA_WUWOJITI2
+FFAFC  GLYPH64_TOKIPONA_YUPEKOSI
+
+
+//------------------------------------------------------------------------------
+// Compounds
+//------------------------------------------------------------------------------
+FFBFA  GLYPH64_TOKIPONA_NIMI_SIN
+
+
+////////////////////////////////////////////////////////////////////////////////
+// GLYPHS WHICH ARE NOT IN FAIRFAX (AS OF THIS MOMENT)
+////////////////////////////////////////////////////////////////////////////////
+
+//------------------------------------------------------------------------------
+// Long/Extended glyphs which were not possible to assign in Fairfax
+//------------------------------------------------------------------------------
+FFE00  GLYPH64_TOKIPONA_ALASA_
+//FFE01 GLYPH64_TOKIPONA_KAMA_   // TODO
+FFE02  GLYPH64_TOKIPONA_LUKIN_
+FFE03  GLYPH64_TOKIPONA_SONA_
+FFE04  GLYPH64_TOKIPONA_OPEN_
+FFE05  GLYPH64_TOKIPONA_TAN_
+//------------------------------------------------------------------------------
+// Punctuation which wasn't possible to assign in Fairfax
+//------------------------------------------------------------------------------
+FFE0E  JOINER_DEFAULT   // not in Fairfax, assigned below
+FFE0F  JOINER_VERTICAL  // not in Fairfax, assigned below

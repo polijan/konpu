@@ -6,8 +6,27 @@
 #include "../glyph.h"
 
 
+// TODO / FIXME / CORRECT
+/*
+li
+ante
+nasa
+jaki
+tu
+loje   (connect or not???)
+laso   (remove one pixel)
+alasa?
+
+TODO>
+ku
+pu_
+joiner
+*/
+
+//------------------------------------------------------------------------------
 // Toki Pona 120 classic pu names (characters 128-247)
 // (Those characters are in ROM)
+//------------------------------------------------------------------------------
 #define GLYPH64_TOKIPONA_A                    GLYPH64(0038141800080808)
 #define GLYPH64_TOKIPONA_AKESI                GLYPH64(001C227F227F1C22)
 #define GLYPH64_TOKIPONA_ALA                  GLYPH64(0041221408142241)
@@ -98,7 +117,7 @@
 #define GLYPH64_TOKIPONA_SELI                 GLYPH64(000800222A494908)
 #define GLYPH64_TOKIPONA_SELO                 GLYPH64(0041555555557F00)
 #define GLYPH64_TOKIPONA_SEME                 GLYPH64(000800083041413E)
-#define GLYPH64_TOKIPONA_SEWI                 GLYPH64(004A555554504040)
+#define GLYPH64_TOKIPONA_SEWI                 GLYPH64_TOKIPONA_SEWI_LOGICAL
 #define GLYPH64_TOKIPONA_SIJELO               GLYPH64(004949494949497F)
 #define GLYPH64_TOKIPONA_SIKE                 GLYPH64(001C22495549221C)
 #define GLYPH64_TOKIPONA_SIN                  GLYPH64(0000000063000808)
@@ -129,42 +148,47 @@
 #define GLYPH64_TOKIPONA_WEKA                 GLYPH64(0041220000002241)
 #define GLYPH64_TOKIPONA_WILE                 GLYPH64(0000364949412200)
 
+//------------------------------------------------------------------------------
 // Other common Toki Pona names: (former)"pu synonyms"
-// (Those characters are in ROM)
+// ali is still considered the same word as ale (just a prononciation variant)
+// other characters are in ROM, and they are characters 248-250
+//------------------------------------------------------------------------------
 #define GLYPH64_TOKIPONA_ALI                  GLYPH64_TOKIPONA_ALE
 #define GLYPH64_TOKIPONA_KIN                  GLYPH64(0014081400080808)
-#define GLYPH64_TOKIPONA_NAMAKO               GLYPH64(0008080063000808)
+#define GLYPH64_TOKIPONA_NAMAKO               GLYPH64_TOKIPONA_NAMAKO_PEPPER
 #define GLYPH64_TOKIPONA_OKO                  GLYPH64(0018246251622418)
 
-// Other common or semi-common Toki Pona names present
-
+//------------------------------------------------------------------------------
+// Other common Toki Pona names
+//------------------------------------------------------------------------------
 #define GLYPH64_TOKIPONA_TONSI                GLYPH64(0008081C221C2241)
 #define GLYPH64_TOKIPONA_KIJETESANTAKALU      GLYPH64(002A2922422A0418)
 #define GLYPH64_TOKIPONA_MONSUTA              GLYPH64(00145555552A2A08)
 #define GLYPH64_TOKIPONA_N                    GLYPH64(0014140C00080808)
 #define GLYPH64_TOKIPONA_KIPISI               GLYPH64(0021722408122742)
-#define GLYPH64_TOKIPONA_SOKO                 GLYPH64(001C14147F41221C)
 #define GLYPH64_TOKIPONA_LEKO                 GLYPH64(007F415D555D417F)
+#define GLYPH64_TOKIPONA_SOKO                 GLYPH64_TOKIPONA_SOKO_THIN
 
+//------------------------------------------------------------------------------
+// Other semi-common Toki Pona names
+//------------------------------------------------------------------------------
 #define GLYPH64_TOKIPONA_MISIKEKE             GLYPH64(001824243C242418)
 #define GLYPH64_TOKIPONA_LANPAN               GLYPH64(0052453901122C10)
 #define GLYPH64_TOKIPONA_EPIKU                GLYPH64(001C224141002A49)
 #define GLYPH64_TOKIPONA_MESO                 GLYPH64(0041414149414141)
 #define GLYPH64_TOKIPONA_JASIMA               GLYPH64(0008394E08394E08)
 #define GLYPH64_TOKIPONA_KOKOSILA             GLYPH64(001A2C1A2C002A49)
-
-#define GLYPH64_TOKIPONA_MAJUNA               GLYPH64(0008080063000000)
-// add linluwi???
-
+#define GLYPH64_TOKIPONA_MAJUNA               GLYPH64_TOKIPONA_MAJUNA_SIN_REVERSED
+#define GLYPH64_TOKIPONA_LINLUWI              GLYPH64(00495B6D416B417F)
+// nimi lipu:
 #define GLYPH64_TOKIPONA_KU                   GLYPH64(007D355D65714D3D)
-// TODO: su (su1, su2)
+#define GLYPH64_TOKIPONA_SU                   GLYPH64_TOKIPONA_SU1
+#define GLYPH64_TOKIPONA_SU1                  GLYPH64(0077773B3B4D707F)
+#define GLYPH64_TOKIPONA_SU2                  GLYPH64(0075655F556F503F)
 
-// Uncommon Toki Pona names but present in UCSUR (not in ROM)
-#define GLYPH64_TOKIPONA_APEJA                GLYPH64(0018184224186666)
-#define GLYPH64_TOKIPONA_PAKE                 GLYPH64(000808080808087F)
-#define GLYPH64_TOKIPONA_POWE                 GLYPH64(00007F0014081400)
-
+//------------------------------------------------------------------------------
 // Punctuations and Cartouches
+//------------------------------------------------------------------------------
 #define GLYPH64_TOKIPONA_SPACE                GLYPH64(0000000000000000)
 #define GLYPH64_TOKIPONA_BRACKET_             GLYPH64(00000000002020E0)
 #define GLYPH64_TOKIPONA__BRACKET             GLYPH64(0704040000000000)
@@ -183,19 +207,50 @@
 #define GLYPH64_TOKIPONA_EMITTERS             GLYPH64(0000000000002A49)
 #define GLYPH64_TOKIPONA_EMITTERS_SIDE        GLYPH64(000402000C000204)
 
-// Long glyphs: pi particle + prepositions + kijetesantakalu(for fun)
-// Maybe in future: preverbs and other particles
+//------------------------------------------------------------------------------
+// Long glyphs for pi and also particles, preverbs, and prepositions
+//
+// Long glyphs is commonly applied to pi, occasionally for preposition like
+// tawa (or kepeken), and is more rarely applied for other words. Long glyphs
+// might be applied either for aesthetics or disambiguation.
+//------------------------------------------------------------------------------
+// pi and other particles (height = 8)
+#define GLYPH64_TOKIPONA__ALA                 GLYPH64_TOKIPONA_ALA
+#define GLYPH64_TOKIPONA__ALA_                GLYPH64(8041221408142241)
 #define GLYPH64_TOKIPONA_PI_                  GLYPH64(F808080808080808)
-#define GLYPH64_TOKIPONA_TAWA_                GLYPH64(E01311110A0A0404)
+// common preverbs (height = 8)
+#define GLYPH64_TOKIPONA_ALASA_               GLYPH64(F60A0A2A7F2A0A06)
+#define GLYPH64_TOKIPONA_AWEN_                GLYPH64(8043444428281010)
+#define GLYPH64_TOKIPONA_KAMA_                // TODO
+#define GLYPH64_TOKIPONA_KEN_                 GLYPH64(E02222120E122222)
+#define GLYPH64_TOKIPONA_LUKIN_               GLYPH64(80601C2249221C00)
+#define GLYPH64_TOKIPONA_SONA_                GLYPH64(FE2222223E002A49)
+// uncommon preverbs (height = 8)
+#define GLYPH64_TOKIPONA_PINI_                GLYPH64(FE0808080808083E)
+#define GLYPH64_TOKIPONA_OPEN_                GLYPH64(FF41417F41414141)
+#define GLYPH64_TOKIPONA_OKO_                 GLYPH64(D824625151622418)
+// prepositions (height = 8)
 #define GLYPH64_TOKIPONA_KEPEKEN_             GLYPH64(C0464538107C547C)
 #define GLYPH64_TOKIPONA_LON_                 GLYPH64(FE0000183C180000)
 #define GLYPH64_TOKIPONA_SAMA_                GLYPH64(8040403E003E0000)
 #define GLYPH64_TOKIPONA_TAN_                 GLYPH64(80404F4345390000)
+#define GLYPH64_TOKIPONA_TAWA_                GLYPH64(E01311110A0A0404)
+// kijetesantakalu (just for fun / height = 7)
 #define GLYPH64_TOKIPONA_KIJETESANTAKALU_     GLYPH64(00FCAAFC00000000)
 #define GLYPH64_TOKIPONA__KIJETESANTAKALU_    GLYPH64(00FFAAFF00000000)
-#define GLYPH64_TOKIPONA__KIJETESANTAKALU     GLYPH64(00292421412A0418)
+#define GLYPH64_TOKIPONA__KIJETESANTAKALU     GLYPH64(00292421422A0418)
 
+//-------------------------------
 // Variations (TODO and CHECK)
+
+
+#define GLYPH64_TOKIPONA_KALA_WITH_EYES       GLYPH64(0000317A6C5A3100)
+#define GLYPH64_TOKIPONA_MELI_VENUS           GLYPH64(00081C081C22221C)
+#define GLYPH64_TOKIPONA_MIJE_MARS            GLYPH64(000E11114E506078)
+#define GLYPH64_TOKIPONA_MOLI_NO_CIRCLE       GLYPH64(001C000055225500)
+#define GLYPH64_TOKIPONA_OLIN_EMITTERS        GLYPH64(001C224936002A49)
+#define GLYPH64_TOKIPONA_MU2                  GLYPH64_TOKIPONA_EMITTERS_SIDE
+#define GLYPH64_TOKIPONA_MUTE_4LUKA           GLYPH64(00555D2200555D22)
 #define GLYPH64_TOKIPONA_NI_LEFT              GLYPH64(000004027F020400)
 #define GLYPH64_TOKIPONA_NI_RIGHT             GLYPH64(000010207F201000)
 #define GLYPH64_TOKIPONA_NI_UP                GLYPH64(00080808082A1C08)
@@ -206,14 +261,117 @@
 #define GLYPH64_TOKIPONA_NI_DOWN_RIGHT        GLYPH64(0078605048040201)
 #define GLYPH64_TOKIPONA_SEWI_LOGICAL         GLYPH64(000041417F000800)
 #define GLYPH64_TOKIPONA_SEWI_SPIRITUAL       GLYPH64(004A555554504040)
-#define GLYPH64_TOKIPONA_MUTE_4LUKA           GLYPH64(00555D2200555D22)
-#define GLYPH64_TOKIPONA_MU2                  GLYPH64_TOKIPONA_EMITTERS_SIDE
+#define GLYPH64_TOKIPONA_TENPO_HOURGLASS      GLYPH64(007F22140814227F)
+#define GLYPH64_TOKIPONA_TENPO_FULL           GLYPH64(001C3E7F6777361C)
+#define GLYPH64_TOKIPONA_UTA_DOTLESS          GLYPH64(00001C2241417F00)
+#define GLYPH64_TOKIPONA_WILE_REVERSED        GLYPH64(0036494141221408)
 
+#define GLYPH64_TOKIPONA_NAMAKO_SIN_EXTENDED  GLYPH64(0008080063000808)
+#define GLYPH64_TOKIPONA_NAMAKO_PEPPER        GLYPH64(000F122424002A49)
+
+#define GLYPH64_TOKIPONA_MAJUNA_SIN_REVERSED  GLYPH64(0008080063000000)
+#define GLYPH64_TOKIPONA_MAJUNA_LOTUS         GLYPH64(000063002A490800)
+#define GLYPH64_TOKIPONA_MISIKEKE_MORTAR      GLYPH64(005D22417F081020)
+#define GLYPH64_TOKIPONA_SOKO_THICK           GLYPH64(001C14147F41221C)
+#define GLYPH64_TOKIPONA_SOKO_THIN            GLYPH64(000808087F41221C)
+#define GLYPH64_TOKIPONA_SOKO_CROSS           GLYPH64(00081C087F41221C)
+
+//------------------------------------------------------------------------------
 // Compounds
+//------------------------------------------------------------------------------
 #define GLYPH64_TOKIPONA_TOKI_PONA            GLYPH64(3E635D7F3E002A49)
 #define GLYPH64_TOKIPONA_NIMI_SIN             GLYPH64(3E41413E00630808)
-#define GLYPH64_TOKIPONA_NIMISIN              GLYPH64_TOKIPONA_NIMI_SIN
 #define GLYPH64_TOKIPONA_TU_WAN               GLYPH64(0045454545556545)
 #define GLYPH64_TOKIPONA_TU_TU                GLYPH64(0055555555555555)
+
+
+//------------------------------------------------------------------------------
+// Uncommon or Obscure: ... but present in UCSUR
+//------------------------------------------------------------------------------
+#define GLYPH64_TOKIPONA_APEJA                GLYPH64(0018184224186666)
+#define GLYPH64_TOKIPONA_PAKE                 GLYPH64(000808080808087F)
+#define GLYPH64_TOKIPONA_POWE                 GLYPH64(00007F0014081400)
+//------------------------------------------------------------------------------
+// Uncommon or Obscure: nimi panke
+//------------------------------------------------------------------------------
+#define GLYPH64_TOKIPONA_ANTIKONTITUTONELEMA  GLYPH64(002A553E41221408)
+#define GLYPH64_TOKIPONA_APELO                GLYPH64(AA55AA55AA55AA55) //TODO
+#define GLYPH64_TOKIPONA_KALAPISITUWI         GLYPH64(AA55AA55AA55AA55) //TODO
+#define GLYPH64_TOKIPONA_KOSIKOSA             GLYPH64(AA55AA55AA55AA55) //TODO
+#define GLYPH64_TOKIPONA_KIKOLO               GLYPH64(AA55AA55AA55AA55) //TODO
+#define GLYPH64_TOKIPONA_KIKULO               GLYPH64(AA55AA55AA55AA55) //TODO
+#define GLYPH64_TOKIPONA_KOKOLIKO             GLYPH64(AA55AA55AA55AA55) //TODO
+#define GLYPH64_TOKIPONA_MASALO               GLYPH64(AA55AA55AA55AA55) //TODO
+#define GLYPH64_TOKIPONA_OLALA                GLYPH64(AA55AA55AA55AA55) //TODO
+#define GLYPH64_TOKIPONA_PANKE                GLYPH64(AA55AA55AA55AA55) //TODO
+#define GLYPH64_TOKIPONA_PIPOLO               GLYPH64(AA55AA55AA55AA55) //TODO
+#define GLYPH64_TOKIPONA_SAPELIPOPE           GLYPH64(AA55AA55AA55AA55) //TODO
+#define GLYPH64_TOKIPONA_SIKAKO               GLYPH64(AA55AA55AA55AA55) //TODO
+#define GLYPH64_TOKIPONA_WIWI                 GLYPH64(AA55AA55AA55AA55) //TODO
+//------------------------------------------------------------------------------
+// Uncommon or Obscure: all others
+//------------------------------------------------------------------------------
+#define GLYPH64_TOKIPONA_ALENTE               GLYPH64(003E083F417E083E)
+#define GLYPH64_TOKIPONA_ELIKI                GLYPH64(004122412A412241)
+#define GLYPH64_TOKIPONA_IKI                  GLYPH64(0000060909453E00)
+#define GLYPH64_TOKIPONA_IPI                  GLYPH64(00003E4509090600)
+#define GLYPH64_TOKIPONA_ISIPIN               GLYPH64(001C227E1C002A49)
+#define GLYPH64_TOKIPONA_JAMI                 GLYPH64(001C223E00005522)
+#define GLYPH64_TOKIPONA_JULE                 GLYPH64(00081868080B0C08)
+#define GLYPH64_TOKIPONA_JUME /*width=8*/     GLYPH64(00304F4830005492)
+//      GLYPH64_TOKIPONA_JUME /*width=7*/     GLYPH64(0030484F48300450)
+#define GLYPH64_TOKIPONA_JONKE                GLYPH64(0044241DD009244A)
+#define GLYPH64_TOKIPONA_KAMALAWALA           GLYPH64(001A39536B533A1C)
+#define GLYPH64_TOKIPONA_KAPESI               GLYPH64(007F22142A3E2A1C)
+#define GLYPH64_TOKIPONA_KAPESI_TRIANGLE      GLYPH64(007F492A3E141408)
+#define GLYPH64_TOKIPONA_KI                   GLYPH64(0078040201020408)
+#define GLYPH64_TOKIPONA_KI_                  GLYPH64(F008040201020408)
+#define GLYPH64_TOKIPONA_KIJOSIN              GLYPH64(004141714D43417F)
+#define GLYPH64_TOKIPONA_KIKI                 GLYPH64_TOKIPONA_KIKI_SPIKES
+#define GLYPH64_TOKIPONA_KIKI_SPIKES          GLYPH64(00493622C1265A91)
+#define GLYPH64_TOKIPONA_KIKI_TRIANGLE        GLYPH64(00635D2214140808)
+#define GLYPH64_TOKIPONA_KONWE                GLYPH64(007F415F507C141C)
+#define GLYPH64_TOKIPONA_KULASO               GLYPH64(007F2214493E4914)
+#define GLYPH64_TOKIPONA_KULIJO               GLYPH64(0022147F14220849)
+#define GLYPH64_TOKIPONA_LIKUJO               GLYPH64(000014002A001400)
+#define GLYPH64_TOKIPONA_MASENTA              GLYPH64(007F2214081C3E14)
+#define GLYPH64_TOKIPONA_MELOME               GLYPH64(005549415549221C)
+// ^ hearts are traditionally upside-down to avoid confusion with nena+olin
+//#define GLYPH64_TOKIPONA_MIJOMI               GLYPH64(00417F1C36001C36)
+#define GLYPH64_TOKIPONA_MIJOMI               GLYPH64(00416B1C14081C14)
+#define GLYPH64_TOKIPONA_MISA                 GLYPH64(000806013E411126)
+#define GLYPH64_TOKIPONA_MULAPISU             GLYPH64(007F6B3E361C1C08)
+#define GLYPH64_TOKIPONA_NALANJA              GLYPH64(007F2214083E221C)
+#define GLYPH64_TOKIPONA_NIMISIN              GLYPH64(00001C631C080800)
+#define GLYPH64_TOKIPONA_NJA                  GLYPH64(001C2A5541225D63)
+#define GLYPH64_TOKIPONA_OKE                  GLYPH64(001E3B756D5F3E5C)
+#define GLYPH64_TOKIPONA_OMEKAPO              GLYPH64(003946443A012A49)
+#define GLYPH64_TOKIPONA_OWE                  GLYPH64(001C2249221C2A49)
+#define GLYPH64_TOKIPONA_PAKOLA               GLYPH64(002A222A3E002A49)
+#define GLYPH64_TOKIPONA_PENPO                GLYPH64(00082A146B1C2A08)
+#define GLYPH64_TOKIPONA_PIKA                 GLYPH64(000810203E020408)
+#define GLYPH64_TOKIPONA_PINGO                GLYPH64(000E04043C44443E)
+#define GLYPH64_TOKIPONA_PO                   GLYPH64(0010107F11121418)
+#define GLYPH64_TOKIPONA_PULASO               GLYPH64(007F221439463946)
+#define GLYPH64_TOKIPONA_PUWA                 GLYPH64(AA55AA55AA55AA55) //TODO
+#define GLYPH64_TOKIPONA_SAMU                 GLYPH64(003F41417E002A49)
+#define GLYPH64_TOKIPONA_SAN                  GLYPH64(00151515155D3715)
+#define GLYPH64_TOKIPONA_SOTO                 GLYPH64(007848484A484878)
+#define GLYPH64_TOKIPONA_SULASO               GLYPH64(007F221408223E08)
+#define GLYPH64_TOKIPONA_SUTOPATIKUNA         GLYPH64(003F404035080700)
+#define GLYPH64_TOKIPONA_TAKI_MAGNET          GLYPH64(AA55AA55AA55AA55) //TODO
+#define GLYPH64_TOKIPONA_TAKI_YING_YANG       GLYPH64(AA55AA55AA55AA55) //TODO
+#define GLYPH64_TOKIPONA_TEJE                 GLYPH64(001E12125212121E)
+#define GLYPH64_TOKIPONA_TEN /* =tenpo */     GLYPH64_TOKIPONA_TENPO_HOURGLASS
+#define GLYPH64_TOKIPONA_UNU                  GLYPH64(AA55AA55AA55AA55) //TODO
+#define GLYPH64_TOKIPONA_USAWI                GLYPH64(001C221A423C2A49)
+#define GLYPH64_TOKIPONA_WA                   GLYPH64(00142A2A00080808)
+#define GLYPH64_TOKIPONA_WAWAJETE             GLYPH64(005D22414141225D)
+#define GLYPH64_TOKIPONA_WASOWELI             GLYPH64(00151570402A100E)
+#define GLYPH64_TOKIPONA_WEKAMA               GLYPH64(0077442414082241)
+#define GLYPH64_TOKIPONA_WUWOJITI1            GLYPH64(00412A1422142A41)
+#define GLYPH64_TOKIPONA_WUWOJITI2            GLYPH64(0008552241225508)
+#define GLYPH64_TOKIPONA_YUPEKOSI             GLYPH64(001E21405C624141)
+// TODO: ALU, JE, UNU, KAN, etc...
 
 #endif  //KONPU_GLYPH_TOKIPONA_H_

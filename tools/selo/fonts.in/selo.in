@@ -1,0 +1,36 @@
+// Duo-spaced font (Glyph32 + Glyph64)
+
+#ifndef KONPU_GLYPH_H
+   #define KONPU_GLYPH_H  // Prevent inclusion of Konpu's "glyph.h"
+   #define GLYPH8(x)   x
+   #define GLYPH16(x)  x
+   #define GLYPH32(x)  x
+   #define GLYPH64(x)  x
+   #define GLYPH128(x,y)     x:y
+   #define GLYPH256(w,x,y,z) w:x:y:z
+#endif
+
+//------------------------------------------------------------------------------
+// Definition of specific glyph whose definition is not in ilo Konpu
+//------------------------------------------------------------------------------
+// toki pona glyph combo joiners:
+#define JOINER_DEFAULT   GLYPH64(003E7F7F417F7F3E) // -
+#define JOINER_STACKING  GLYPH64(003E7F7F5D6B773E) // ^
+#define JOINER_SCALING   GLYPH64(003E77774177773E) // +
+#define JOINER_VERTICAL  GLYPH64(003E77775577773E) // |
+
+//------------------------------------------------------------------------------
+
+#include "selo_ascii"     // U+0020-007E (printable ascii)
+
+#include "selo_cjk_punctuation"  // U+3000-303F   (only a few symbols)
+#include "selo_latin_fullwidth"  // U+FF00-U+FFEF ("fullwidth ascii")
+
+#include "selo_sp_ucsur"  // U+F1900-F19FF (part of UCSUR)
+#include "selo_titi_pula" // U+F1C40-F1C17 (part of UCSUR)
+#include "selo_sp_extra"  // Extra names (mostly in PUA-A >U+FF900 and PUA-B)
+
+#include "octants32"      // the 2x4 octant blocks
+         // U+2580-9F     contains some chars from block elements,
+         // U+1FB00-FF    a few octants from legacy computing,
+         // U+1CC00-EBF   most are from legacy computing supplement
