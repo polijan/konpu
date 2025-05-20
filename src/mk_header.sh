@@ -34,7 +34,9 @@ include  config.h platform.h c.h \
 
 # Extra Resources
 include  glyph_constants/glyph_patterns_blocks.h \
-         glyph_constants/glyph_patterns_8x8.me.h
+         glyph_constants/glyph_patterns_8x8.me.h \
+         glyph_constants/glyph_tokipona.h        \
+         glyph_constants/glyph_tukitiki.h
 
 hr
 printf '\n#endif //KONPU_H\n'

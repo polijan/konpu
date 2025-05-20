@@ -1,6 +1,6 @@
-#ifndef  KONPU_GLYPH_PATTERNS_BASICS_H
-#define  KONPU_GLYPH_PATTERNS_BASICS_H
-#include "glyph.h"
+#ifndef  KONPU_GLYPH_PATTERNS_BASICS_H_
+#define  KONPU_GLYPH_PATTERNS_BASICS_H_
+#include "../glyph.h"
 
 //------------------------------------------------------------------------------
 // Glyph Block Constants:
@@ -78,4 +78,4 @@
                                                             .bottom_left  = GLYPH64_PATTERN_FULL, .bottom_right = GLYPH64_PATTERN_FULL})
 #define GLYPH256_PATTERN_EMPTY                  ((Glyph256){0})
 
-#endif //KONPU_GLYPH_PATTERNS_BASICS_H
+#endif //KONPU_GLYPH_PATTERNS_BASICS_H_

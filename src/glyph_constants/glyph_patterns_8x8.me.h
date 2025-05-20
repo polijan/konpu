@@ -3,9 +3,9 @@
 // Those patterns are in Public Domain / CC0.
 // Automatically Converted: see tools/patterns
 
-#ifndef KONPU_GLYPH_PATTERNS_8x8_ME_H
-#define KONPU_GLYPH_PATTERNS_8x8_ME_H
-#include "glyph.h"
+#ifndef KONPU_GLYPH_PATTERNS_8x8_ME_H_
+#define KONPU_GLYPH_PATTERNS_8x8_ME_H_
+#include "../glyph.h"
 
 #define GLYPH64_PATTERN_DITHER_BAYER_DITHER00                 GLYPH64(FFFFFFFFFFFFFFFF)
 #define GLYPH64_PATTERN_DITHER_BAYER_DITHER01                 GLYPH64(FFFFFFEEFFFFFFEE)
@@ -390,4 +390,4 @@
 #define GLYPH64_PATTERN_OTHER_TRACKS                          GLYPH64(99FF0099FF0099FF)
 #define GLYPH64_PATTERN_OTHER_YULETIDE                        GLYPH64(FFAAFFEED7BB7DEE)
 
-#endif //KONPU_GLYPH_PATTERNS_8x8_ME_H
+#endif //KONPU_GLYPH_PATTERNS_8x8_ME_H_
