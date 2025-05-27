@@ -46,7 +46,10 @@ typedef void      Glyph;
 // int   GlyphPixelAt(glyph, x,y)
 // bool? GlyphPixelIsSet(glyph, x,y)
 // glyph GlyphPixelSet(glyph, x,y, [value=1])
+//       '---> or: glyph GlyphPixelSet(glyph, x,y)
+//                 glyph GlyphPixelSetValue(glyph, x,y, value)
 // glyph GlyphPixelUnset(glyph, x,y)
+// glyph GlyphPixelToggle(glyph, x,y)
 //
 // // Bitwise Not, And, Or, Xor:
 // glyph GlyphNot(glyph)
