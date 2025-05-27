@@ -1,5 +1,10 @@
 // Duo-spaced font (Glyph32 + Glyph64)
 
+
+// UTIL_CAT: Trigger macro expansion and concatenate its parameters.
+#define UTIL_CAT(item, ...)        UTIL_CAT_(item, __VA_ARGS__)
+   #define UTIL_CAT_(item, ...)    item##__VA_ARGS__
+
 #ifndef KONPU_GLYPH_H
    #define KONPU_GLYPH_H  // Prevent inclusion of Konpu's "glyph.h"
    #define GLYPH8(x)   x
@@ -14,10 +19,10 @@
 // Definition of specific glyph whose definition is not in ilo Konpu
 //------------------------------------------------------------------------------
 // toki pona glyph combo joiners:
-#define JOINER_DEFAULT   GLYPH64(003E7F7F417F7F3E) // -
-#define JOINER_STACKING  GLYPH64(003E7F7F5D6B773E) // ^
-#define JOINER_SCALING   GLYPH64(003E77774177773E) // +
-#define JOINER_VERTICAL  GLYPH64(003E77777F77773E) // | // GLYPH64(003E77775577773E)
+// #define JOINER_DEFAULT   GLYPH64(003E7F7F417F7F3E) // -
+// #define JOINER_STACKING  GLYPH64(003E7F7F5D6B773E) // ^
+// #define JOINER_SCALING   GLYPH64(003E77774177773E) // +
+// #define JOINER_VERTICAL  GLYPH64(003E77777F77773E) // | // GLYPH64(003E77775577773E)
 
 //------------------------------------------------------------------------------
 

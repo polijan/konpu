@@ -1001,7 +1001,7 @@
 #define GLYPH16_ASCII3_SEMICOLON              GLYPH16(0130) // ouch
 #define GLYPH16_ASCII3_LESS_THAN_SIGN         GLYPH16_ASCII4_LESS_THAN_SIGN
 #define GLYPH16_ASCII3_EQUAL_SIGN             GLYPH16_ASCII4_EQUAL_SIGN
-#define GLYPH16_ASCII3_GREATER_THAN_SIGN      GLYPH16_ASCII3_GREATER_THAN_SIGN
+#define GLYPH16_ASCII3_GREATER_THAN_SIGN      GLYPH16_ASCII4_GREATER_THAN_SIGN
 #define GLYPH16_ASCII3_QUESTION_MARK          GLYPH16(0267) // ouch
 #define GLYPH16_ASCII3_AT_SIGN                GLYPH16(0543) // ouch... ~RSS
 #define GLYPH16_ASCII3_A                      GLYPH16_ASCII4_A
@@ -1034,39 +1034,39 @@
 #define GLYPH16_ASCII3_LEFT_SQUARE_BACKET     GLYPH16(0626)
 #define GLYPH16_ASCII3_BACKSLASH              GLYPH16(0421)
 #define GLYPH16_ASCII3_RIGHT_SQUARE_BRACKET   GLYPH16(0646)
-#define GLYPH16_ASCII3_CARET                  GLYPH_ASCII4_CARET
-#define GLYPH16_ASCII3_UNDERSCORE             GLYPH_ASCII4_UNDERSCORE
-#define GLYPH16_ASCII3_BACKQUOTE              GLYPH_ASCII4_BACKQUOTE
-#define GLYPH16_ASCII3_a                      GLYPH_ASCII3_A
-#define GLYPH16_ASCII3_b                      GLYPH_ASCII3_B
-#define GLYPH16_ASCII3_c                      GLYPH_ASCII3_C
-#define GLYPH16_ASCII3_d                      GLYPH_ASCII3_D
-#define GLYPH16_ASCII3_e                      GLYPH_ASCII3_E
-#define GLYPH16_ASCII3_f                      GLYPH_ASCII3_F
-#define GLYPH16_ASCII3_g                      GLYPH_ASCII3_G
-#define GLYPH16_ASCII3_h                      GLYPH_ASCII3_H
-#define GLYPH16_ASCII3_i                      GLYPH_ASCII3_I
-#define GLYPH16_ASCII3_j                      GLYPH_ASCII3_J
-#define GLYPH16_ASCII3_k                      GLYPH_ASCII3_K
-#define GLYPH16_ASCII3_l                      GLYPH_ASCII3_L
-#define GLYPH16_ASCII3_m                      GLYPH_ASCII3_M
-#define GLYPH16_ASCII3_n                      GLYPH_ASCII3_N
-#define GLYPH16_ASCII3_o                      GLYPH_ASCII3_O
-#define GLYPH16_ASCII3_p                      GLYPH_ASCII3_P
-#define GLYPH16_ASCII3_q                      GLYPH_ASCII3_Q
-#define GLYPH16_ASCII3_r                      GLYPH_ASCII3_R
-#define GLYPH16_ASCII3_s                      GLYPH_ASCII3_S
-#define GLYPH16_ASCII3_t                      GLYPH_ASCII3_T
-#define GLYPH16_ASCII3_u                      GLYPH_ASCII3_U
-#define GLYPH16_ASCII3_v                      GLYPH_ASCII3_V
-#define GLYPH16_ASCII3_w                      GLYPH_ASCII3_W
-#define GLYPH16_ASCII3_x                      GLYPH_ASCII3_X
-#define GLYPH16_ASCII3_y                      GLYPH_ASCII3_Y
-#define GLYPH16_ASCII3_z                      GLYPH_ASCII3_Z
+#define GLYPH16_ASCII3_CARET                  GLYPH16_ASCII4_CARET
+#define GLYPH16_ASCII3_UNDERSCORE             GLYPH16_ASCII4_UNDERSCORE
+#define GLYPH16_ASCII3_BACKQUOTE              GLYPH16_ASCII4_BACKQUOTE
+#define GLYPH16_ASCII3_a                      GLYPH16_ASCII3_A
+#define GLYPH16_ASCII3_b                      GLYPH16_ASCII3_B
+#define GLYPH16_ASCII3_c                      GLYPH16_ASCII3_C
+#define GLYPH16_ASCII3_d                      GLYPH16_ASCII3_D
+#define GLYPH16_ASCII3_e                      GLYPH16_ASCII3_E
+#define GLYPH16_ASCII3_f                      GLYPH16_ASCII3_F
+#define GLYPH16_ASCII3_g                      GLYPH16_ASCII3_G
+#define GLYPH16_ASCII3_h                      GLYPH16_ASCII3_H
+#define GLYPH16_ASCII3_i                      GLYPH16_ASCII3_I
+#define GLYPH16_ASCII3_j                      GLYPH16_ASCII3_J
+#define GLYPH16_ASCII3_k                      GLYPH16_ASCII3_K
+#define GLYPH16_ASCII3_l                      GLYPH16_ASCII3_L
+#define GLYPH16_ASCII3_m                      GLYPH16_ASCII3_M
+#define GLYPH16_ASCII3_n                      GLYPH16_ASCII3_N
+#define GLYPH16_ASCII3_o                      GLYPH16_ASCII3_O
+#define GLYPH16_ASCII3_p                      GLYPH16_ASCII3_P
+#define GLYPH16_ASCII3_q                      GLYPH16_ASCII3_Q
+#define GLYPH16_ASCII3_r                      GLYPH16_ASCII3_R
+#define GLYPH16_ASCII3_s                      GLYPH16_ASCII3_S
+#define GLYPH16_ASCII3_t                      GLYPH16_ASCII3_T
+#define GLYPH16_ASCII3_u                      GLYPH16_ASCII3_U
+#define GLYPH16_ASCII3_v                      GLYPH16_ASCII3_V
+#define GLYPH16_ASCII3_w                      GLYPH16_ASCII3_W
+#define GLYPH16_ASCII3_x                      GLYPH16_ASCII3_X
+#define GLYPH16_ASCII3_y                      GLYPH16_ASCII3_Y
+#define GLYPH16_ASCII3_z                      GLYPH16_ASCII3_Z
 #define GLYPH16_ASCII3_LEFT_CURLY_BACKET      GLYPH16(0636)
 #define GLYPH16_ASCII3_VERTICAL_BAR           GLYPH16(0222)
 #define GLYPH16_ASCII3_RIGHT_CURLY_BRACKET    GLYPH16(0363)
-#define GLYPH16_ASCII3_TILDE                  GLYPH_ASCII4_TILDE
+#define GLYPH16_ASCII3_TILDE                  GLYPH16_ASCII4_TILDE
 
 
 #endif
