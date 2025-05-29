@@ -33,9 +33,10 @@ include  config.h platform.h c.h \
          printer.h
 
 # Extra Resources
-include  glyph_constants/glyph_patterns_blocks.h \
-         glyph_constants/glyph_patterns_8x8.me.h \
-         glyph_constants/glyph_tokipona.h        \
+include  glyph_constants/glyph_patterns_blocks.h    \
+         glyph_constants/glyph_patterns_8x8.me.h    \
+         glyph_constants/glyph_tokipona.h           \
+         glyph_constants/glyph_tokipona_halfwidth.c \
          glyph_constants/glyph_tukitiki.h
 
 hr

@@ -5,6 +5,14 @@
 #define  KONPU_GLYPH_ASCII_H_
 #include "../glyph.h"
 
+// TODO
+#ifndef    GLYPH32_TODO
+#  define  GLYPH32_TODO  GLYPH32(FFFFFFFF)
+#endif
+#ifndef    GLYPH16_TODO
+#  define  GLYPH16_TODO  GLYPH16(FFFF)
+#endif
+
 
 // . . . . <---- top margin (# empty lines = 6 - x-height)
 // ...
@@ -18,13 +26,19 @@
 // 1 2 3 ^---- margin right (usually empty)
 
 
-// Available as Glyph32 fonts: ASCII7, ASCII6, ASCII5, ASCII4, ASCII3
-// Available as Glyph16 fonts: ASCII4 and ASCII3
+// Available as Glyph16 fonts: ASCII3 and ASCII4
+// Available as Glyph32 fonts: ASCII3, ASCII4, ASCII5, ASCII5, ASCII6
 //
 // Notes:
-// - ASCII5+ has italic and smallcaps (which is just the caps from smaller font)
-// - ASCII3  has most uppercase characters same as ASCII4, and lower case is
-//           same as uppercase, so that it doesn't have descenders.
+// - ASCII5,6,7 fonts have _SMALLCAP_A-Z (which are just the uppercase from the
+//                                        caps from smaller font)
+// - ASCII3 has most uppercase characters same as ASCII4, and lower case is
+//          same as uppercase, so that it doesn't have descenders.
+// - Fonts have _BOLD_... and _ITALIC_... for:
+//   * letters A-Z
+//   * letters a-z (may be same as uppercase for ASCII 3 and 4),
+//   * SMALLCAP_A-Z (for ASCII5+ fonts only)
+
 
 //------------------------------------------------------------------------------
 // Glyph32 Ascii Font, 3x7 (x-height=5, ascender=1, descender=1)
@@ -152,6 +166,87 @@
 #define GLYPH32_ASCII7_SMALLCAP_X             GLYPH32_ASCII6_X
 #define GLYPH32_ASCII7_SMALLCAP_Y             GLYPH32_ASCII6_Y
 #define GLYPH32_ASCII7_SMALLCAP_Z             GLYPH32_ASCII6_Z
+// Bold (Uppercase) --> For now at least, same as ASCII6 --> TODO!!!
+#define GLYPH32_ASCII7_BOLD_A                 GLYPH32_ASCII6_BOLD_A
+#define GLYPH32_ASCII7_BOLD_B                 GLYPH32_ASCII6_BOLD_B
+#define GLYPH32_ASCII7_BOLD_C                 GLYPH32_ASCII6_BOLD_C
+#define GLYPH32_ASCII7_BOLD_D                 GLYPH32_ASCII6_BOLD_D
+#define GLYPH32_ASCII7_BOLD_E                 GLYPH32_ASCII6_BOLD_E
+#define GLYPH32_ASCII7_BOLD_F                 GLYPH32_ASCII6_BOLD_F
+#define GLYPH32_ASCII7_BOLD_G                 GLYPH32_ASCII6_BOLD_G
+#define GLYPH32_ASCII7_BOLD_H                 GLYPH32_ASCII6_BOLD_H
+#define GLYPH32_ASCII7_BOLD_I                 GLYPH32_ASCII6_BOLD_I
+#define GLYPH32_ASCII7_BOLD_J                 GLYPH32_ASCII6_BOLD_J
+#define GLYPH32_ASCII7_BOLD_K                 GLYPH32_ASCII6_BOLD_K
+#define GLYPH32_ASCII7_BOLD_L                 GLYPH32_ASCII6_BOLD_L
+#define GLYPH32_ASCII7_BOLD_M                 GLYPH32_ASCII6_BOLD_M
+#define GLYPH32_ASCII7_BOLD_N                 GLYPH32_ASCII6_BOLD_N
+#define GLYPH32_ASCII7_BOLD_O                 GLYPH32_ASCII6_BOLD_O
+#define GLYPH32_ASCII7_BOLD_P                 GLYPH32_ASCII6_BOLD_P
+#define GLYPH32_ASCII7_BOLD_Q                 GLYPH32_ASCII6_BOLD_Q
+#define GLYPH32_ASCII7_BOLD_R                 GLYPH32_ASCII6_BOLD_R
+#define GLYPH32_ASCII7_BOLD_S                 GLYPH32_ASCII6_BOLD_S
+#define GLYPH32_ASCII7_BOLD_T                 GLYPH32_ASCII6_BOLD_T
+#define GLYPH32_ASCII7_BOLD_U                 GLYPH32_ASCII6_BOLD_U
+#define GLYPH32_ASCII7_BOLD_V                 GLYPH32_ASCII6_BOLD_V
+#define GLYPH32_ASCII7_BOLD_W                 GLYPH32_ASCII6_BOLD_W
+#define GLYPH32_ASCII7_BOLD_X                 GLYPH32_ASCII6_BOLD_X
+#define GLYPH32_ASCII7_BOLD_Y                 GLYPH32_ASCII6_BOLD_Y
+#define GLYPH32_ASCII7_BOLD_Z                 GLYPH32_ASCII6_BOLD_Z
+// Bold (lowercase) --> For now at least, same as Uppercase! TODO!!!
+#define GLYPH32_ASCII7_BOLD_a                 GLYPH32_ASCII7_BOLD_A
+#define GLYPH32_ASCII7_BOLD_b                 GLYPH32_ASCII7_BOLD_B
+#define GLYPH32_ASCII7_BOLD_c                 GLYPH32_ASCII7_BOLD_C
+#define GLYPH32_ASCII7_BOLD_d                 GLYPH32_ASCII7_BOLD_D
+#define GLYPH32_ASCII7_BOLD_e                 GLYPH32_ASCII7_BOLD_E
+#define GLYPH32_ASCII7_BOLD_f                 GLYPH32_ASCII7_BOLD_F
+#define GLYPH32_ASCII7_BOLD_g                 GLYPH32_ASCII7_BOLD_G
+#define GLYPH32_ASCII7_BOLD_h                 GLYPH32_ASCII7_BOLD_H
+#define GLYPH32_ASCII7_BOLD_i                 GLYPH32_ASCII7_BOLD_I
+#define GLYPH32_ASCII7_BOLD_j                 GLYPH32_ASCII7_BOLD_J
+#define GLYPH32_ASCII7_BOLD_k                 GLYPH32_ASCII7_BOLD_K
+#define GLYPH32_ASCII7_BOLD_l                 GLYPH32_ASCII7_BOLD_L
+#define GLYPH32_ASCII7_BOLD_m                 GLYPH32_ASCII7_BOLD_M
+#define GLYPH32_ASCII7_BOLD_n                 GLYPH32_ASCII7_BOLD_N
+#define GLYPH32_ASCII7_BOLD_o                 GLYPH32_ASCII7_BOLD_O
+#define GLYPH32_ASCII7_BOLD_p                 GLYPH32_ASCII7_BOLD_P
+#define GLYPH32_ASCII7_BOLD_q                 GLYPH32_ASCII7_BOLD_Q
+#define GLYPH32_ASCII7_BOLD_r                 GLYPH32_ASCII7_BOLD_R
+#define GLYPH32_ASCII7_BOLD_s                 GLYPH32_ASCII7_BOLD_S
+#define GLYPH32_ASCII7_BOLD_t                 GLYPH32_ASCII7_BOLD_T
+#define GLYPH32_ASCII7_BOLD_u                 GLYPH32_ASCII7_BOLD_U
+#define GLYPH32_ASCII7_BOLD_v                 GLYPH32_ASCII7_BOLD_V
+#define GLYPH32_ASCII7_BOLD_w                 GLYPH32_ASCII7_BOLD_W
+#define GLYPH32_ASCII7_BOLD_x                 GLYPH32_ASCII7_BOLD_X
+#define GLYPH32_ASCII7_BOLD_y                 GLYPH32_ASCII7_BOLD_Y
+#define GLYPH32_ASCII7_BOLD_z                 GLYPH32_ASCII7_BOLD_Z
+// Bold (smallcaps)
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_A        GLYPH32_ASCII6_BOLD_A
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_B        GLYPH32_ASCII6_BOLD_B
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_C        GLYPH32_ASCII6_BOLD_C
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_D        GLYPH32_ASCII6_BOLD_D
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_E        GLYPH32_ASCII6_BOLD_E
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_F        GLYPH32_ASCII6_BOLD_F
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_G        GLYPH32_ASCII6_BOLD_G
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_H        GLYPH32_ASCII6_BOLD_H
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_I        GLYPH32_ASCII6_BOLD_I
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_J        GLYPH32_ASCII6_BOLD_J
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_K        GLYPH32_ASCII6_BOLD_K
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_L        GLYPH32_ASCII6_BOLD_L
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_M        GLYPH32_ASCII6_BOLD_M
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_N        GLYPH32_ASCII6_BOLD_N
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_O        GLYPH32_ASCII6_BOLD_O
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_P        GLYPH32_ASCII6_BOLD_P
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_Q        GLYPH32_ASCII6_BOLD_Q
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_R        GLYPH32_ASCII6_BOLD_R
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_S        GLYPH32_ASCII6_BOLD_S
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_T        GLYPH32_ASCII6_BOLD_T
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_U        GLYPH32_ASCII6_BOLD_U
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_V        GLYPH32_ASCII6_BOLD_V
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_W        GLYPH32_ASCII6_BOLD_W
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_X        GLYPH32_ASCII6_BOLD_X
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_Y        GLYPH32_ASCII6_BOLD_Y
+#define GLYPH32_ASCII7_BOLD_SMALLCAP_Z        GLYPH32_ASCII6_BOLD_Z
 // Italic (Uppercase) //TODO
 #define GLYPH32_ASCII7_ITALIC_A               GLYPH32(00000000)
 #define GLYPH32_ASCII7_ITALIC_B               GLYPH32(00000000)
@@ -361,6 +456,87 @@
 #define GLYPH32_ASCII6_SMALLCAP_X             GLYPH32_ASCII5_X
 #define GLYPH32_ASCII6_SMALLCAP_Y             GLYPH32_ASCII5_Y
 #define GLYPH32_ASCII6_SMALLCAP_Z             GLYPH32_ASCII5_Z
+// Bold (Uppercase)
+#define GLYPH32_ASCII6_BOLD_A                 GLYPH32(05775600)
+#define GLYPH32_ASCII6_BOLD_B                 GLYPH32(03735300)
+#define GLYPH32_ASCII6_BOLD_C                 GLYPH32(06333600)
+#define GLYPH32_ASCII6_BOLD_D                 GLYPH32(03755300)
+#define GLYPH32_ASCII6_BOLD_E                 GLYPH32(07373700)
+#define GLYPH32_ASCII6_BOLD_F                 GLYPH32(03373700)
+#define GLYPH32_ASCII6_BOLD_G                 GLYPH32(06751600)
+#define GLYPH32_ASCII6_BOLD_H                 GLYPH32(05777500)
+#define GLYPH32_ASCII6_BOLD_I                 GLYPH32(07727700)
+#define GLYPH32_ASCII6_BOLD_J                 GLYPH32(03666700)
+#define GLYPH32_ASCII6_BOLD_K                 GLYPH32(05737500)
+#define GLYPH32_ASCII6_BOLD_L                 GLYPH32(07733300)
+#define GLYPH32_ASCII6_BOLD_M                 GLYPH32(05777700)
+#define GLYPH32_ASCII6_BOLD_N                 GLYPH32(05577300)
+#define GLYPH32_ASCII6_BOLD_O                 GLYPH32(03757600)
+#define GLYPH32_ASCII6_BOLD_P                 GLYPH32(03375700)
+#define GLYPH32_ASCII6_BOLD_Q                 GLYPH32(63757700)
+#define GLYPH32_ASCII6_BOLD_R                 GLYPH32(05735300)
+#define GLYPH32_ASCII6_BOLD_S                 GLYPH32(03673600)
+#define GLYPH32_ASCII6_BOLD_T                 GLYPH32(02227700)
+#define GLYPH32_ASCII6_BOLD_U                 GLYPH32(06755500)
+#define GLYPH32_ASCII6_BOLD_V                 GLYPH32(03755500)
+#define GLYPH32_ASCII6_BOLD_W                 GLYPH32(07775500)
+#define GLYPH32_ASCII6_BOLD_X                 GLYPH32(05727500)
+#define GLYPH32_ASCII6_BOLD_Y                 GLYPH32(02277500)
+#define GLYPH32_ASCII6_BOLD_Z                 GLYPH32(07326700)
+// Bold (lowercase) --> For now at least, same as Uppercase! TODO?
+#define GLYPH32_ASCII6_BOLD_a                 GLYPH32_ASCII6_BOLD_A
+#define GLYPH32_ASCII6_BOLD_b                 GLYPH32_ASCII6_BOLD_B
+#define GLYPH32_ASCII6_BOLD_c                 GLYPH32_ASCII6_BOLD_C
+#define GLYPH32_ASCII6_BOLD_d                 GLYPH32_ASCII6_BOLD_D
+#define GLYPH32_ASCII6_BOLD_e                 GLYPH32_ASCII6_BOLD_E
+#define GLYPH32_ASCII6_BOLD_f                 GLYPH32_ASCII6_BOLD_F
+#define GLYPH32_ASCII6_BOLD_g                 GLYPH32_ASCII6_BOLD_G
+#define GLYPH32_ASCII6_BOLD_h                 GLYPH32_ASCII6_BOLD_H
+#define GLYPH32_ASCII6_BOLD_i                 GLYPH32_ASCII6_BOLD_I
+#define GLYPH32_ASCII6_BOLD_j                 GLYPH32_ASCII6_BOLD_J
+#define GLYPH32_ASCII6_BOLD_k                 GLYPH32_ASCII6_BOLD_K
+#define GLYPH32_ASCII6_BOLD_l                 GLYPH32_ASCII6_BOLD_L
+#define GLYPH32_ASCII6_BOLD_m                 GLYPH32_ASCII6_BOLD_M
+#define GLYPH32_ASCII6_BOLD_n                 GLYPH32_ASCII6_BOLD_N
+#define GLYPH32_ASCII6_BOLD_o                 GLYPH32_ASCII6_BOLD_O
+#define GLYPH32_ASCII6_BOLD_p                 GLYPH32_ASCII6_BOLD_P
+#define GLYPH32_ASCII6_BOLD_q                 GLYPH32_ASCII6_BOLD_Q
+#define GLYPH32_ASCII6_BOLD_r                 GLYPH32_ASCII6_BOLD_R
+#define GLYPH32_ASCII6_BOLD_s                 GLYPH32_ASCII6_BOLD_S
+#define GLYPH32_ASCII6_BOLD_t                 GLYPH32_ASCII6_BOLD_T
+#define GLYPH32_ASCII6_BOLD_u                 GLYPH32_ASCII6_BOLD_U
+#define GLYPH32_ASCII6_BOLD_v                 GLYPH32_ASCII6_BOLD_V
+#define GLYPH32_ASCII6_BOLD_w                 GLYPH32_ASCII6_BOLD_W
+#define GLYPH32_ASCII6_BOLD_x                 GLYPH32_ASCII6_BOLD_X
+#define GLYPH32_ASCII6_BOLD_y                 GLYPH32_ASCII6_BOLD_Y
+#define GLYPH32_ASCII6_BOLD_z                 GLYPH32_ASCII6_BOLD_Z
+// Bold (smallcaps)
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_A        GLYPH32_ASCII5_BOLD_A
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_B        GLYPH32_ASCII5_BOLD_B
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_C        GLYPH32_ASCII5_BOLD_C
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_D        GLYPH32_ASCII5_BOLD_D
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_E        GLYPH32_ASCII5_BOLD_E
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_F        GLYPH32_ASCII5_BOLD_F
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_G        GLYPH32_ASCII5_BOLD_G
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_H        GLYPH32_ASCII5_BOLD_H
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_I        GLYPH32_ASCII5_BOLD_I
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_J        GLYPH32_ASCII5_BOLD_J
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_K        GLYPH32_ASCII5_BOLD_K
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_L        GLYPH32_ASCII5_BOLD_L
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_M        GLYPH32_ASCII5_BOLD_M
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_N        GLYPH32_ASCII5_BOLD_N
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_O        GLYPH32_ASCII5_BOLD_O
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_P        GLYPH32_ASCII5_BOLD_P
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_Q        GLYPH32_ASCII5_BOLD_Q
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_R        GLYPH32_ASCII5_BOLD_R
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_S        GLYPH32_ASCII5_BOLD_S
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_T        GLYPH32_ASCII5_BOLD_T
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_U        GLYPH32_ASCII5_BOLD_U
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_V        GLYPH32_ASCII5_BOLD_V
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_W        GLYPH32_ASCII5_BOLD_W
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_X        GLYPH32_ASCII5_BOLD_X
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_Y        GLYPH32_ASCII5_BOLD_Y
+#define GLYPH32_ASCII6_BOLD_SMALLCAP_Z        GLYPH32_ASCII5_BOLD_Z
 // Italic (Uppercase)
 #define GLYPH32_ASCII6_ITALIC_A               GLYPH32(0579A400)
 #define GLYPH32_ASCII6_ITALIC_B               GLYPH32(0357A600) // or 0357AE00
@@ -571,6 +747,87 @@
 #define GLYPH32_ASCII5_SMALLCAP_X             GLYPH32_ASCII4_X
 #define GLYPH32_ASCII5_SMALLCAP_Y             GLYPH32_ASCII4_Y
 #define GLYPH32_ASCII5_SMALLCAP_Z             GLYPH32_ASCII4_Z
+// Bold (Uppercase)
+#define GLYPH32_ASCII5_BOLD_A                 GLYPH32(05776000)
+#define GLYPH32_ASCII5_BOLD_B                 GLYPH32(07773000)
+#define GLYPH32_ASCII5_BOLD_C                 GLYPH32(06336000)
+#define GLYPH32_ASCII5_BOLD_D                 GLYPH32(03773000)
+#define GLYPH32_ASCII5_BOLD_E                 GLYPH32(07377000)
+#define GLYPH32_ASCII5_BOLD_F                 GLYPH32(03737000)
+#define GLYPH32_ASCII5_BOLD_G                 GLYPH32(07536000)
+#define GLYPH32_ASCII5_BOLD_H                 GLYPH32(05775000)
+#define GLYPH32_ASCII5_BOLD_I                 GLYPH32(07727000)
+#define GLYPH32_ASCII5_BOLD_J                 GLYPH32(03667000)
+#define GLYPH32_ASCII5_BOLD_K                 GLYPH32(05735000)
+#define GLYPH32_ASCII5_BOLD_L                 GLYPH32(07333000)
+#define GLYPH32_ASCII5_BOLD_M                 GLYPH32(05777000)
+#define GLYPH32_ASCII5_BOLD_N                 GLYPH32(05573000)
+#define GLYPH32_ASCII5_BOLD_O                 GLYPH32(07757000)
+#define GLYPH32_ASCII5_BOLD_P                 GLYPH32(03757000)
+#define GLYPH32_ASCII5_BOLD_Q                 GLYPH32(63757000)
+#define GLYPH32_ASCII5_BOLD_R                 GLYPH32(05377000)
+#define GLYPH32_ASCII5_BOLD_S                 GLYPH32(03636000)
+#define GLYPH32_ASCII5_BOLD_T                 GLYPH32(02277000)
+#define GLYPH32_ASCII5_BOLD_U                 GLYPH32(06755000)
+#define GLYPH32_ASCII5_BOLD_V                 GLYPH32(03755000)
+#define GLYPH32_ASCII5_BOLD_W                 GLYPH32(07775000)
+#define GLYPH32_ASCII5_BOLD_X                 GLYPH32(05635000)
+#define GLYPH32_ASCII5_BOLD_Y                 GLYPH32(02775000)
+#define GLYPH32_ASCII5_BOLD_Z                 GLYPH32(07367000)
+// Bold (lowercase) --> For now at least, same as Uppercase! TODO?
+#define GLYPH32_ASCII5_BOLD_a                 GLYPH32_ASCII5_BOLD_a
+#define GLYPH32_ASCII5_BOLD_b                 GLYPH32_ASCII5_BOLD_b
+#define GLYPH32_ASCII5_BOLD_c                 GLYPH32_ASCII5_BOLD_c
+#define GLYPH32_ASCII5_BOLD_d                 GLYPH32_ASCII5_BOLD_d
+#define GLYPH32_ASCII5_BOLD_e                 GLYPH32_ASCII5_BOLD_e
+#define GLYPH32_ASCII5_BOLD_f                 GLYPH32_ASCII5_BOLD_f
+#define GLYPH32_ASCII5_BOLD_g                 GLYPH32_ASCII5_BOLD_g
+#define GLYPH32_ASCII5_BOLD_h                 GLYPH32_ASCII5_BOLD_h
+#define GLYPH32_ASCII5_BOLD_i                 GLYPH32_ASCII5_BOLD_i
+#define GLYPH32_ASCII5_BOLD_j                 GLYPH32_ASCII5_BOLD_j
+#define GLYPH32_ASCII5_BOLD_k                 GLYPH32_ASCII5_BOLD_k
+#define GLYPH32_ASCII5_BOLD_l                 GLYPH32_ASCII5_BOLD_l
+#define GLYPH32_ASCII5_BOLD_m                 GLYPH32_ASCII5_BOLD_m
+#define GLYPH32_ASCII5_BOLD_n                 GLYPH32_ASCII5_BOLD_n
+#define GLYPH32_ASCII5_BOLD_o                 GLYPH32_ASCII5_BOLD_o
+#define GLYPH32_ASCII5_BOLD_p                 GLYPH32_ASCII5_BOLD_p
+#define GLYPH32_ASCII5_BOLD_q                 GLYPH32_ASCII5_BOLD_q
+#define GLYPH32_ASCII5_BOLD_r                 GLYPH32_ASCII5_BOLD_r
+#define GLYPH32_ASCII5_BOLD_s                 GLYPH32_ASCII5_BOLD_s
+#define GLYPH32_ASCII5_BOLD_t                 GLYPH32_ASCII5_BOLD_t
+#define GLYPH32_ASCII5_BOLD_u                 GLYPH32_ASCII5_BOLD_u
+#define GLYPH32_ASCII5_BOLD_v                 GLYPH32_ASCII5_BOLD_v
+#define GLYPH32_ASCII5_BOLD_w                 GLYPH32_ASCII5_BOLD_w
+#define GLYPH32_ASCII5_BOLD_x                 GLYPH32_ASCII5_BOLD_x
+#define GLYPH32_ASCII5_BOLD_y                 GLYPH32_ASCII5_BOLD_y
+#define GLYPH32_ASCII5_BOLD_z                 GLYPH32_ASCII5_BOLD_z
+// Bold (smallcaps)
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_A        GLYPH32_ASCII4_BOLD_A
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_B        GLYPH32_ASCII4_BOLD_B
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_C        GLYPH32_ASCII4_BOLD_C
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_D        GLYPH32_ASCII4_BOLD_D
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_E        GLYPH32_ASCII4_BOLD_E
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_F        GLYPH32_ASCII4_BOLD_F
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_G        GLYPH32_ASCII4_BOLD_G
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_H        GLYPH32_ASCII4_BOLD_H
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_I        GLYPH32_ASCII4_BOLD_I
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_J        GLYPH32_ASCII4_BOLD_J
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_K        GLYPH32_ASCII4_BOLD_K
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_L        GLYPH32_ASCII4_BOLD_L
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_M        GLYPH32_ASCII4_BOLD_M
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_N        GLYPH32_ASCII4_BOLD_N
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_O        GLYPH32_ASCII4_BOLD_O
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_P        GLYPH32_ASCII4_BOLD_P
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_Q        GLYPH32_ASCII4_BOLD_Q
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_R        GLYPH32_ASCII4_BOLD_R
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_S        GLYPH32_ASCII4_BOLD_S
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_T        GLYPH32_ASCII4_BOLD_T
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_U        GLYPH32_ASCII4_BOLD_U
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_V        GLYPH32_ASCII4_BOLD_V
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_W        GLYPH32_ASCII4_BOLD_W
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_X        GLYPH32_ASCII4_BOLD_X
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_Y        GLYPH32_ASCII4_BOLD_Y
+#define GLYPH32_ASCII5_BOLD_SMALLCAP_Z        GLYPH32_ASCII4_BOLD_Z
 // Italic (Uppercase)
 #define GLYPH32_ASCII5_ITALIC_A               GLYPH32(057A4000)
 #define GLYPH32_ASCII5_ITALIC_B               GLYPH32(075A6000)
@@ -625,7 +882,33 @@
 #define GLYPH32_ASCII5_ITALIC_x               GLYPH32(056A0000)
 #define GLYPH32_ASCII5_ITALIC_y               GLYPH32(346A0000)
 #define GLYPH32_ASCII5_ITALIC_z               GLYPH32(07260000)  // meh! or 0727000 or 6230000?
-
+// Italic (smallcaps)
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_A      GLYPH32_ASCII4_ITALIC_A
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_B      GLYPH32_ASCII4_ITALIC_B
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_C      GLYPH32_ASCII4_ITALIC_C
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_D      GLYPH32_ASCII4_ITALIC_D
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_E      GLYPH32_ASCII4_ITALIC_E
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_F      GLYPH32_ASCII4_ITALIC_F
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_G      GLYPH32_ASCII4_ITALIC_G
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_H      GLYPH32_ASCII4_ITALIC_H
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_I      GLYPH32_ASCII4_ITALIC_I
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_J      GLYPH32_ASCII4_ITALIC_J
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_K      GLYPH32_ASCII4_ITALIC_K
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_L      GLYPH32_ASCII4_ITALIC_L
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_M      GLYPH32_ASCII4_ITALIC_M
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_N      GLYPH32_ASCII4_ITALIC_N
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_O      GLYPH32_ASCII4_ITALIC_O
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_P      GLYPH32_ASCII4_ITALIC_P
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_Q      GLYPH32_ASCII4_ITALIC_Q
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_R      GLYPH32_ASCII4_ITALIC_R
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_S      GLYPH32_ASCII4_ITALIC_S
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_T      GLYPH32_ASCII4_ITALIC_T
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_U      GLYPH32_ASCII4_ITALIC_U
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_V      GLYPH32_ASCII4_ITALIC_V
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_W      GLYPH32_ASCII4_ITALIC_W
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_X      GLYPH32_ASCII4_ITALIC_X
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_Y      GLYPH32_ASCII4_ITALIC_Y
+#define GLYPH32_ASCII5_ITALIC_SMALLCAP_Z      GLYPH32_ASCII4_ITALIC_Z
 
 
 
@@ -639,14 +922,445 @@
 // "u      06550500
 
 
+//------------------------------------------------------------------------------
+// ASCII4 FONT - This is a Glyph16 font, 3x4 (x-height=2,descender=1,ascender=1)
+//
+// Notes: - Lowercase letters start to be quite difficult to read,
+//          so it also makes senes to use only uppercase.
+//        - Quite a few non-alphanumeric characters have a descender.
+//------------------------------------------------------------------------------
+// Printable Ascii
+#define GLYPH16_ASCII4_SPACE                  GLYPH16(0000)
+#define GLYPH16_ASCII4_EXCLAMATION_MARK       GLYPH16(2022) // weird descender
+#define GLYPH16_ASCII4_DOUBLE_QUOTE           GLYPH16(0055)
+#define GLYPH16_ASCII4_HASHTAG                GLYPH16(0505)
+#define GLYPH16_ASCII4_DOLLAR_SIGN            GLYPH16(3636)
+#define GLYPH16_ASCII4_PERCENT_SIGN           GLYPH16(5365)
+#define GLYPH16_ASCII4_AMPERSAND              GLYPH16(0736) // better with desc?
+#define GLYPH16_ASCII4_SINGLE_QUOTE           GLYPH16(0012)
+#define GLYPH16_ASCII4_LEFT_PARENTHESIS       GLYPH16(2112)
+#define GLYPH16_ASCII4_RIGHT_PARENTHESIS      GLYPH16(2442)
+#define GLYPH16_ASCII4_ASTERISK               GLYPH16(0020) // mid-dot
+#define GLYPH16_ASCII4_PLUS_SIGN              GLYPH16(0272)
+#define GLYPH16_ASCII4_COMMA                  GLYPH16(1200)
+#define GLYPH16_ASCII4_MINUS_SIGN             GLYPH16(0070)
+#define GLYPH16_ASCII4_DOT                    GLYPH16(0100)
+#define GLYPH16_ASCII4_SLASH                  GLYPH16(1224)
+#define GLYPH16_ASCII4_0                      GLYPH16(0653)
+#define GLYPH16_ASCII4_1                      GLYPH16(0723)
+#define GLYPH16_ASCII4_2                      GLYPH16(0623)
+#define GLYPH16_ASCII4_3                      GLYPH16(0363)
+#define GLYPH16_ASCII4_4                      GLYPH16(0271)
+#define GLYPH16_ASCII4_5                      GLYPH16(0326)
+#define GLYPH16_ASCII4_6                      GLYPH16(0771)
+#define GLYPH16_ASCII4_7                      GLYPH16(0247)
+#define GLYPH16_ASCII4_8                      GLYPH16(0777)
+#define GLYPH16_ASCII4_9                      GLYPH16(0477)
+#define GLYPH16_ASCII4_COLON                  GLYPH16(0202)
+#define GLYPH16_ASCII4_SEMICOLON              GLYPH16(1202)
+#define GLYPH16_ASCII4_LESS_THAN_SIGN         GLYPH16(0424)
+#define GLYPH16_ASCII4_EQUAL_SIGN             GLYPH16(0707)
+#define GLYPH16_ASCII4_GREATER_THAN_SIGN      GLYPH16(0242)
+#define GLYPH16_ASCII4_QUESTION_MARK          GLYPH16(2067) // weird descdender
+#define GLYPH16_ASCII4_QUESTION_MARK_NO_DESCENDER  GLYPH16(0267)
+#define GLYPH16_ASCII4_AT_SIGN                GLYPH16(3157)
+#define GLYPH16_ASCII4_A                      GLYPH16(0572)
+#define GLYPH16_ASCII4_B                      GLYPH16(0773)
+#define GLYPH16_ASCII4_C                      GLYPH16(0616)
+#define GLYPH16_ASCII4_D                      GLYPH16(0353)
+#define GLYPH16_ASCII4_E                      GLYPH16(0737)
+#define GLYPH16_ASCII4_F                      GLYPH16(0137)
+#define GLYPH16_ASCII4_G                      GLYPH16(0753) // or 0EA2
+#define GLYPH16_ASCII4_H                      GLYPH16(0575)
+#define GLYPH16_ASCII4_I                      GLYPH16(0727)
+#define GLYPH16_ASCII4_J                      GLYPH16(0327)
+#define GLYPH16_ASCII4_K                      GLYPH16(0535)
+#define GLYPH16_ASCII4_L                      GLYPH16(0711)
+#define GLYPH16_ASCII4_M                      GLYPH16(0577)
+#define GLYPH16_ASCII4_N                      GLYPH16(0553)
+#define GLYPH16_ASCII4_O                      GLYPH16(0356) // GLYPH16(0252)
+#define GLYPH16_ASCII4_P                      GLYPH16(0177)
+#define GLYPH16_ASCII4_Q                      GLYPH16(4356)
+#define GLYPH16_ASCII4_R                      GLYPH16(0537)
+#define GLYPH16_ASCII4_S                      GLYPH16(0326)
+#define GLYPH16_ASCII4_T                      GLYPH16(0227)
+#define GLYPH16_ASCII4_U                      GLYPH16(0655)
+#define GLYPH16_ASCII4_V                      GLYPH16(0255)
+#define GLYPH16_ASCII4_W                      GLYPH16(0775)
+#define GLYPH16_ASCII4_X                      GLYPH16(0525)
+#define GLYPH16_ASCII4_Y                      GLYPH16(0225)
+#define GLYPH16_ASCII4_Z                      GLYPH16(0623)
+#define GLYPH16_ASCII4_LEFT_SQUARE_BACKET     GLYPH16(6226)
+#define GLYPH16_ASCII4_BACKSLASH              GLYPH16(4221)
+#define GLYPH16_ASCII4_RIGHT_SQUARE_BRACKET   GLYPH16(6446)
+#define GLYPH16_ASCII4_CARET                  GLYPH16(0052)
+#define GLYPH16_ASCII4_UNDERSCORE             GLYPH16(0700)
+#define GLYPH16_ASCII4_BACKQUOTE              GLYPH16(0042)
+#define GLYPH16_ASCII4_a                      GLYPH16(0640)
+#define GLYPH16_ASCII4_b                      GLYPH16(0662)
+#define GLYPH16_ASCII4_c                      GLYPH16(0620)
+#define GLYPH16_ASCII4_d                      GLYPH16(0664)
+#define GLYPH16_ASCII4_e                      GLYPH16(0730)
+#define GLYPH16_ASCII4_f                      GLYPH16(0236)
+#define GLYPH16_ASCII4_g                      GLYPH16(6570)
+#define GLYPH16_ASCII4_h                      GLYPH16(0571)
+#define GLYPH16_ASCII4_i                      GLYPH16(0220)
+#define GLYPH16_ASCII4_j                      GLYPH16(2440)
+#define GLYPH16_ASCII4_k                      GLYPH16(0531)
+#define GLYPH16_ASCII4_l                      GLYPH16(0222)
+#define GLYPH16_ASCII4_m                      GLYPH16(0570)
+#define GLYPH16_ASCII4_n                      GLYPH16(0530)
+#define GLYPH16_ASCII4_o                      GLYPH16(0660)
+#define GLYPH16_ASCII4_p                      GLYPH16(2660)
+#define GLYPH16_ASCII4_q                      GLYPH16(4660)
+#define GLYPH16_ASCII4_r                      GLYPH16(0260)
+#define GLYPH16_ASCII4_s                      GLYPH16(0360)
+#define GLYPH16_ASCII4_t                      GLYPH16(0632)
+#define GLYPH16_ASCII4_u                      GLYPH16(0650)
+#define GLYPH16_ASCII4_v                      GLYPH16(0350)
+#define GLYPH16_ASCII4_w                      GLYPH16(0750)
+#define GLYPH16_ASCII4_x                      GLYPH16(0520)
+#define GLYPH16_ASCII4_y                      GLYPH16(1250)
+#define GLYPH16_ASCII4_z                      GLYPH16(0630)
+#define GLYPH16_ASCII4_LEFT_CURLY_BACKET      GLYPH16(6236)
+#define GLYPH16_ASCII4_VERTICAL_BAR           GLYPH16(0222)
+#define GLYPH16_ASCII4_RIGHT_CURLY_BRACKET    GLYPH16(3263)
+#define GLYPH16_ASCII4_TILDE                  GLYPH16(0174) //0063
+// Bold (Uppercase) // quite a few glyphs are same as regular
+#define GLYPH16_ASCII4_BOLD_A                 GLYPH16(0576)
+#define GLYPH16_ASCII4_BOLD_B                 GLYPH16(0773)
+#define GLYPH16_ASCII4_BOLD_C                 GLYPH16(0736)
+#define GLYPH16_ASCII4_BOLD_D                 GLYPH16(0373)
+#define GLYPH16_ASCII4_BOLD_E                 GLYPH16(0737)
+#define GLYPH16_ASCII4_BOLD_F                 GLYPH16(0137)
+#define GLYPH16_ASCII4_BOLD_G                 GLYPH16(0753)
+#define GLYPH16_ASCII4_BOLD_H                 GLYPH16(0575)
+#define GLYPH16_ASCII4_BOLD_I                 GLYPH16(0727)
+#define GLYPH16_ASCII4_BOLD_J                 GLYPH16(0367)
+#define GLYPH16_ASCII4_BOLD_K                 GLYPH16(0535)
+#define GLYPH16_ASCII4_BOLD_L                 GLYPH16(0733)
+#define GLYPH16_ASCII4_BOLD_M                 GLYPH16(0577)
+#define GLYPH16_ASCII4_BOLD_N                 GLYPH16(0553)
+#define GLYPH16_ASCII4_BOLD_O                 GLYPH16(0757)
+#define GLYPH16_ASCII4_BOLD_P                 GLYPH16(0377)
+#define GLYPH16_ASCII4_BOLD_Q                 GLYPH16(6377)
+#define GLYPH16_ASCII4_BOLD_R                 GLYPH16(0537)
+#define GLYPH16_ASCII4_BOLD_S                 GLYPH16(076E)
+#define GLYPH16_ASCII4_BOLD_T                 GLYPH16(0277)
+#define GLYPH16_ASCII4_BOLD_U                 GLYPH16(0755)
+#define GLYPH16_ASCII4_BOLD_V                 GLYPH16(0375)
+#define GLYPH16_ASCII4_BOLD_W                 GLYPH16(0775)
+#define GLYPH16_ASCII4_BOLD_X                 GLYPH16(0525)
+#define GLYPH16_ASCII4_BOLD_Y                 GLYPH16(0275)
+#define GLYPH16_ASCII4_BOLD_Z                 GLYPH16(0E67)
+// Bold (lowercase) = same as Uppercase FOW NOWWWW---- TODO
+#define GLYPH16_ASCII4_BOLD_a                 GLYPH16(0760)
+#define GLYPH16_ASCII4_BOLD_b                 GLYPH16(0771)
+#define GLYPH16_ASCII4_BOLD_c                 GLYPH16(0370)
+#define GLYPH16_ASCII4_BOLD_d                 GLYPH16(0774)
+#define GLYPH16_ASCII4_BOLD_e                 GLYPH16(0730)
+#define GLYPH16_ASCII4_BOLD_f                 GLYPH16(0236)
+#define GLYPH16_ASCII4_BOLD_g                 GLYPH16(6570)
+#define GLYPH16_ASCII4_BOLD_h                 GLYPH16(0571)
+#define GLYPH16_ASCII4_BOLD_i                 GLYPH16(0220)
+#define GLYPH16_ASCII4_BOLD_j                 GLYPH16(3440)
+#define GLYPH16_ASCII4_BOLD_k                 GLYPH16(0531)
+#define GLYPH16_ASCII4_BOLD_l                 GLYPH16(0666)
+#define GLYPH16_ASCII4_BOLD_m                 GLYPH16(0570)
+#define GLYPH16_ASCII4_BOLD_n                 GLYPH16(0530)
+#define GLYPH16_ASCII4_BOLD_o                 GLYPH16(0770)
+#define GLYPH16_ASCII4_BOLD_p                 GLYPH16(1770)
+#define GLYPH16_ASCII4_BOLD_q                 GLYPH16(4770)
+#define GLYPH16_ASCII4_BOLD_r                 GLYPH16(0170)
+#define GLYPH16_ASCII4_BOLD_s                 GLYPH16(0360)
+#define GLYPH16_ASCII4_BOLD_t                 GLYPH16(0632)
+#define GLYPH16_ASCII4_BOLD_u                 GLYPH16(0650)
+#define GLYPH16_ASCII4_BOLD_v                 GLYPH16(0350)
+#define GLYPH16_ASCII4_BOLD_w                 GLYPH16(0750)
+#define GLYPH16_ASCII4_BOLD_x                 GLYPH16(0525) // weird ascender
+#define GLYPH16_ASCII4_BOLD_y                 GLYPH16(6750)
+#define GLYPH16_ASCII4_BOLD_z                 GLYPH16(0630)
+// Italic (Uppercase)
+#define GLYPH16_ASCII4_ITALIC_A               GLYPH16(0564)
+#define GLYPH16_ASCII4_ITALIC_B               GLYPH16(0376)
+#define GLYPH16_ASCII4_ITALIC_C               GLYPH16(0316)
+#define GLYPH16_ASCII4_ITALIC_D               GLYPH16(0352)
+#define GLYPH16_ASCII4_ITALIC_E               GLYPH16(077E)
+#define GLYPH16_ASCII4_ITALIC_F               GLYPH16(017E)
+#define GLYPH16_ASCII4_ITALIC_G               GLYPH16(0352)
+#define GLYPH16_ASCII4_ITALIC_H               GLYPH16(057A)
+#define GLYPH16_ASCII4_ITALIC_I               GLYPH16(0224)
+#define GLYPH16_ASCII4_ITALIC_J               GLYPH16(034E)
+#define GLYPH16_ASCII4_ITALIC_K               GLYPH16(057A) //same as h?
+#define GLYPH16_ASCII4_ITALIC_L               GLYPH16(0724)
+#define GLYPH16_ASCII4_ITALIC_M               GLYPH16(057E) //or 5EE
+#define GLYPH16_ASCII4_ITALIC_N               GLYPH16(05E6)
+#define GLYPH16_ASCII4_ITALIC_O               GLYPH16(0356)
+#define GLYPH16_ASCII4_ITALIC_P               GLYPH16(0176)
+#define GLYPH16_ASCII4_ITALIC_Q               GLYPH16(6356)
+#define GLYPH16_ASCII4_ITALIC_R               GLYPH16(05E6)
+#define GLYPH16_ASCII4_ITALIC_S               GLYPH16(036C)
+#define GLYPH16_ASCII4_ITALIC_T               GLYPH16(024E)
+#define GLYPH16_ASCII4_ITALIC_U               GLYPH16(035A)
+#define GLYPH16_ASCII4_ITALIC_V               GLYPH16(026A)
+#define GLYPH16_ASCII4_ITALIC_W               GLYPH16(077A)
+#define GLYPH16_ASCII4_ITALIC_X               GLYPH16(056A)
+#define GLYPH16_ASCII4_ITALIC_Y               GLYPH16(036A)
+#define GLYPH16_ASCII4_ITALIC_Z               GLYPH16(076E)
+// Italic (lowercase - glyph with no descender or ascender can't change much)
+#define GLYPH16_ASCII4_ITALIC_a               GLYPH16_ASCII4_a
+#define GLYPH16_ASCII4_ITALIC_b               GLYPH16(0762)
+#define GLYPH16_ASCII4_ITALIC_c               GLYPH16(0370)
+#define GLYPH16_ASCII4_ITALIC_d               GLYPH16(0374)
+#define GLYPH16_ASCII4_ITALIC_e               GLYPH16(0730)
+#define GLYPH16_ASCII4_ITALIC_f               GLYPH16(027C)
+#define GLYPH16_ASCII4_ITALIC_g               GLYPH16(3660)
+#define GLYPH16_ASCII4_ITALIC_h               GLYPH16(0562)
+#define GLYPH16_ASCII4_ITALIC_i               GLYPH16(0128) // or 0240
+#define GLYPH16_ASCII4_ITALIC_j               GLYPH16(3408)
+#define GLYPH16_ASCII4_ITALIC_k               GLYPH16(07E2) //TODO?
+#define GLYPH16_ASCII4_ITALIC_l               GLYPH16(0224)
+#define GLYPH16_ASCII4_ITALIC_m               GLYPH16_ASCII4_m
+#define GLYPH16_ASCII4_ITALIC_n               GLYPH16_ASCII4_n
+#define GLYPH16_ASCII4_ITALIC_o               GLYPH16(0770)
+#define GLYPH16_ASCII4_ITALIC_p               GLYPH16(1760)
+#define GLYPH16_ASCII4_ITALIC_q               GLYPH16(2560)
+#define GLYPH16_ASCII4_ITALIC_r               GLYPH16(0160)
+#define GLYPH16_ASCII4_ITALIC_s               GLYPH16_ASCII4_s
+#define GLYPH16_ASCII4_ITALIC_t               GLYPH16(0172)
+#define GLYPH16_ASCII4_ITALIC_u               GLYPH16_ASCII4_u
+#define GLYPH16_ASCII4_ITALIC_v               GLYPH16_ASCII4_v
+#define GLYPH16_ASCII4_ITALIC_w               GLYPH16_ASCII4_w
+#define GLYPH16_ASCII4_ITALIC_x               GLYPH16(0525) // 056A
+#define GLYPH16_ASCII4_ITALIC_y               GLYPH16(1250) // or 36A0
+#define GLYPH16_ASCII4_ITALIC_z               GLYPH16_ASCII4_z
+// Extra characters:
+#define GLYPH16_ASCII4_MICRO                  GLYPH16(1750)
 
 
 //------------------------------------------------------------------------------
-// Glyph32 Ascii Font, 3x4 (x-height=2,descender=1,ascender=1)
-// Lowercase letters start to be quite difficult to read, so perhaps you want
-// to use the 3x3 font which defines the lowercase in the same way as the
-// upper case
-// This is the same as the Glyph16 font (see below) but in Glyph32 format.
+// ASCII3 FONT - This ia a Glyph16 Font, 3x3 (x-height=2, ascender=1,
+//                                            NO DESCENDER, but margin bottom)
+// - Lower case is same as upper case
+// - Q is an exception in that it's a uppercase letter with a descnder ...
+//   but a STRICT no descender version is also available.
+//
+// Note: A few characters are unfortunately the same (for example: Z and 2).
+// Although it would be possible to have different designs, the approach is
+// to avoid straying away for the traditional design of each the character,
+// and thus just rely on context for differentiation.
+//------------------------------------------------------------------------------
+// Printable Ascii (Lower case is same as Upper Case)
+#define GLYPH16_ASCII3_SPACE                  GLYPH16(0000)
+#define GLYPH16_ASCII3_EXCLAMATION_MARK       GLYPH16(0277) // ouch
+#define GLYPH16_ASCII3_DOUBLE_QUOTE           GLYPH16_ASCII4_DOUBLE_QUOTE
+#define GLYPH16_ASCII3_HASHTAG                GLYPH16(0505) // GLYPH16(0757)
+#define GLYPH16_ASCII3_DOLLAR_SIGN            GLYPH16(0376) // ouch
+#define GLYPH16_ASCII3_PERCENT_SIGN           GLYPH16(0154) // ouch
+#define GLYPH16_ASCII3_AMPERSAND              GLYPH16(0736) // ouch
+#define GLYPH16_ASCII3_SINGLE_QUOTE           GLYPH16_ASCII4_SINGLE_QUOTE
+#define GLYPH16_ASCII3_LEFT_PARENTHESIS       GLYPH16(0212) // ouch
+#define GLYPH16_ASCII3_RIGHT_PARENTHESIS      GLYPH16(0242) // ouch
+#define GLYPH16_ASCII3_ASTERISK               GLYPH16(0020) // ouch / mid-dot
+#define GLYPH16_ASCII3_PLUS_SIGN              GLYPH16_ASCII4_PLUS_SIGN
+#define GLYPH16_ASCII3_COMMA                  GLYPH16(0120)
+#define GLYPH16_ASCII3_MINUS_SIGN             GLYPH16_ASCII4_MINUS_SIGN
+#define GLYPH16_ASCII3_DOT                    GLYPH16_ASCII4_DOT
+#define GLYPH16_ASCII3_SLASH                  GLYPH16(0124)
+#define GLYPH16_ASCII3_0                      GLYPH16_ASCII4_0
+#define GLYPH16_ASCII3_1                      GLYPH16_ASCII4_1
+#define GLYPH16_ASCII3_2                      GLYPH16_ASCII4_2
+#define GLYPH16_ASCII3_3                      GLYPH16_ASCII4_3
+#define GLYPH16_ASCII3_4                      GLYPH16_ASCII4_4
+#define GLYPH16_ASCII3_5                      GLYPH16_ASCII4_5
+#define GLYPH16_ASCII3_6                      GLYPH16_ASCII4_6
+#define GLYPH16_ASCII3_7                      GLYPH16_ASCII4_7
+#define GLYPH16_ASCII3_8                      GLYPH16_ASCII4_8
+#define GLYPH16_ASCII3_9                      GLYPH16_ASCII4_9
+#define GLYPH16_ASCII3_COLON                  GLYPH16_ASCII4_COLON
+#define GLYPH16_ASCII3_SEMICOLON              GLYPH16(0130) // ouch
+#define GLYPH16_ASCII3_LESS_THAN_SIGN         GLYPH16_ASCII4_LESS_THAN_SIGN
+#define GLYPH16_ASCII3_EQUAL_SIGN             GLYPH16_ASCII4_EQUAL_SIGN
+#define GLYPH16_ASCII3_GREATER_THAN_SIGN      GLYPH16_ASCII4_GREATER_THAN_SIGN
+#define GLYPH16_ASCII3_QUESTION_MARK          GLYPH16(0267) // ouch
+#define GLYPH16_ASCII3_AT_SIGN                GLYPH16(0543) // ouch... ~RSS
+#define GLYPH16_ASCII3_A                      GLYPH16_ASCII4_A
+#define GLYPH16_ASCII3_B                      GLYPH16_ASCII4_B
+#define GLYPH16_ASCII3_C                      GLYPH16_ASCII4_C
+#define GLYPH16_ASCII3_D                      GLYPH16_ASCII4_D
+#define GLYPH16_ASCII3_E                      GLYPH16_ASCII4_E
+#define GLYPH16_ASCII3_F                      GLYPH16_ASCII4_F
+#define GLYPH16_ASCII3_G                      GLYPH16_ASCII4_G
+#define GLYPH16_ASCII3_H                      GLYPH16_ASCII4_H
+#define GLYPH16_ASCII3_I                      GLYPH16_ASCII4_I
+#define GLYPH16_ASCII3_J                      GLYPH16_ASCII4_J
+#define GLYPH16_ASCII3_K                      GLYPH16_ASCII4_K
+#define GLYPH16_ASCII3_L                      GLYPH16_ASCII4_L
+#define GLYPH16_ASCII3_M                      GLYPH16_ASCII4_M
+#define GLYPH16_ASCII3_N                      GLYPH16_ASCII4_N
+#define GLYPH16_ASCII3_O                      GLYPH16_ASCII4_O
+#define GLYPH16_ASCII3_P                      GLYPH16_ASCII4_P
+#define GLYPH16_ASCII3_Q /* height=4 */       GLYPH16_ASCII4_Q // DESCENDER !!!
+#define GLYPH16_ASCII3_Q_STRICT               GLYPH16(0657)    // NO DESCENDER!
+#define GLYPH16_ASCII3_R                      GLYPH16_ASCII4_R
+#define GLYPH16_ASCII3_S                      GLYPH16_ASCII4_S
+#define GLYPH16_ASCII3_T                      GLYPH16_ASCII4_T
+#define GLYPH16_ASCII3_U                      GLYPH16_ASCII4_U
+#define GLYPH16_ASCII3_V                      GLYPH16_ASCII4_V
+#define GLYPH16_ASCII3_W                      GLYPH16_ASCII4_W
+#define GLYPH16_ASCII3_X                      GLYPH16_ASCII4_X
+#define GLYPH16_ASCII3_Y                      GLYPH16_ASCII4_Y
+#define GLYPH16_ASCII3_Z                      GLYPH16_ASCII4_Z
+#define GLYPH16_ASCII3_LEFT_SQUARE_BACKET     GLYPH16(0626)
+#define GLYPH16_ASCII3_BACKSLASH              GLYPH16(0421)
+#define GLYPH16_ASCII3_RIGHT_SQUARE_BRACKET   GLYPH16(0646)
+#define GLYPH16_ASCII3_CARET                  GLYPH16_ASCII4_CARET
+#define GLYPH16_ASCII3_UNDERSCORE             GLYPH16_ASCII4_UNDERSCORE
+#define GLYPH16_ASCII3_BACKQUOTE              GLYPH16_ASCII4_BACKQUOTE
+#define GLYPH16_ASCII3_a                      GLYPH16_ASCII3_A
+#define GLYPH16_ASCII3_b                      GLYPH16_ASCII3_B
+#define GLYPH16_ASCII3_c                      GLYPH16_ASCII3_C
+#define GLYPH16_ASCII3_d                      GLYPH16_ASCII3_D
+#define GLYPH16_ASCII3_e                      GLYPH16_ASCII3_E
+#define GLYPH16_ASCII3_f                      GLYPH16_ASCII3_F
+#define GLYPH16_ASCII3_g                      GLYPH16_ASCII3_G
+#define GLYPH16_ASCII3_h                      GLYPH16_ASCII3_H
+#define GLYPH16_ASCII3_i                      GLYPH16_ASCII3_I
+#define GLYPH16_ASCII3_j                      GLYPH16_ASCII3_J
+#define GLYPH16_ASCII3_k                      GLYPH16_ASCII3_K
+#define GLYPH16_ASCII3_l                      GLYPH16_ASCII3_L
+#define GLYPH16_ASCII3_m                      GLYPH16_ASCII3_M
+#define GLYPH16_ASCII3_n                      GLYPH16_ASCII3_N
+#define GLYPH16_ASCII3_o                      GLYPH16_ASCII3_O
+#define GLYPH16_ASCII3_p                      GLYPH16_ASCII3_P
+#define GLYPH16_ASCII3_q                      GLYPH16_ASCII3_Q
+#define GLYPH16_ASCII3_r                      GLYPH16_ASCII3_R
+#define GLYPH16_ASCII3_s                      GLYPH16_ASCII3_S
+#define GLYPH16_ASCII3_t                      GLYPH16_ASCII3_T
+#define GLYPH16_ASCII3_u                      GLYPH16_ASCII3_U
+#define GLYPH16_ASCII3_v                      GLYPH16_ASCII3_V
+#define GLYPH16_ASCII3_w                      GLYPH16_ASCII3_W
+#define GLYPH16_ASCII3_x                      GLYPH16_ASCII3_X
+#define GLYPH16_ASCII3_y                      GLYPH16_ASCII3_Y
+#define GLYPH16_ASCII3_z                      GLYPH16_ASCII3_Z
+#define GLYPH16_ASCII3_LEFT_CURLY_BACKET      GLYPH16(0636)
+#define GLYPH16_ASCII3_VERTICAL_BAR           GLYPH16(0222)
+#define GLYPH16_ASCII3_RIGHT_CURLY_BRACKET    GLYPH16(0363)
+#define GLYPH16_ASCII3_TILDE                  GLYPH16_ASCII4_TILDE
+// Bold (Uppercase)
+#define GLYPH16_ASCII3_BOLD_A                 GLYPH16_ASCII4_BOLD_A
+#define GLYPH16_ASCII3_BOLD_B                 GLYPH16_ASCII4_BOLD_B
+#define GLYPH16_ASCII3_BOLD_C                 GLYPH16_ASCII4_BOLD_C
+#define GLYPH16_ASCII3_BOLD_D                 GLYPH16_ASCII4_BOLD_D
+#define GLYPH16_ASCII3_BOLD_E                 GLYPH16_ASCII4_BOLD_E
+#define GLYPH16_ASCII3_BOLD_F                 GLYPH16_ASCII4_BOLD_F
+#define GLYPH16_ASCII3_BOLD_G                 GLYPH16_ASCII4_BOLD_G
+#define GLYPH16_ASCII3_BOLD_H                 GLYPH16_ASCII4_BOLD_H
+#define GLYPH16_ASCII3_BOLD_I                 GLYPH16_ASCII4_BOLD_I
+#define GLYPH16_ASCII3_BOLD_J                 GLYPH16_ASCII4_BOLD_J
+#define GLYPH16_ASCII3_BOLD_K                 GLYPH16_ASCII4_BOLD_K
+#define GLYPH16_ASCII3_BOLD_L                 GLYPH16_ASCII4_BOLD_L
+#define GLYPH16_ASCII3_BOLD_M                 GLYPH16_ASCII4_BOLD_M
+#define GLYPH16_ASCII3_BOLD_N                 GLYPH16_ASCII4_BOLD_N
+#define GLYPH16_ASCII3_BOLD_O                 GLYPH16_ASCII4_BOLD_O
+#define GLYPH16_ASCII3_BOLD_P                 GLYPH16_ASCII4_BOLD_P
+#define GLYPH16_ASCII3_BOLD_Q                 GLYPH16_ASCII4_BOLD_Q
+#define GLYPH16_ASCII3_BOLD_R                 GLYPH16_ASCII4_BOLD_R
+#define GLYPH16_ASCII3_BOLD_S                 GLYPH16_ASCII4_BOLD_S
+#define GLYPH16_ASCII3_BOLD_T                 GLYPH16_ASCII4_BOLD_T
+#define GLYPH16_ASCII3_BOLD_U                 GLYPH16_ASCII4_BOLD_U
+#define GLYPH16_ASCII3_BOLD_V                 GLYPH16_ASCII4_BOLD_V
+#define GLYPH16_ASCII3_BOLD_W                 GLYPH16_ASCII4_BOLD_W
+#define GLYPH16_ASCII3_BOLD_X                 GLYPH16_ASCII4_BOLD_X
+#define GLYPH16_ASCII3_BOLD_Y                 GLYPH16_ASCII4_BOLD_Y
+#define GLYPH16_ASCII3_BOLD_Z                 GLYPH16_ASCII4_BOLD_Z
+// Bold (lowercase) = same as Uppercase
+#define GLYPH16_ASCII3_BOLD_a                 GLYPH16_ASCII3_BOLD_A
+#define GLYPH16_ASCII3_BOLD_b                 GLYPH16_ASCII3_BOLD_B
+#define GLYPH16_ASCII3_BOLD_c                 GLYPH16_ASCII3_BOLD_C
+#define GLYPH16_ASCII3_BOLD_d                 GLYPH16_ASCII3_BOLD_D
+#define GLYPH16_ASCII3_BOLD_e                 GLYPH16_ASCII3_BOLD_E
+#define GLYPH16_ASCII3_BOLD_f                 GLYPH16_ASCII3_BOLD_F
+#define GLYPH16_ASCII3_BOLD_g                 GLYPH16_ASCII3_BOLD_G
+#define GLYPH16_ASCII3_BOLD_h                 GLYPH16_ASCII3_BOLD_H
+#define GLYPH16_ASCII3_BOLD_i                 GLYPH16_ASCII3_BOLD_I
+#define GLYPH16_ASCII3_BOLD_j                 GLYPH16_ASCII3_BOLD_J
+#define GLYPH16_ASCII3_BOLD_k                 GLYPH16_ASCII3_BOLD_K
+#define GLYPH16_ASCII3_BOLD_l                 GLYPH16_ASCII3_BOLD_L
+#define GLYPH16_ASCII3_BOLD_m                 GLYPH16_ASCII3_BOLD_M
+#define GLYPH16_ASCII3_BOLD_n                 GLYPH16_ASCII3_BOLD_N
+#define GLYPH16_ASCII3_BOLD_o                 GLYPH16_ASCII3_BOLD_O
+#define GLYPH16_ASCII3_BOLD_p                 GLYPH16_ASCII3_BOLD_P
+#define GLYPH16_ASCII3_BOLD_q                 GLYPH16_ASCII3_BOLD_Q
+#define GLYPH16_ASCII3_BOLD_r                 GLYPH16_ASCII3_BOLD_R
+#define GLYPH16_ASCII3_BOLD_s                 GLYPH16_ASCII3_BOLD_S
+#define GLYPH16_ASCII3_BOLD_t                 GLYPH16_ASCII3_BOLD_T
+#define GLYPH16_ASCII3_BOLD_u                 GLYPH16_ASCII3_BOLD_U
+#define GLYPH16_ASCII3_BOLD_v                 GLYPH16_ASCII3_BOLD_V
+#define GLYPH16_ASCII3_BOLD_w                 GLYPH16_ASCII3_BOLD_W
+#define GLYPH16_ASCII3_BOLD_x                 GLYPH16_ASCII3_BOLD_X
+#define GLYPH16_ASCII3_BOLD_y                 GLYPH16_ASCII3_BOLD_Y
+#define GLYPH16_ASCII3_BOLD_z                 GLYPH16_ASCII3_BOLD_Z
+// Italic (Uppercase)
+#define GLYPH16_ASCII3_ITALIC_A               GLYPH16_ASCII4_ITALIC_A
+#define GLYPH16_ASCII3_ITALIC_B               GLYPH16_ASCII4_ITALIC_B
+#define GLYPH16_ASCII3_ITALIC_C               GLYPH16_ASCII4_ITALIC_C
+#define GLYPH16_ASCII3_ITALIC_D               GLYPH16_ASCII4_ITALIC_D
+#define GLYPH16_ASCII3_ITALIC_E               GLYPH16_ASCII4_ITALIC_E
+#define GLYPH16_ASCII3_ITALIC_F               GLYPH16_ASCII4_ITALIC_F
+#define GLYPH16_ASCII3_ITALIC_G               GLYPH16_ASCII4_ITALIC_G
+#define GLYPH16_ASCII3_ITALIC_H               GLYPH16_ASCII4_ITALIC_H
+#define GLYPH16_ASCII3_ITALIC_I               GLYPH16_ASCII4_ITALIC_I
+#define GLYPH16_ASCII3_ITALIC_J               GLYPH16_ASCII4_ITALIC_J
+#define GLYPH16_ASCII3_ITALIC_K               GLYPH16_ASCII4_ITALIC_K
+#define GLYPH16_ASCII3_ITALIC_L               GLYPH16_ASCII4_ITALIC_L
+#define GLYPH16_ASCII3_ITALIC_M               GLYPH16_ASCII4_ITALIC_M
+#define GLYPH16_ASCII3_ITALIC_N               GLYPH16_ASCII4_ITALIC_N
+#define GLYPH16_ASCII3_ITALIC_O               GLYPH16_ASCII4_ITALIC_O
+#define GLYPH16_ASCII3_ITALIC_P               GLYPH16_ASCII4_ITALIC_P
+#define GLYPH16_ASCII3_ITALIC_Q               GLYPH16_ASCII4_ITALIC_Q
+#define GLYPH16_ASCII3_ITALIC_R               GLYPH16_ASCII4_ITALIC_R
+#define GLYPH16_ASCII3_ITALIC_S               GLYPH16_ASCII4_ITALIC_S
+#define GLYPH16_ASCII3_ITALIC_T               GLYPH16_ASCII4_ITALIC_T
+#define GLYPH16_ASCII3_ITALIC_U               GLYPH16_ASCII4_ITALIC_U
+#define GLYPH16_ASCII3_ITALIC_V               GLYPH16_ASCII4_ITALIC_V
+#define GLYPH16_ASCII3_ITALIC_W               GLYPH16_ASCII4_ITALIC_W
+#define GLYPH16_ASCII3_ITALIC_X               GLYPH16_ASCII4_ITALIC_X
+#define GLYPH16_ASCII3_ITALIC_Y               GLYPH16_ASCII4_ITALIC_Y
+#define GLYPH16_ASCII3_ITALIC_Z               GLYPH16_ASCII4_ITALIC_Z
+// Italic (lowercase = Uppercase)
+#define GLYPH16_ASCII3_ITALIC_a               GLYPH16_ASCII3_ITALIC_A
+#define GLYPH16_ASCII3_ITALIC_b               GLYPH16_ASCII3_ITALIC_B
+#define GLYPH16_ASCII3_ITALIC_c               GLYPH16_ASCII3_ITALIC_C
+#define GLYPH16_ASCII3_ITALIC_d               GLYPH16_ASCII3_ITALIC_D
+#define GLYPH16_ASCII3_ITALIC_e               GLYPH16_ASCII3_ITALIC_E
+#define GLYPH16_ASCII3_ITALIC_f               GLYPH16_ASCII3_ITALIC_F
+#define GLYPH16_ASCII3_ITALIC_g               GLYPH16_ASCII3_ITALIC_G
+#define GLYPH16_ASCII3_ITALIC_h               GLYPH16_ASCII3_ITALIC_H
+#define GLYPH16_ASCII3_ITALIC_i               GLYPH16_ASCII3_ITALIC_I
+#define GLYPH16_ASCII3_ITALIC_j               GLYPH16_ASCII3_ITALIC_J
+#define GLYPH16_ASCII3_ITALIC_k               GLYPH16_ASCII3_ITALIC_K
+#define GLYPH16_ASCII3_ITALIC_l               GLYPH16_ASCII3_ITALIC_L
+#define GLYPH16_ASCII3_ITALIC_m               GLYPH16_ASCII3_ITALIC_M
+#define GLYPH16_ASCII3_ITALIC_n               GLYPH16_ASCII3_ITALIC_N
+#define GLYPH16_ASCII3_ITALIC_o               GLYPH16_ASCII3_ITALIC_O
+#define GLYPH16_ASCII3_ITALIC_p               GLYPH16_ASCII3_ITALIC_P
+#define GLYPH16_ASCII3_ITALIC_q               GLYPH16_ASCII3_ITALIC_Q
+#define GLYPH16_ASCII3_ITALIC_r               GLYPH16_ASCII3_ITALIC_R
+#define GLYPH16_ASCII3_ITALIC_s               GLYPH16_ASCII3_ITALIC_S
+#define GLYPH16_ASCII3_ITALIC_t               GLYPH16_ASCII3_ITALIC_T
+#define GLYPH16_ASCII3_ITALIC_u               GLYPH16_ASCII3_ITALIC_U
+#define GLYPH16_ASCII3_ITALIC_v               GLYPH16_ASCII3_ITALIC_V
+#define GLYPH16_ASCII3_ITALIC_w               GLYPH16_ASCII3_ITALIC_W
+#define GLYPH16_ASCII3_ITALIC_x               GLYPH16_ASCII3_ITALIC_X
+#define GLYPH16_ASCII3_ITALIC_y               GLYPH16_ASCII3_ITALIC_Y
+#define GLYPH16_ASCII3_ITALIC_z               GLYPH16_ASCII3_ITALIC_Z
+
+
+
+
+//------------------------------------------------------------------------------
+// Ascii4 font but in Glyph32 form
 //------------------------------------------------------------------------------
 // Printable Ascii
 #define GLYPH32_ASCII4_SPACE                  ((uint32_t)(GLYPH16_ASCII4_SPACE))
@@ -744,13 +1458,115 @@
 #define GLYPH32_ASCII4_VERTICAL_BAR           ((uint32_t)(GLYPH16_ASCII4_VERTICAL_BAT))
 #define GLYPH32_ASCII4_RIGHT_CURLY_BRACKET    ((uint32_t)(GLYPH16_ASCII4_RIGHT_CURLY_BRACKET))
 #define GLYPH32_ASCII4_TILDE                  ((uint32_t)(GLYPH16_ASCII4_TILDE))
-
+// Bold
+#define GLYPH32_ASCII4_BOLD_A                 ((uint32_t)(GLYPH_ASCII4_BOLD_A))
+#define GLYPH32_ASCII4_BOLD_B                 ((uint32_t)(GLYPH_ASCII4_BOLD_B))
+#define GLYPH32_ASCII4_BOLD_C                 ((uint32_t)(GLYPH_ASCII4_BOLD_C))
+#define GLYPH32_ASCII4_BOLD_D                 ((uint32_t)(GLYPH_ASCII4_BOLD_D))
+#define GLYPH32_ASCII4_BOLD_E                 ((uint32_t)(GLYPH_ASCII4_BOLD_E))
+#define GLYPH32_ASCII4_BOLD_F                 ((uint32_t)(GLYPH_ASCII4_BOLD_F))
+#define GLYPH32_ASCII4_BOLD_G                 ((uint32_t)(GLYPH_ASCII4_BOLD_G))
+#define GLYPH32_ASCII4_BOLD_H                 ((uint32_t)(GLYPH_ASCII4_BOLD_H))
+#define GLYPH32_ASCII4_BOLD_I                 ((uint32_t)(GLYPH_ASCII4_BOLD_I))
+#define GLYPH32_ASCII4_BOLD_J                 ((uint32_t)(GLYPH_ASCII4_BOLD_J))
+#define GLYPH32_ASCII4_BOLD_K                 ((uint32_t)(GLYPH_ASCII4_BOLD_K))
+#define GLYPH32_ASCII4_BOLD_L                 ((uint32_t)(GLYPH_ASCII4_BOLD_L))
+#define GLYPH32_ASCII4_BOLD_M                 ((uint32_t)(GLYPH_ASCII4_BOLD_M))
+#define GLYPH32_ASCII4_BOLD_N                 ((uint32_t)(GLYPH_ASCII4_BOLD_N))
+#define GLYPH32_ASCII4_BOLD_O                 ((uint32_t)(GLYPH_ASCII4_BOLD_O))
+#define GLYPH32_ASCII4_BOLD_P                 ((uint32_t)(GLYPH_ASCII4_BOLD_P))
+#define GLYPH32_ASCII4_BOLD_Q                 ((uint32_t)(GLYPH_ASCII4_BOLD_Q))
+#define GLYPH32_ASCII4_BOLD_R                 ((uint32_t)(GLYPH_ASCII4_BOLD_R))
+#define GLYPH32_ASCII4_BOLD_S                 ((uint32_t)(GLYPH_ASCII4_BOLD_S))
+#define GLYPH32_ASCII4_BOLD_T                 ((uint32_t)(GLYPH_ASCII4_BOLD_T))
+#define GLYPH32_ASCII4_BOLD_U                 ((uint32_t)(GLYPH_ASCII4_BOLD_U))
+#define GLYPH32_ASCII4_BOLD_V                 ((uint32_t)(GLYPH_ASCII4_BOLD_V))
+#define GLYPH32_ASCII4_BOLD_W                 ((uint32_t)(GLYPH_ASCII4_BOLD_W))
+#define GLYPH32_ASCII4_BOLD_X                 ((uint32_t)(GLYPH_ASCII4_BOLD_X))
+#define GLYPH32_ASCII4_BOLD_Y                 ((uint32_t)(GLYPH_ASCII4_BOLD_Y))
+#define GLYPH32_ASCII4_BOLD_Z                 ((uint32_t)(GLYPH_ASCII4_BOLD_Z))
+#define GLYPH32_ASCII4_BOLD_a                 ((uint32_t)(GLYPH_ASCII4_BOLD_a))
+#define GLYPH32_ASCII4_BOLD_b                 ((uint32_t)(GLYPH_ASCII4_BOLD_b))
+#define GLYPH32_ASCII4_BOLD_c                 ((uint32_t)(GLYPH_ASCII4_BOLD_c))
+#define GLYPH32_ASCII4_BOLD_d                 ((uint32_t)(GLYPH_ASCII4_BOLD_d))
+#define GLYPH32_ASCII4_BOLD_e                 ((uint32_t)(GLYPH_ASCII4_BOLD_e))
+#define GLYPH32_ASCII4_BOLD_f                 ((uint32_t)(GLYPH_ASCII4_BOLD_f))
+#define GLYPH32_ASCII4_BOLD_g                 ((uint32_t)(GLYPH_ASCII4_BOLD_g))
+#define GLYPH32_ASCII4_BOLD_h                 ((uint32_t)(GLYPH_ASCII4_BOLD_h))
+#define GLYPH32_ASCII4_BOLD_i                 ((uint32_t)(GLYPH_ASCII4_BOLD_i))
+#define GLYPH32_ASCII4_BOLD_j                 ((uint32_t)(GLYPH_ASCII4_BOLD_j))
+#define GLYPH32_ASCII4_BOLD_k                 ((uint32_t)(GLYPH_ASCII4_BOLD_k))
+#define GLYPH32_ASCII4_BOLD_l                 ((uint32_t)(GLYPH_ASCII4_BOLD_l))
+#define GLYPH32_ASCII4_BOLD_m                 ((uint32_t)(GLYPH_ASCII4_BOLD_m))
+#define GLYPH32_ASCII4_BOLD_n                 ((uint32_t)(GLYPH_ASCII4_BOLD_n))
+#define GLYPH32_ASCII4_BOLD_o                 ((uint32_t)(GLYPH_ASCII4_BOLD_o))
+#define GLYPH32_ASCII4_BOLD_p                 ((uint32_t)(GLYPH_ASCII4_BOLD_p))
+#define GLYPH32_ASCII4_BOLD_q                 ((uint32_t)(GLYPH_ASCII4_BOLD_q))
+#define GLYPH32_ASCII4_BOLD_r                 ((uint32_t)(GLYPH_ASCII4_BOLD_r))
+#define GLYPH32_ASCII4_BOLD_s                 ((uint32_t)(GLYPH_ASCII4_BOLD_s))
+#define GLYPH32_ASCII4_BOLD_t                 ((uint32_t)(GLYPH_ASCII4_BOLD_t))
+#define GLYPH32_ASCII4_BOLD_u                 ((uint32_t)(GLYPH_ASCII4_BOLD_u))
+#define GLYPH32_ASCII4_BOLD_v                 ((uint32_t)(GLYPH_ASCII4_BOLD_v))
+#define GLYPH32_ASCII4_BOLD_w                 ((uint32_t)(GLYPH_ASCII4_BOLD_w))
+#define GLYPH32_ASCII4_BOLD_x                 ((uint32_t)(GLYPH_ASCII4_BOLD_x))
+#define GLYPH32_ASCII4_BOLD_y                 ((uint32_t)(GLYPH_ASCII4_BOLD_y))
+#define GLYPH32_ASCII4_BOLD_z                 ((uint32_t)(GLYPH_ASCII4_BOLD_z))
+// Italic
+#define GLYPH32_ASCII4_ITALIC_A               ((uint32_t)(GLYPH_ASCII4_ITALIC_A))
+#define GLYPH32_ASCII4_ITALIC_B               ((uint32_t)(GLYPH_ASCII4_ITALIC_B))
+#define GLYPH32_ASCII4_ITALIC_C               ((uint32_t)(GLYPH_ASCII4_ITALIC_C))
+#define GLYPH32_ASCII4_ITALIC_D               ((uint32_t)(GLYPH_ASCII4_ITALIC_D))
+#define GLYPH32_ASCII4_ITALIC_E               ((uint32_t)(GLYPH_ASCII4_ITALIC_E))
+#define GLYPH32_ASCII4_ITALIC_F               ((uint32_t)(GLYPH_ASCII4_ITALIC_F))
+#define GLYPH32_ASCII4_ITALIC_G               ((uint32_t)(GLYPH_ASCII4_ITALIC_G))
+#define GLYPH32_ASCII4_ITALIC_H               ((uint32_t)(GLYPH_ASCII4_ITALIC_H))
+#define GLYPH32_ASCII4_ITALIC_I               ((uint32_t)(GLYPH_ASCII4_ITALIC_I))
+#define GLYPH32_ASCII4_ITALIC_J               ((uint32_t)(GLYPH_ASCII4_ITALIC_J))
+#define GLYPH32_ASCII4_ITALIC_K               ((uint32_t)(GLYPH_ASCII4_ITALIC_K))
+#define GLYPH32_ASCII4_ITALIC_L               ((uint32_t)(GLYPH_ASCII4_ITALIC_L))
+#define GLYPH32_ASCII4_ITALIC_M               ((uint32_t)(GLYPH_ASCII4_ITALIC_M))
+#define GLYPH32_ASCII4_ITALIC_N               ((uint32_t)(GLYPH_ASCII4_ITALIC_N))
+#define GLYPH32_ASCII4_ITALIC_O               ((uint32_t)(GLYPH_ASCII4_ITALIC_O))
+#define GLYPH32_ASCII4_ITALIC_P               ((uint32_t)(GLYPH_ASCII4_ITALIC_P))
+#define GLYPH32_ASCII4_ITALIC_Q               ((uint32_t)(GLYPH_ASCII4_ITALIC_Q))
+#define GLYPH32_ASCII4_ITALIC_R               ((uint32_t)(GLYPH_ASCII4_ITALIC_R))
+#define GLYPH32_ASCII4_ITALIC_S               ((uint32_t)(GLYPH_ASCII4_ITALIC_S))
+#define GLYPH32_ASCII4_ITALIC_T               ((uint32_t)(GLYPH_ASCII4_ITALIC_T))
+#define GLYPH32_ASCII4_ITALIC_U               ((uint32_t)(GLYPH_ASCII4_ITALIC_U))
+#define GLYPH32_ASCII4_ITALIC_V               ((uint32_t)(GLYPH_ASCII4_ITALIC_V))
+#define GLYPH32_ASCII4_ITALIC_W               ((uint32_t)(GLYPH_ASCII4_ITALIC_W))
+#define GLYPH32_ASCII4_ITALIC_X               ((uint32_t)(GLYPH_ASCII4_ITALIC_X))
+#define GLYPH32_ASCII4_ITALIC_Y               ((uint32_t)(GLYPH_ASCII4_ITALIC_Y))
+#define GLYPH32_ASCII4_ITALIC_Z               ((uint32_t)(GLYPH_ASCII4_ITALIC_Z))
+#define GLYPH32_ASCII4_ITALIC_a               ((uint32_t)(GLYPH_ASCII4_ITALIC_a))
+#define GLYPH32_ASCII4_ITALIC_b               ((uint32_t)(GLYPH_ASCII4_ITALIC_b))
+#define GLYPH32_ASCII4_ITALIC_c               ((uint32_t)(GLYPH_ASCII4_ITALIC_c))
+#define GLYPH32_ASCII4_ITALIC_d               ((uint32_t)(GLYPH_ASCII4_ITALIC_d))
+#define GLYPH32_ASCII4_ITALIC_e               ((uint32_t)(GLYPH_ASCII4_ITALIC_e))
+#define GLYPH32_ASCII4_ITALIC_f               ((uint32_t)(GLYPH_ASCII4_ITALIC_f))
+#define GLYPH32_ASCII4_ITALIC_g               ((uint32_t)(GLYPH_ASCII4_ITALIC_g))
+#define GLYPH32_ASCII4_ITALIC_h               ((uint32_t)(GLYPH_ASCII4_ITALIC_h))
+#define GLYPH32_ASCII4_ITALIC_i               ((uint32_t)(GLYPH_ASCII4_ITALIC_i))
+#define GLYPH32_ASCII4_ITALIC_j               ((uint32_t)(GLYPH_ASCII4_ITALIC_j))
+#define GLYPH32_ASCII4_ITALIC_k               ((uint32_t)(GLYPH_ASCII4_ITALIC_k))
+#define GLYPH32_ASCII4_ITALIC_l               ((uint32_t)(GLYPH_ASCII4_ITALIC_l))
+#define GLYPH32_ASCII4_ITALIC_m               ((uint32_t)(GLYPH_ASCII4_ITALIC_m))
+#define GLYPH32_ASCII4_ITALIC_n               ((uint32_t)(GLYPH_ASCII4_ITALIC_n))
+#define GLYPH32_ASCII4_ITALIC_o               ((uint32_t)(GLYPH_ASCII4_ITALIC_o))
+#define GLYPH32_ASCII4_ITALIC_p               ((uint32_t)(GLYPH_ASCII4_ITALIC_p))
+#define GLYPH32_ASCII4_ITALIC_q               ((uint32_t)(GLYPH_ASCII4_ITALIC_q))
+#define GLYPH32_ASCII4_ITALIC_r               ((uint32_t)(GLYPH_ASCII4_ITALIC_r))
+#define GLYPH32_ASCII4_ITALIC_s               ((uint32_t)(GLYPH_ASCII4_ITALIC_s))
+#define GLYPH32_ASCII4_ITALIC_t               ((uint32_t)(GLYPH_ASCII4_ITALIC_t))
+#define GLYPH32_ASCII4_ITALIC_u               ((uint32_t)(GLYPH_ASCII4_ITALIC_u))
+#define GLYPH32_ASCII4_ITALIC_v               ((uint32_t)(GLYPH_ASCII4_ITALIC_v))
+#define GLYPH32_ASCII4_ITALIC_w               ((uint32_t)(GLYPH_ASCII4_ITALIC_w))
+#define GLYPH32_ASCII4_ITALIC_x               ((uint32_t)(GLYPH_ASCII4_ITALIC_x))
+#define GLYPH32_ASCII4_ITALIC_y               ((uint32_t)(GLYPH_ASCII4_ITALIC_y))
+#define GLYPH32_ASCII4_ITALIC_z               ((uint32_t)(GLYPH_ASCII4_ITALIC_z))
 
 //------------------------------------------------------------------------------
-// Glyph32 Ascii Font, 3x3 (x-height=2, ascender=1,
-//                          no descender --> lower case same as upper case)
-// At this point, lowercase letters start to be quite difficult to read.
-// Note: This is the same as the Glyph16 font (see below) but in Glyph32 format.
+// Ascii3 font but in Glyph32 form
 //------------------------------------------------------------------------------
 // Printable Ascii
 #define GLYPH32_ASCII3_SPACE                  ((uint32_t)(GLYPH16_ASCII3_SPACE))
@@ -848,225 +1664,112 @@
 #define GLYPH32_ASCII3_VERTICAL_BAR           ((uint32_t)(GLYPH16_ASCII3_VERTICAL_BAT))
 #define GLYPH32_ASCII3_RIGHT_CURLY_BRACKET    ((uint32_t)(GLYPH16_ASCII3_RIGHT_CURLY_BRACKET))
 #define GLYPH32_ASCII3_TILDE                  ((uint32_t)(GLYPH16_ASCII3_TILDE))
-
-
-//------------------------------------------------------------------------------
-// Glyph16 Ascii Font, 3x4 (x-height=2,descender=1,ascender=1)
-// Notes: - Lowercase letters start to be quite difficult to read,
-//          so it also makes senes to use only uppercase.
-//        - Quite a few non-alphanumeric characters have a descender.
-//------------------------------------------------------------------------------
-// Printable Ascii
-#define GLYPH16_ASCII4_SPACE                  GLYPH16(0000)
-#define GLYPH16_ASCII4_EXCLAMATION_MARK       GLYPH16(2022) // weird descender
-#define GLYPH16_ASCII4_DOUBLE_QUOTE           GLYPH16(0055)
-#define GLYPH16_ASCII4_HASHTAG                GLYPH16(0505)
-#define GLYPH16_ASCII4_DOLLAR_SIGN            GLYPH16(3636)
-#define GLYPH16_ASCII4_PERCENT_SIGN           GLYPH16(5365)
-#define GLYPH16_ASCII4_AMPERSAND              GLYPH16(0736) // better with desc?
-#define GLYPH16_ASCII4_SINGLE_QUOTE           GLYPH16(0012)
-#define GLYPH16_ASCII4_LEFT_PARENTHESIS       GLYPH16(2112)
-#define GLYPH16_ASCII4_RIGHT_PARENTHESIS      GLYPH16(2442)
-#define GLYPH16_ASCII4_ASTERISK               GLYPH16(0020) // mid-dot
-#define GLYPH16_ASCII4_PLUS_SIGN              GLYPH16(0272)
-#define GLYPH16_ASCII4_COMMA                  GLYPH16(1200)
-#define GLYPH16_ASCII4_MINUS_SIGN             GLYPH16(0070)
-#define GLYPH16_ASCII4_DOT                    GLYPH16(0100)
-#define GLYPH16_ASCII4_SLASH                  GLYPH16(1224)
-#define GLYPH16_ASCII4_0                      GLYPH16(0653)
-#define GLYPH16_ASCII4_1                      GLYPH16(0723)
-#define GLYPH16_ASCII4_2                      GLYPH16(0623)
-#define GLYPH16_ASCII4_3                      GLYPH16(0363)
-#define GLYPH16_ASCII4_4                      GLYPH16(0271)
-#define GLYPH16_ASCII4_5                      GLYPH16(0326)
-#define GLYPH16_ASCII4_6                      GLYPH16(0771)
-#define GLYPH16_ASCII4_7                      GLYPH16(0247)
-#define GLYPH16_ASCII4_8                      GLYPH16(0777)
-#define GLYPH16_ASCII4_9                      GLYPH16(0477)
-#define GLYPH16_ASCII4_COLON                  GLYPH16(0202)
-#define GLYPH16_ASCII4_SEMICOLON              GLYPH16(1202)
-#define GLYPH16_ASCII4_LESS_THAN_SIGN         GLYPH16(0424)
-#define GLYPH16_ASCII4_EQUAL_SIGN             GLYPH16(0707)
-#define GLYPH16_ASCII4_GREATER_THAN_SIGN      GLYPH16(0242)
-#define GLYPH16_ASCII4_QUESTION_MARK          GLYPH16(2067) // weird descdender
-#define GLYPH16_ASCII4_QUESTION_MARK_NO_DESCENDER  GLYPH16(0267)
-#define GLYPH16_ASCII4_AT_SIGN                GLYPH16(3157)
-#define GLYPH16_ASCII4_A                      GLYPH16(0572)
-#define GLYPH16_ASCII4_B                      GLYPH16(0773)
-#define GLYPH16_ASCII4_C                      GLYPH16(0616)
-#define GLYPH16_ASCII4_D                      GLYPH16(0353)
-#define GLYPH16_ASCII4_E                      GLYPH16(0737)
-#define GLYPH16_ASCII4_F                      GLYPH16(0137)
-#define GLYPH16_ASCII4_G                      GLYPH16(0753)
-#define GLYPH16_ASCII4_H                      GLYPH16(0575)
-#define GLYPH16_ASCII4_I                      GLYPH16(0727)
-#define GLYPH16_ASCII4_J                      GLYPH16(0327)
-#define GLYPH16_ASCII4_K                      GLYPH16(0535)
-#define GLYPH16_ASCII4_L                      GLYPH16(0711)
-#define GLYPH16_ASCII4_M                      GLYPH16(0577)
-#define GLYPH16_ASCII4_N                      GLYPH16(0553)
-#define GLYPH16_ASCII4_O                      GLYPH16(0356) // GLYPH16(0252)
-#define GLYPH16_ASCII4_P                      GLYPH16(0177)
-#define GLYPH16_ASCII4_Q                      GLYPH16(4356)
-#define GLYPH16_ASCII4_R                      GLYPH16(0537)
-#define GLYPH16_ASCII4_S                      GLYPH16(0326)
-#define GLYPH16_ASCII4_T                      GLYPH16(0227)
-#define GLYPH16_ASCII4_U                      GLYPH16(0655)
-#define GLYPH16_ASCII4_V                      GLYPH16(0255)
-#define GLYPH16_ASCII4_W                      GLYPH16(0775)
-#define GLYPH16_ASCII4_X                      GLYPH16(0525)
-#define GLYPH16_ASCII4_Y                      GLYPH16(0225)
-#define GLYPH16_ASCII4_Z                      GLYPH16(0623)
-#define GLYPH16_ASCII4_LEFT_SQUARE_BACKET     GLYPH16(6226)
-#define GLYPH16_ASCII4_BACKSLASH              GLYPH16(4221)
-#define GLYPH16_ASCII4_RIGHT_SQUARE_BRACKET   GLYPH16(6446)
-#define GLYPH16_ASCII4_CARET                  GLYPH16(0052)
-#define GLYPH16_ASCII4_UNDERSCORE             GLYPH16(0700)
-#define GLYPH16_ASCII4_BACKQUOTE              GLYPH16(0042)
-#define GLYPH16_ASCII4_a                      GLYPH16(0760)
-#define GLYPH16_ASCII4_b                      GLYPH16(0771)
-#define GLYPH16_ASCII4_c                      GLYPH16(0370)
-#define GLYPH16_ASCII4_d                      GLYPH16(0774)
-#define GLYPH16_ASCII4_e                      GLYPH16(0730)
-#define GLYPH16_ASCII4_f                      GLYPH16(0236)
-#define GLYPH16_ASCII4_g                      GLYPH16(6570)
-#define GLYPH16_ASCII4_h                      GLYPH16(0571)
-#define GLYPH16_ASCII4_i                      GLYPH16(0220)
-#define GLYPH16_ASCII4_j                      GLYPH16(3440)
-#define GLYPH16_ASCII4_k                      GLYPH16(0531)
-#define GLYPH16_ASCII4_l                      GLYPH16(0222)
-#define GLYPH16_ASCII4_m                      GLYPH16(0570)
-#define GLYPH16_ASCII4_n                      GLYPH16(0530)
-#define GLYPH16_ASCII4_o                      GLYPH16(0770)
-#define GLYPH16_ASCII4_p                      GLYPH16(1770)
-#define GLYPH16_ASCII4_q                      GLYPH16(4770)
-#define GLYPH16_ASCII4_r                      GLYPH16(0170)
-#define GLYPH16_ASCII4_s                      GLYPH16(0360)
-#define GLYPH16_ASCII4_t                      GLYPH16(0632)
-#define GLYPH16_ASCII4_u                      GLYPH16(0650)
-#define GLYPH16_ASCII4_v                      GLYPH16(0350)
-#define GLYPH16_ASCII4_w                      GLYPH16(0750)
-#define GLYPH16_ASCII4_x                      GLYPH16(0525) // weird ascender
-#define GLYPH16_ASCII4_y                      GLYPH16(6750)
-#define GLYPH16_ASCII4_z                      GLYPH16(0630)
-#define GLYPH16_ASCII4_LEFT_CURLY_BACKET      GLYPH16(6236)
-#define GLYPH16_ASCII4_VERTICAL_BAR           GLYPH16(0222)
-#define GLYPH16_ASCII4_RIGHT_CURLY_BRACKET    GLYPH16(3263)
-#define GLYPH16_ASCII4_TILDE                  GLYPH16(0174) //0063
-// Extra characters:
-#define GLYPH16_ASCII4_MICRO                  GLYPH16(1750)
-
-
-//------------------------------------------------------------------------------
-// Glyph16 Ascii Font, 3x3 (x-height=2, ascender=1, NO DESCENDER,
-//                          but margin bottom)
-// - Lower case is same as upper case
-// - Q is an exception in that it's a uppercase letter with a descnder ...
-//   but a STRICT no descender version is also available.
-//
-// Note: A few characters are unfortunately the same (for example: Z and 2).
-// Although it would be possible to have different designs, the approach is
-// to avoid straying away for the traditional design of each the character,
-// and thus just rely on context for differentiation.
-//------------------------------------------------------------------------------
-// Printable Ascii (Lower case is same as Upper Case)
-
-#define GLYPH16_ASCII3_SPACE                  GLYPH16(0000)
-#define GLYPH16_ASCII3_EXCLAMATION_MARK       GLYPH16(0277) // ouch
-#define GLYPH16_ASCII3_DOUBLE_QUOTE           GLYPH16_ASCII4_DOUBLE_QUOTE
-#define GLYPH16_ASCII3_HASHTAG                GLYPH16(0505) // GLYPH16(0757)
-#define GLYPH16_ASCII3_DOLLAR_SIGN            GLYPH16(0376) // ouch
-#define GLYPH16_ASCII3_PERCENT_SIGN           GLYPH16(0154) // ouch
-#define GLYPH16_ASCII3_AMPERSAND              GLYPH16(0736) // ouch
-#define GLYPH16_ASCII3_SINGLE_QUOTE           GLYPH16_ASCII4_SINGLE_QUOTE
-#define GLYPH16_ASCII3_LEFT_PARENTHESIS       GLYPH16(0212) // ouch
-#define GLYPH16_ASCII3_RIGHT_PARENTHESIS      GLYPH16(0242) // ouch
-#define GLYPH16_ASCII3_ASTERISK               GLYPH16(0020) // ouch / mid-dot
-#define GLYPH16_ASCII3_PLUS_SIGN              GLYPH16_ASCII4_PLUS_SIGN
-#define GLYPH16_ASCII3_COMMA                  GLYPH16(0120)
-#define GLYPH16_ASCII3_MINUS_SIGN             GLYPH16_ASCII4_MINUS_SIGN
-#define GLYPH16_ASCII3_DOT                    GLYPH16_ASCII4_DOT
-#define GLYPH16_ASCII3_SLASH                  GLYPH16(0124)
-#define GLYPH16_ASCII3_0                      GLYPH16_ASCII4_0
-#define GLYPH16_ASCII3_1                      GLYPH16_ASCII4_1
-#define GLYPH16_ASCII3_2                      GLYPH16_ASCII4_2
-#define GLYPH16_ASCII3_3                      GLYPH16_ASCII4_3
-#define GLYPH16_ASCII3_4                      GLYPH16_ASCII4_4
-#define GLYPH16_ASCII3_5                      GLYPH16_ASCII4_5
-#define GLYPH16_ASCII3_6                      GLYPH16_ASCII4_6
-#define GLYPH16_ASCII3_7                      GLYPH16_ASCII4_7
-#define GLYPH16_ASCII3_8                      GLYPH16_ASCII4_8
-#define GLYPH16_ASCII3_9                      GLYPH16_ASCII4_9
-#define GLYPH16_ASCII3_COLON                  GLYPH16_ASCII4_COLON
-#define GLYPH16_ASCII3_SEMICOLON              GLYPH16(0130) // ouch
-#define GLYPH16_ASCII3_LESS_THAN_SIGN         GLYPH16_ASCII4_LESS_THAN_SIGN
-#define GLYPH16_ASCII3_EQUAL_SIGN             GLYPH16_ASCII4_EQUAL_SIGN
-#define GLYPH16_ASCII3_GREATER_THAN_SIGN      GLYPH16_ASCII4_GREATER_THAN_SIGN
-#define GLYPH16_ASCII3_QUESTION_MARK          GLYPH16(0267) // ouch
-#define GLYPH16_ASCII3_AT_SIGN                GLYPH16(0543) // ouch... ~RSS
-#define GLYPH16_ASCII3_A                      GLYPH16_ASCII4_A
-#define GLYPH16_ASCII3_B                      GLYPH16_ASCII4_B
-#define GLYPH16_ASCII3_C                      GLYPH16_ASCII4_C
-#define GLYPH16_ASCII3_D                      GLYPH16_ASCII4_D
-#define GLYPH16_ASCII3_E                      GLYPH16_ASCII4_E
-#define GLYPH16_ASCII3_F                      GLYPH16_ASCII4_F
-#define GLYPH16_ASCII3_G                      GLYPH16_ASCII4_G
-#define GLYPH16_ASCII3_H                      GLYPH16_ASCII4_H
-#define GLYPH16_ASCII3_I                      GLYPH16_ASCII4_I
-#define GLYPH16_ASCII3_J                      GLYPH16_ASCII4_J
-#define GLYPH16_ASCII3_K                      GLYPH16_ASCII4_K
-#define GLYPH16_ASCII3_L                      GLYPH16_ASCII4_L
-#define GLYPH16_ASCII3_M                      GLYPH16_ASCII4_M
-#define GLYPH16_ASCII3_N                      GLYPH16_ASCII4_N
-#define GLYPH16_ASCII3_O                      GLYPH16_ASCII4_O
-#define GLYPH16_ASCII3_P                      GLYPH16_ASCII4_P
-#define GLYPH16_ASCII3_Q /* height=4 */       GLYPH16_ASCII4_Q // DESCENDER !!!
-#define GLYPH16_ASCII3_Q_STRICT               GLYPH16(0657)    // NO DESCENDER!
-#define GLYPH16_ASCII3_R                      GLYPH16_ASCII4_R
-#define GLYPH16_ASCII3_S                      GLYPH16_ASCII4_S
-#define GLYPH16_ASCII3_T                      GLYPH16_ASCII4_T
-#define GLYPH16_ASCII3_U                      GLYPH16_ASCII4_U
-#define GLYPH16_ASCII3_V                      GLYPH16_ASCII4_V
-#define GLYPH16_ASCII3_W                      GLYPH16_ASCII4_W
-#define GLYPH16_ASCII3_X                      GLYPH16_ASCII4_X
-#define GLYPH16_ASCII3_Y                      GLYPH16_ASCII4_Y
-#define GLYPH16_ASCII3_Z                      GLYPH16_ASCII4_Z
-#define GLYPH16_ASCII3_LEFT_SQUARE_BACKET     GLYPH16(0626)
-#define GLYPH16_ASCII3_BACKSLASH              GLYPH16(0421)
-#define GLYPH16_ASCII3_RIGHT_SQUARE_BRACKET   GLYPH16(0646)
-#define GLYPH16_ASCII3_CARET                  GLYPH16_ASCII4_CARET
-#define GLYPH16_ASCII3_UNDERSCORE             GLYPH16_ASCII4_UNDERSCORE
-#define GLYPH16_ASCII3_BACKQUOTE              GLYPH16_ASCII4_BACKQUOTE
-#define GLYPH16_ASCII3_a                      GLYPH16_ASCII3_A
-#define GLYPH16_ASCII3_b                      GLYPH16_ASCII3_B
-#define GLYPH16_ASCII3_c                      GLYPH16_ASCII3_C
-#define GLYPH16_ASCII3_d                      GLYPH16_ASCII3_D
-#define GLYPH16_ASCII3_e                      GLYPH16_ASCII3_E
-#define GLYPH16_ASCII3_f                      GLYPH16_ASCII3_F
-#define GLYPH16_ASCII3_g                      GLYPH16_ASCII3_G
-#define GLYPH16_ASCII3_h                      GLYPH16_ASCII3_H
-#define GLYPH16_ASCII3_i                      GLYPH16_ASCII3_I
-#define GLYPH16_ASCII3_j                      GLYPH16_ASCII3_J
-#define GLYPH16_ASCII3_k                      GLYPH16_ASCII3_K
-#define GLYPH16_ASCII3_l                      GLYPH16_ASCII3_L
-#define GLYPH16_ASCII3_m                      GLYPH16_ASCII3_M
-#define GLYPH16_ASCII3_n                      GLYPH16_ASCII3_N
-#define GLYPH16_ASCII3_o                      GLYPH16_ASCII3_O
-#define GLYPH16_ASCII3_p                      GLYPH16_ASCII3_P
-#define GLYPH16_ASCII3_q                      GLYPH16_ASCII3_Q
-#define GLYPH16_ASCII3_r                      GLYPH16_ASCII3_R
-#define GLYPH16_ASCII3_s                      GLYPH16_ASCII3_S
-#define GLYPH16_ASCII3_t                      GLYPH16_ASCII3_T
-#define GLYPH16_ASCII3_u                      GLYPH16_ASCII3_U
-#define GLYPH16_ASCII3_v                      GLYPH16_ASCII3_V
-#define GLYPH16_ASCII3_w                      GLYPH16_ASCII3_W
-#define GLYPH16_ASCII3_x                      GLYPH16_ASCII3_X
-#define GLYPH16_ASCII3_y                      GLYPH16_ASCII3_Y
-#define GLYPH16_ASCII3_z                      GLYPH16_ASCII3_Z
-#define GLYPH16_ASCII3_LEFT_CURLY_BACKET      GLYPH16(0636)
-#define GLYPH16_ASCII3_VERTICAL_BAR           GLYPH16(0222)
-#define GLYPH16_ASCII3_RIGHT_CURLY_BRACKET    GLYPH16(0363)
-#define GLYPH16_ASCII3_TILDE                  GLYPH16_ASCII4_TILDE
+// Bold
+#define GLYPH32_ASCII3_BOLD_A                 ((uint32_t)(GLYPH_ASCII3_BOLD_A))
+#define GLYPH32_ASCII3_BOLD_B                 ((uint32_t)(GLYPH_ASCII3_BOLD_B))
+#define GLYPH32_ASCII3_BOLD_C                 ((uint32_t)(GLYPH_ASCII3_BOLD_C))
+#define GLYPH32_ASCII3_BOLD_D                 ((uint32_t)(GLYPH_ASCII3_BOLD_D))
+#define GLYPH32_ASCII3_BOLD_E                 ((uint32_t)(GLYPH_ASCII3_BOLD_E))
+#define GLYPH32_ASCII3_BOLD_F                 ((uint32_t)(GLYPH_ASCII3_BOLD_F))
+#define GLYPH32_ASCII3_BOLD_G                 ((uint32_t)(GLYPH_ASCII3_BOLD_G))
+#define GLYPH32_ASCII3_BOLD_H                 ((uint32_t)(GLYPH_ASCII3_BOLD_H))
+#define GLYPH32_ASCII3_BOLD_I                 ((uint32_t)(GLYPH_ASCII3_BOLD_I))
+#define GLYPH32_ASCII3_BOLD_J                 ((uint32_t)(GLYPH_ASCII3_BOLD_J))
+#define GLYPH32_ASCII3_BOLD_K                 ((uint32_t)(GLYPH_ASCII3_BOLD_K))
+#define GLYPH32_ASCII3_BOLD_L                 ((uint32_t)(GLYPH_ASCII3_BOLD_L))
+#define GLYPH32_ASCII3_BOLD_M                 ((uint32_t)(GLYPH_ASCII3_BOLD_M))
+#define GLYPH32_ASCII3_BOLD_N                 ((uint32_t)(GLYPH_ASCII3_BOLD_N))
+#define GLYPH32_ASCII3_BOLD_O                 ((uint32_t)(GLYPH_ASCII3_BOLD_O))
+#define GLYPH32_ASCII3_BOLD_P                 ((uint32_t)(GLYPH_ASCII3_BOLD_P))
+#define GLYPH32_ASCII3_BOLD_Q                 ((uint32_t)(GLYPH_ASCII3_BOLD_Q))
+#define GLYPH32_ASCII3_BOLD_R                 ((uint32_t)(GLYPH_ASCII3_BOLD_R))
+#define GLYPH32_ASCII3_BOLD_S                 ((uint32_t)(GLYPH_ASCII3_BOLD_S))
+#define GLYPH32_ASCII3_BOLD_T                 ((uint32_t)(GLYPH_ASCII3_BOLD_T))
+#define GLYPH32_ASCII3_BOLD_U                 ((uint32_t)(GLYPH_ASCII3_BOLD_U))
+#define GLYPH32_ASCII3_BOLD_V                 ((uint32_t)(GLYPH_ASCII3_BOLD_V))
+#define GLYPH32_ASCII3_BOLD_W                 ((uint32_t)(GLYPH_ASCII3_BOLD_W))
+#define GLYPH32_ASCII3_BOLD_X                 ((uint32_t)(GLYPH_ASCII3_BOLD_X))
+#define GLYPH32_ASCII3_BOLD_Y                 ((uint32_t)(GLYPH_ASCII3_BOLD_Y))
+#define GLYPH32_ASCII3_BOLD_Z                 ((uint32_t)(GLYPH_ASCII3_BOLD_Z))
+#define GLYPH32_ASCII3_BOLD_a                 ((uint32_t)(GLYPH_ASCII3_BOLD_a))
+#define GLYPH32_ASCII3_BOLD_b                 ((uint32_t)(GLYPH_ASCII3_BOLD_b))
+#define GLYPH32_ASCII3_BOLD_c                 ((uint32_t)(GLYPH_ASCII3_BOLD_c))
+#define GLYPH32_ASCII3_BOLD_d                 ((uint32_t)(GLYPH_ASCII3_BOLD_d))
+#define GLYPH32_ASCII3_BOLD_e                 ((uint32_t)(GLYPH_ASCII3_BOLD_e))
+#define GLYPH32_ASCII3_BOLD_f                 ((uint32_t)(GLYPH_ASCII3_BOLD_f))
+#define GLYPH32_ASCII3_BOLD_g                 ((uint32_t)(GLYPH_ASCII3_BOLD_g))
+#define GLYPH32_ASCII3_BOLD_h                 ((uint32_t)(GLYPH_ASCII3_BOLD_h))
+#define GLYPH32_ASCII3_BOLD_i                 ((uint32_t)(GLYPH_ASCII3_BOLD_i))
+#define GLYPH32_ASCII3_BOLD_j                 ((uint32_t)(GLYPH_ASCII3_BOLD_j))
+#define GLYPH32_ASCII3_BOLD_k                 ((uint32_t)(GLYPH_ASCII3_BOLD_k))
+#define GLYPH32_ASCII3_BOLD_l                 ((uint32_t)(GLYPH_ASCII3_BOLD_l))
+#define GLYPH32_ASCII3_BOLD_m                 ((uint32_t)(GLYPH_ASCII3_BOLD_m))
+#define GLYPH32_ASCII3_BOLD_n                 ((uint32_t)(GLYPH_ASCII3_BOLD_n))
+#define GLYPH32_ASCII3_BOLD_o                 ((uint32_t)(GLYPH_ASCII3_BOLD_o))
+#define GLYPH32_ASCII3_BOLD_p                 ((uint32_t)(GLYPH_ASCII3_BOLD_p))
+#define GLYPH32_ASCII3_BOLD_q                 ((uint32_t)(GLYPH_ASCII3_BOLD_q))
+#define GLYPH32_ASCII3_BOLD_r                 ((uint32_t)(GLYPH_ASCII3_BOLD_r))
+#define GLYPH32_ASCII3_BOLD_s                 ((uint32_t)(GLYPH_ASCII3_BOLD_s))
+#define GLYPH32_ASCII3_BOLD_t                 ((uint32_t)(GLYPH_ASCII3_BOLD_t))
+#define GLYPH32_ASCII3_BOLD_u                 ((uint32_t)(GLYPH_ASCII3_BOLD_u))
+#define GLYPH32_ASCII3_BOLD_v                 ((uint32_t)(GLYPH_ASCII3_BOLD_v))
+#define GLYPH32_ASCII3_BOLD_w                 ((uint32_t)(GLYPH_ASCII3_BOLD_w))
+#define GLYPH32_ASCII3_BOLD_x                 ((uint32_t)(GLYPH_ASCII3_BOLD_x))
+#define GLYPH32_ASCII3_BOLD_y                 ((uint32_t)(GLYPH_ASCII3_BOLD_y))
+#define GLYPH32_ASCII3_BOLD_z                 ((uint32_t)(GLYPH_ASCII3_BOLD_z))
+// Italic
+#define GLYPH32_ASCII3_ITALIC_A               ((uint32_t)(GLYPH_ASCII3_ITALIC_A))
+#define GLYPH32_ASCII3_ITALIC_B               ((uint32_t)(GLYPH_ASCII3_ITALIC_B))
+#define GLYPH32_ASCII3_ITALIC_C               ((uint32_t)(GLYPH_ASCII3_ITALIC_C))
+#define GLYPH32_ASCII3_ITALIC_D               ((uint32_t)(GLYPH_ASCII3_ITALIC_D))
+#define GLYPH32_ASCII3_ITALIC_E               ((uint32_t)(GLYPH_ASCII3_ITALIC_E))
+#define GLYPH32_ASCII3_ITALIC_F               ((uint32_t)(GLYPH_ASCII3_ITALIC_F))
+#define GLYPH32_ASCII3_ITALIC_G               ((uint32_t)(GLYPH_ASCII3_ITALIC_G))
+#define GLYPH32_ASCII3_ITALIC_H               ((uint32_t)(GLYPH_ASCII3_ITALIC_H))
+#define GLYPH32_ASCII3_ITALIC_I               ((uint32_t)(GLYPH_ASCII3_ITALIC_I))
+#define GLYPH32_ASCII3_ITALIC_J               ((uint32_t)(GLYPH_ASCII3_ITALIC_J))
+#define GLYPH32_ASCII3_ITALIC_K               ((uint32_t)(GLYPH_ASCII3_ITALIC_K))
+#define GLYPH32_ASCII3_ITALIC_L               ((uint32_t)(GLYPH_ASCII3_ITALIC_L))
+#define GLYPH32_ASCII3_ITALIC_M               ((uint32_t)(GLYPH_ASCII3_ITALIC_M))
+#define GLYPH32_ASCII3_ITALIC_N               ((uint32_t)(GLYPH_ASCII3_ITALIC_N))
+#define GLYPH32_ASCII3_ITALIC_O               ((uint32_t)(GLYPH_ASCII3_ITALIC_O))
+#define GLYPH32_ASCII3_ITALIC_P               ((uint32_t)(GLYPH_ASCII3_ITALIC_P))
+#define GLYPH32_ASCII3_ITALIC_Q               ((uint32_t)(GLYPH_ASCII3_ITALIC_Q))
+#define GLYPH32_ASCII3_ITALIC_R               ((uint32_t)(GLYPH_ASCII3_ITALIC_R))
+#define GLYPH32_ASCII3_ITALIC_S               ((uint32_t)(GLYPH_ASCII3_ITALIC_S))
+#define GLYPH32_ASCII3_ITALIC_T               ((uint32_t)(GLYPH_ASCII3_ITALIC_T))
+#define GLYPH32_ASCII3_ITALIC_U               ((uint32_t)(GLYPH_ASCII3_ITALIC_U))
+#define GLYPH32_ASCII3_ITALIC_V               ((uint32_t)(GLYPH_ASCII3_ITALIC_V))
+#define GLYPH32_ASCII3_ITALIC_W               ((uint32_t)(GLYPH_ASCII3_ITALIC_W))
+#define GLYPH32_ASCII3_ITALIC_X               ((uint32_t)(GLYPH_ASCII3_ITALIC_X))
+#define GLYPH32_ASCII3_ITALIC_Y               ((uint32_t)(GLYPH_ASCII3_ITALIC_Y))
+#define GLYPH32_ASCII3_ITALIC_Z               ((uint32_t)(GLYPH_ASCII3_ITALIC_Z))
+#define GLYPH32_ASCII3_ITALIC_a               ((uint32_t)(GLYPH_ASCII3_ITALIC_a))
+#define GLYPH32_ASCII3_ITALIC_b               ((uint32_t)(GLYPH_ASCII3_ITALIC_b))
+#define GLYPH32_ASCII3_ITALIC_c               ((uint32_t)(GLYPH_ASCII3_ITALIC_c))
+#define GLYPH32_ASCII3_ITALIC_d               ((uint32_t)(GLYPH_ASCII3_ITALIC_d))
+#define GLYPH32_ASCII3_ITALIC_e               ((uint32_t)(GLYPH_ASCII3_ITALIC_e))
+#define GLYPH32_ASCII3_ITALIC_f               ((uint32_t)(GLYPH_ASCII3_ITALIC_f))
+#define GLYPH32_ASCII3_ITALIC_g               ((uint32_t)(GLYPH_ASCII3_ITALIC_g))
+#define GLYPH32_ASCII3_ITALIC_h               ((uint32_t)(GLYPH_ASCII3_ITALIC_h))
+#define GLYPH32_ASCII3_ITALIC_i               ((uint32_t)(GLYPH_ASCII3_ITALIC_i))
+#define GLYPH32_ASCII3_ITALIC_j               ((uint32_t)(GLYPH_ASCII3_ITALIC_j))
+#define GLYPH32_ASCII3_ITALIC_k               ((uint32_t)(GLYPH_ASCII3_ITALIC_k))
+#define GLYPH32_ASCII3_ITALIC_l               ((uint32_t)(GLYPH_ASCII3_ITALIC_l))
+#define GLYPH32_ASCII3_ITALIC_m               ((uint32_t)(GLYPH_ASCII3_ITALIC_m))
+#define GLYPH32_ASCII3_ITALIC_n               ((uint32_t)(GLYPH_ASCII3_ITALIC_n))
+#define GLYPH32_ASCII3_ITALIC_o               ((uint32_t)(GLYPH_ASCII3_ITALIC_o))
+#define GLYPH32_ASCII3_ITALIC_p               ((uint32_t)(GLYPH_ASCII3_ITALIC_p))
+#define GLYPH32_ASCII3_ITALIC_q               ((uint32_t)(GLYPH_ASCII3_ITALIC_q))
+#define GLYPH32_ASCII3_ITALIC_r               ((uint32_t)(GLYPH_ASCII3_ITALIC_r))
+#define GLYPH32_ASCII3_ITALIC_s               ((uint32_t)(GLYPH_ASCII3_ITALIC_s))
+#define GLYPH32_ASCII3_ITALIC_t               ((uint32_t)(GLYPH_ASCII3_ITALIC_t))
+#define GLYPH32_ASCII3_ITALIC_u               ((uint32_t)(GLYPH_ASCII3_ITALIC_u))
+#define GLYPH32_ASCII3_ITALIC_v               ((uint32_t)(GLYPH_ASCII3_ITALIC_v))
+#define GLYPH32_ASCII3_ITALIC_w               ((uint32_t)(GLYPH_ASCII3_ITALIC_w))
+#define GLYPH32_ASCII3_ITALIC_x               ((uint32_t)(GLYPH_ASCII3_ITALIC_x))
+#define GLYPH32_ASCII3_ITALIC_y               ((uint32_t)(GLYPH_ASCII3_ITALIC_y))
+#define GLYPH32_ASCII3_ITALIC_z               ((uint32_t)(GLYPH_ASCII3_ITALIC_z))
 
 
 #endif
