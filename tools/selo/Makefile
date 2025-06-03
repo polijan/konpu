@@ -20,26 +20,26 @@ print-%: # Use make print-<VARIABLE> to print out a variable from this Makefile
 # FONTS
 #-------------------------------------------------------------------------------
 
-FONTS_IN    = $(wildcard fonts.in/*.in)
-FONTS_SELO  = $(patsubst fonts.in/%.in, fonts.out/%.selo,  $(FONTS_IN))
-FONTS_FLF   = $(patsubst fonts.in/%.in, fonts.out/%.flf,   $(FONTS_IN))
-FONTS_KBITX = $(patsubst fonts.in/%.in, fonts.out/%.kbitx, $(FONTS_IN))
+FONTS       = $(wildcard scripts/selo-generate-*)
+FONTS_SELO  = $(patsubst scripts/selo-generate-%, fonts.out/%.selo,  $(FONTS))
+FONTS_FLF   = $(patsubst scripts/selo-generate-%, fonts.out/%.flf,   $(FONTS))
+FONTS_KBITX = $(patsubst scripts/selo-generate-%, fonts.out/%.kbitx, $(FONTS))
 FONTS_OUT   = $(FONTS_SELO) $(FONTS_KBITX) $(FONTS_FLF)
 
-fonts.out/%.kbitx: fonts.out/%.selo bin/selo-to-kbitx
+fonts.out/%.selo: scripts/selo-generate-% ../../src/glyph_constants/glyph_*.h fonts.in/selo*
+	@printf "\033[33mgenerating selo font '%s':\033[m " $@
+	@mkdir -p $(@D)
+	$< > $@
+
+fonts.out/%.kbitx: fonts.out/%.selo scripts/selo-to-kbitx
 	@printf "\033[33mgenerating kbitx font '%s':\033[m " $@
 	@mkdir -p $(@D)
 	selo-to-kbitx $< > $@
 
-fonts.out/%.flf: fonts.out/%.selo bin/selo-to-flf
+fonts.out/%.flf: fonts.out/%.selo scripts/selo-to-flf
 	@printf "\033[33mgenerating flf font '%s':\033[m " $@
 	@mkdir -p $(@D)
 	selo-to-flf $< > $@
-
-fonts.out/%.selo: fonts.in/%.in
-	@printf "\033[33mgenerating selo font '%s':\033[m " $@
-	@mkdir -p $(@D)
-	dev-cpp $< > $@
 
 #-------------------------------------------------------------------------------
 

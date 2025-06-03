@@ -1,0 +1,65 @@
+#!/bin/sh
+
+# Usage: $0 file.selo
+# Print on stdout what would be a .kbitx file suitable for BitsNPicas.
+# filename should contain indication of the size 4,5,6,7,8.
+
+. "$KONPU_HOME"/tools/dev/lib/common.sh
+requires glyph-print
+
+props() {
+   DESCENT=1
+   case $* in
+      *4*) CELL_HEIGHT=4; X_HEIGHT=2; ASCENT=1 ;;
+      *5*) CELL_HEIGHT=8; X_HEIGHT=3; ASCENT=1 ;;
+      *6*) CELL_HEIGHT=8; X_HEIGHT=4; ASCENT=1 ;;
+      *7*) CELL_HEIGHT=8; X_HEIGHT=5; ASCENT=1 ;;
+      *8*) CELL_HEIGHT=8; X_HEIGHT=5; ASCENT=2 ;;
+        *) die 'wrong dimension' ;;
+   esac
+
+cat << EOF
+<prop id="emAscent" value="$((CELL_HEIGHT - DESCENT))"/>
+<prop id="emDescent" value="$DESCENT"/>
+<prop id="lineAscent" value="$((CELL_HEIGHT - DESCENT))"/>
+<prop id="lineDescent" value="$DESCENT"/>
+<prop id="lineGap" value="0"/>
+<prop id="xHeight" value="$X_HEIGHT"/>
+<prop id="capHeight" value="$((X_HEIGHT + ASCENT))"/>
+EOF
+}
+
+names() {
+cat << EOF
+<name id="0" value="(c) jan Polijan"/>
+<name id="1" value="selo Konpu $*"/>
+<name id="11" value="$KONPU_URL"/>
+EOF
+}
+
+
+
+echo '<?xml version="1.0" encoding="UTF-8"?>'
+echo '<!DOCTYPE kbits PUBLIC "-//Kreative//DTD BitsNPicasBitmap 1.0//EN" "http://www.kreativekorp.com/dtd/kbitx.dtd">'
+echo '<kbits>'
+
+props "$*"
+names "$*"
+
+while read -r codepoint glyph; do
+   case ${#glyph} in
+       2) w=2  ; h=4  ;; # Glyph8
+       4) w=4  ; h=4  ;; # Glyph16
+       8) w=4  ; h=8  ;; # Glyph32
+      16) w=8  ; h=8  ;; # Glyph64
+      33) w=8  ; h=16 ;; # Glyph128
+      67) w=16 ; h=16 ;; # Glyph256
+       *) die "Wrong glyph length for codepoint $codepoint --> $glyph" ;;
+   esac
+
+   printf "<g u=\"%d\" x=\"0\" y=\"%d\" w=\"%d\" d=\"%s\"/>\n" \
+      "0x$codepoint" "$((h - 1))"  "$w" \
+      "$(glyph-print --kbitx "$glyph")"
+done < "$1"
+
+echo '</kbits>'

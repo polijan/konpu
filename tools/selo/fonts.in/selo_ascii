@@ -1,8 +1,7 @@
 #include "../../../src/glyph_constants/glyph_ascii.h"
-#include "../../../src/glyph_constants/glyph_cpc.h"
 
 #ifndef ASCII_SIZE
-#define ASCII_SIZE 4
+#define ASCII_SIZE 6
 #endif
 
 #if ASCII_SIZE <= 4
@@ -16,6 +15,7 @@
 #else
 #   error "Wrong ASCII_SIZE"
 #endif
+
 
 // Printable ASCII
 0020    ASCII(SPACE)
@@ -116,16 +116,83 @@
 
 
 // "German" letters... those are needed for Figlet fonts (altough of course,
-// we could leave them blank), we do it ourself in same style as CPC.
-// TODO: - Those are Glyph64, we need some glyph32 with different sizes.
-//       - Also should umlaut be tighten on o and u (36 instead of 66)?
-00C4  0063637F633E0063  // Umlaut A
-00D6  003E6363633E0063  // Umlaut O
-00DC  003E636363630063  // Umlaut U
-00E4  006E333E301E0036  // Umlaut a
-00F6  003C6666663C0066  // Umlaut o
-00FC  007C666666660066  // Umlaut u
-00DF  GLYPH64_CPC_B1    // Eszett --> same as greek "beta" 0x03B2
+// we could leave them blank)
+
+#define GLYPH32_LATIN7_A_UMLAUT           GLYPH32(05575250)
+#define GLYPH32_LATIN6_A_UMLAUT           GLYPH32(05752500) // 00575205
+#define GLYPH32_LATIN5_A_UMLAUT           GLYPH32(05725000)
+#define GLYPH16_LATIN4_A_UMLAUT           ASCII(A)
+#define GLYPH32_LATIN7_O_UMLAUT           GLYPH32(02555250)
+#define GLYPH32_LATIN6_O_UMLAUT           GLYPH32(02552500)
+#define GLYPH32_LATIN5_O_UMLAUT           GLYPH32(07705000)
+#define GLYPH16_LATIN4_O_UMLAUT           ASCII(O)
+#define GLYPH32_LATIN7_U_UMLAUT           GLYPH32(07555050)
+#define GLYPH32_LATIN6_U_UMLAUT           GLYPH32(07550500)
+#define GLYPH32_LATIN5_U_UMLAUT           GLYPH32(07505000)
+#define GLYPH16_LATIN4_U_UMLAUT           ASCII(U)
+#define GLYPH32_LATIN7_a_UMLAUT           GLYPH32(06556050)
+#define GLYPH32_LATIN6_a_UMLAUT           GLYPH32(06560500)
+#define GLYPH32_LATIN5_a_UMLAUT           GLYPH32(07605000)
+#define GLYPH16_LATIN4_a_UMLAUT           ASCII(a)
+#define GLYPH32_LATIN7_o_UMLAUT           GLYPH32(02552050)
+#define GLYPH32_LATIN6_o_UMLAUT           GLYPH32(03560500)
+#define GLYPH32_LATIN5_o_UMLAUT           GLYPH32(06605000)
+#define GLYPH16_LATIN4_o_UMLAUT           ASCII(o)
+#define GLYPH32_LATIN7_u_UMLAUT           GLYPH32(06555050)
+#define GLYPH32_LATIN6_u_UMLAUT           GLYPH32(06550500)
+#define GLYPH32_LATIN5_u_UMLAUT           GLYPH32(06505000)
+#define GLYPH16_LATIN4_u_UMLAUT           ASCII(u)
+#define GLYPH32_LATIN7_ESZETT             GLYPH32(17553520)
+#define GLYPH32_LATIN6_ESZETT             GLYPH32(17535200)
+#define GLYPH32_LATIN5_ESZETT             GLYPH32(17533000)
+#define GLYPH16_LATIN4_ESZETT             GLYPH16(1773)
+
+//Glyph64 (in same style as CPC)
+// #include "../../../src/glyph_constants/glyph_cpc.h"
+// TODO: should umlaut be tighten on o and u (36 instead of 66)?
+//00C4  0063637F633E0063  // Umlaut A
+//00D6  003E6363633E0063  // Umlaut O
+//00DC  003E636363630063  // Umlaut U
+//00E4  006E333E301E0036  // Umlaut a
+//00F6  003C6666663C0066  // Umlaut o
+//00FC  007C666666660066  // Umlaut u
+//00DF  GLYPH64_CPC_B1    // Eszett --> same as greek "beta" 0x03B2
+
+#if ASCII_SIZE <= 4
+00C4  GLYPH16_LATIN4_A_UMLAUT
+00D6  GLYPH16_LATIN4_O_UMLAUT
+00DC  GLYPH16_LATIN4_U_UMLAUT
+00E4  GLYPH16_LATIN4_a_UMLAUT
+00F6  GLYPH16_LATIN4_o_UMLAUT
+00FC  GLYPH16_LATIN4_u_UMLAUT
+00DF  GLYPH16_LATIN4_ESZETT
+#elif ASCII_SIZE == 5
+00C4  GLYPH32_LATIN5_A_UMLAUT
+00D6  GLYPH32_LATIN5_O_UMLAUT
+00DC  GLYPH32_LATIN5_U_UMLAUT
+00E4  GLYPH32_LATIN5_a_UMLAUT
+00F6  GLYPH32_LATIN5_o_UMLAUT
+00FC  GLYPH32_LATIN5_u_UMLAUT
+00DF  GLYPH32_LATIN5_ESZETT
+#elif ASCII_SIZE == 6
+00C4  GLYPH32_LATIN6_A_UMLAUT
+00D6  GLYPH32_LATIN6_O_UMLAUT
+00DC  GLYPH32_LATIN6_U_UMLAUT
+00E4  GLYPH32_LATIN6_a_UMLAUT
+00F6  GLYPH32_LATIN6_o_UMLAUT
+00FC  GLYPH32_LATIN6_u_UMLAUT
+00DF  GLYPH32_LATIN6_ESZETT
+#elif ASCII_SIZE ==7
+00C4  GLYPH32_LATIN7_A_UMLAUT
+00D6  GLYPH32_LATIN7_O_UMLAUT
+00DC  GLYPH32_LATIN7_U_UMLAUT
+00E4  GLYPH32_LATIN7_a_UMLAUT
+00F6  GLYPH32_LATIN7_o_UMLAUT
+00FC  GLYPH32_LATIN7_u_UMLAUT
+00DF  GLYPH32_LATIN7_ESZETT
+#else
+#   error "Wrong ASCII_SIZE for german characters"
+#endif
 
 
 // Smallcaps:

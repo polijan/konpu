@@ -1,13 +1,13 @@
 #include "../../../src/glyph_constants/glyph_tokipona.h"
 
-#ifndef   SIZE
-#  define SIZE 6
+#ifndef   SITELENPONA_SIZE
+#  define SITELENPONA_SIZE 6
 #endif
 
-#if SIZE <= 8
-#   define SITELENPONA(x)  UTIL_CAT(UTIL_CAT(UTIL_CAT(GLYPH64_TOKIPONA, SIZE), _), x)
+#if SITELENPONA_SIZE <= 8
+#   define SITELENPONA(x)  UTIL_CAT(UTIL_CAT(UTIL_CAT(GLYPH64_TOKIPONA, SITELENPONA_SIZE), _), x)
 #else
-#   error "Wrong SIZE"
+#   error "Wrong SITELENPONA_SIZE"
 #endif
 
 

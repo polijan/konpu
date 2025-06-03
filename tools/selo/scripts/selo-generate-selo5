@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# Usage: $0
+# Print the selo5 font
+
+. "$KONPU_HOME"/tools/dev/lib/common.sh
+cd "$KONPU_HOME"/tools/selo/fonts.in || die 'cannot cd into fonts.in'
+requires glyph-generate-octants
+
+dev-cpp << EOF
+#include "selo"
+#define  ASCII_SIZE 5
+#include "selo_ascii"
+
+#include "selo_cjk_punctuation"
+#include "selo_latin_fullwidth"
+
+#define SITELENPONA_SIZE  5
+#include "selo_sp_ucsur"
+#include "selo_titi_pula"
+#include "selo_sp_extra"
+
+EOF
+glyph-generate-octants 32 | awk '{print $1, $2}'
