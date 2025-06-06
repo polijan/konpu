@@ -151,12 +151,12 @@
 
 // UTIL_STRINGIFY: Trigger macro expansion and turn into a string constant.
 #define UTIL_STRINGIFY(x)          UTIL_STRINGIFY_(x)
-   #define UTIL_STRINGIFY_(x)      #x
+#  define UTIL_STRINGIFY_(x)       #x
 
 // UTIL_CAT: Trigger macro expansion and concatenate its parameters.
 //           It is useful for creating other macros.
 #define UTIL_CAT(item, ...)        UTIL_CAT_(item, __VA_ARGS__)
-   #define UTIL_CAT_(item, ...)    item##__VA_ARGS__
+#  define UTIL_CAT_(item, ...)     item##__VA_ARGS__
 
 // UTIL_IF: Expands differently depending on the condition.
 // Note: the condition should expand to exactly the token 0 or 1, nothing else.
