@@ -17,6 +17,60 @@
 // present in the framebuffer in accordance to the VIDEO_MODE.
 #define VIDEO_FRAMEBUFFER_AS(TYPE) ((TYPE *)VIDEO_FRAMEBUFFER)
 
+
+// MACROS THAT RETURN A BUFFER FOR ELEMENTS THAT MAY LIVE IN THE VIDEO FRAMEBUFFER
+
+#define VIDEO_BUFFER_GLYPH8             VIDEO_FRAMEBUFFER
+#define VIDEO_BUFFER_GLYPH16            ((uint16_t*)VIDEO_FRAMEBUFFER)
+#define VIDEO_BUFFER_GLYPH32            ((uint32_t*)VIDEO_FRAMEBUFFER)
+#define VIDEO_BUFFER_GLYPH64            ((uint64_t*)VIDEO_FRAMEBUFFER)
+#define VIDEO_BUFFER_GLYPH128           ((Glyph128*)VIDEO_FRAMEBUFFER)
+#define VIDEO_BUFFER_GLYPH256           ((Glyph256*)VIDEO_FRAMEBUFFER)
+#define VIDEO_BUFFER_PIXELS             VIDEO_FRAMEBUFFER
+
+#if INT_WIDTH >=32
+#  define VIDEO_BUFFER_GLYPH8_SIZE      ((VIDEO_WIDTH * VIDEO_HEIGHT) >> 3)
+#  define VIDEO_BUFFER_GLYPH16_SIZE     ((VIDEO_WIDTH * VIDEO_HEIGHT) >> 4)
+#  define VIDEO_BUFFER_GLYPH32_SIZE     ((VIDEO_WIDTH * VIDEO_HEIGHT) >> 5)
+#  define VIDEO_BUFFER_GLYPH64_SIZE     ((VIDEO_WIDTH * VIDEO_HEIGHT) >> 6)
+#  define VIDEO_BUFFER_GLYPH128_SIZE    ((VIDEO_WIDTH * VIDEO_HEIGHT) >> 7)
+#  define VIDEO_BUFFER_GLYPH256_SIZE    ((VIDEO_WIDTH * VIDEO_HEIGHT) >> 8)
+#  define VIDEO_EBUFFER_PIXELS_SIZE     ((VIDEO_WIDTH * VIDEO_HEIGHT) >> 3)
+#else
+#  define VIDEO_BUFFER_GLYPH8_SIZE      (((int32_t)VIDEO_WIDTH * (int32_t)VIDEO_HEIGHT) >> 3)
+#  define VIDEO_BUFFER_GLYPH16_SIZE     (((int32_t)VIDEO_WIDTH * (int32_t)VIDEO_HEIGHT) >> 4)
+#  define VIDEO_BUFFER_GLYPH32_SIZE     (((int32_t)VIDEO_WIDTH * (int32_t)VIDEO_HEIGHT) >> 5)
+#  define VIDEO_BUFFER_GLYPH64_SIZE     (((int32_t)VIDEO_WIDTH * (int32_t)VIDEO_HEIGHT) >> 6)
+#  define VIDEO_BUFFER_GLYPH128_SIZE    (((int32_t)VIDEO_WIDTH * (int32_t)VIDEO_HEIGHT) >> 7)
+#  define VIDEO_BUFFER_GLYPH256_SIZE    (((int32_t)VIDEO_WIDTH * (int32_t)VIDEO_HEIGHT) >> 8)
+#endif
+
+#define VIDEO_BUFFER_GLYPH8_WIDTH       (VIDEO_WIDTH >> GLYPH8_WIDTH_LOG2)
+#define VIDEO_BUFFER_GLYPH16_WIDTH      (VIDEO_WIDTH >> GLYPH16_WIDTH_LOG2)
+#define VIDEO_BUFFER_GLYPH32_WIDTH      (VIDEO_WIDTH >> GLYPH32_WIDTH_LOG2)
+#define VIDEO_BUFFER_GLYPH64_WIDTH      (VIDEO_WIDTH >> GLYPH64_WIDTH_LOG2)
+#define VIDEO_BUFFER_GLYPH128_WIDTH     (VIDEO_WIDTH >> GLYPH128_WIDTH_LOG2)
+#define VIDEO_BUFFER_GLYPH256_WIDTH     (VIDEO_WIDTH >> GLYPH256_WIDTH_LOG2)
+#define VIDEO_BUFFER_PIXELS_WIDTH       (VIDEO_WIDTH >> 3)
+
+#define VIDEO_BUFFER_GLYPH8_HEIGHT      (VIDEO_HEIGHT >> GLYPH8_HEIGHT_LOG2)
+#define VIDEO_BUFFER_GLYPH16_HEIGHT     (VIDEO_HEIGHT >> GLYPH16_HEIGHT_LOG2)
+#define VIDEO_BUFFER_GLYPH32_HEIGHT     (VIDEO_HEIGHT >> GLYPH32_HEIGHT_LOG2)
+#define VIDEO_BUFFER_GLYPH64_HEIGHT     (VIDEO_HEIGHT >> GLYPH64_HEIGHT_LOG2)
+#define VIDEO_BUFFER_GLYPH128_HEIGHT    (VIDEO_HEIGHT >> GLYPH128_HEIGHT_LOG2)
+#define VIDEO_BUFFER_GLYPH256_HEIGHT    (VIDEO_HEIGHT >> GLYPH256_HEIGHT_LOG2)
+#define VIDEO_BUFFER_PIXELS_HEIGHT      VIDEO_HEIGHT
+
+
+#define VIDEO_FRAMEBUFFER_ATTRIBUTES   (VIDEO_FRAMEBUFFER + (VIDEO_WIDTH*VIDEO_HEIGHT) >> 3)
+#if INT_WIDTH < 32
+#   undef  VIDEO_FRAMEBUFFER_ATTRIBUTES
+#   define VIDEO_FRAMEBUFFER_ATTRIBUTES  \
+      (VIDEO_FRAMEBUFFER + ((int32_t)VIDEO_WIDTH * (int32_t)VIDEO_HEIGHT) >> 3)
+#endif
+
+
+
 // Assert that the given pointer indicates a location inside the framebuffer
 static inline void VideoAssertInFramebuffer(void *pointer)
 {
@@ -102,7 +156,7 @@ static inline int VideoAttributeOffset(void)
 // Same as function `VideoAttribute`, but no bounds checking.
 static inline uint8_t *VideoAttribute_(int x, int y)
 {
-   assert(x >= 0 && x < (VIDEO_WIDTH >> AttributeWidthLog2()));
+   assert(x >= 0 && x < (VIDEO_WIDTH  >> AttributeWidthLog2()));
    assert(y >= 0 && y < (VIDEO_HEIGHT >> AttributeHeightLog2()));
 
    int index = x + y * (VIDEO_WIDTH >> AttributeWidthLog2());
@@ -117,7 +171,7 @@ static inline uint8_t *VideoAttribute_(int x, int y)
 //   of the screen, they will be clamped to the nearest valid edge.
 static inline uint8_t *VideoAttribute(int x, int y)
 {
-   UtilClampCoordinate(&x, VIDEO_WIDTH >> AttributeWidthLog2());
+   UtilClampCoordinate(&x, VIDEO_WIDTH  >> AttributeWidthLog2());
    UtilClampCoordinate(&y, VIDEO_HEIGHT >> AttributeHeightLog2());
    return VideoAttribute_(x, y);
 }
@@ -144,34 +198,32 @@ static inline uint8_t *VideoAttributeAtPixel(int x, int y)
 // void VideoAttributeSetAll(int attribute_byte);
 // void VideoAttributeSetAll(int fg, int bg);
 // Set all the attributes of the video framebuffer to a given value.
-// - no arguments: set to default fg and bg
+// - no  argument: set to default fg and bg
 // - one argument: set to the given byte (Attribute must point to a single byte)
 // - two arguments: set to the given fg and bg colors.
 #define VideoAttributeSetAll(...) \
    UTIL_OVERLOAD(VideoAttributeSetAll, __VA_ARGS__)
-static inline void VideoAttributeSetAll_1_(int byte)
-{
-   int start = VideoAttributeOffset();
-   memset(VIDEO_FRAMEBUFFER + start, byte, VIDEO_SIZE - start);
-}
-static inline void VideoAttributeSetAll_2_(int fg, int bg)
-{
-   if (AttributeHasTwoBytes()) {
-      union {
-         uint16_t u8[8];
-         uint64_t u64;
-      } mem = {.u8 = {fg, bg, fg, bg, fg, bg, fg, bg}};
-      int offset = VideoAttributeOffset();
-      uint8_t *attributes = VIDEO_FRAMEBUFFER + offset;
-      int end = (VIDEO_SIZE - offset) >> 3;
-      for (int i = 0; i < end; i++)
-         ((uint64_t *)attributes)[i] = mem.u64;
-   } else {
-      VideoAttributeSetAll_1_(fg << 4 | bg);
+   static inline void VideoAttributeSetAll_1_(int byte) {
+      int start = VideoAttributeOffset();
+      memset(VIDEO_FRAMEBUFFER + start, byte, VIDEO_SIZE - start);
    }
-}
-#define VideoAttributeSetAll_0_() \
-   VideoAttributeSetAll_2_(COLOR_DEFAULT_FG, COLOR_DEFAULT_BG)
+   static inline void VideoAttributeSetAll_2_(int fg, int bg) {
+      if (AttributeHasTwoBytes()) {
+         union {
+            uint16_t u8[8];
+            uint64_t u64;
+         } mem = {.u8 = {fg, bg, fg, bg, fg, bg, fg, bg}};
+         int offset = VideoAttributeOffset();
+         uint8_t *attributes = VIDEO_FRAMEBUFFER + offset;
+         int end = (VIDEO_SIZE - offset) >> 3;
+         for (int i = 0; i < end; i++)
+            ((uint64_t *)attributes)[i] = mem.u64;
+      } else {
+      VideoAttributeSetAll_1_(fg << 4 | bg);
+      }
+   }
+#  define VideoAttributeSetAll_0_() \
+      VideoAttributeSetAll_2_(COLOR_DEFAULT_FG, COLOR_DEFAULT_BG)
 
 //------------------------------------------------------------------------------
 // Access to Glyphs
@@ -206,27 +258,28 @@ static inline void VideoAttributeSetAll_2_(int fg, int bg)
 //   which indicates the bit plane index (zero-indexed).
 // - Bounds checking: if the (x,y) glyph coordinates are outside the bounds of
 //   the screen, they will be clamped to the nearest valid edge. And likewise
-//   the plane will be clamped to [0, max numbeof of planes[
-#define VideoGlyph(...) UTIL_OVERLOAD(VideoGlyph, __VA_ARGS__)
+//   the plane will be clamped to [0, max number of planes[
+#define VideoGlyph(...) \
+   UTIL_OVERLOAD(VideoGlyph, __VA_ARGS__)
 // Same as function `VideoGlyph()`, but no bounds checking.
-#define VideoGlyph_(...) UTIL_OVERLOAD(VideoGlyph_, __VA_ARGS__)
-#define VideoGlyph__2_(x, y) VideoGlyph__3_((x), (y), 0)
-static inline Glyph *VideoGlyph__3_(int x, int y, int plane)
-{
-   // Coordinates (x,y) must be inside the glyph grid:
-   assert(x >= 0 && x < (VIDEO_WIDTH >> VideoGlyphLog2Width()));
-   assert(y >= 0 && y < (VIDEO_HEIGHT >> VideoGlyphLog2Height()));
-   int index = x + y * (VIDEO_WIDTH >> VideoGlyphLog2Width());
-   return VideoPlane(plane) + (index << VideoModeElementDescriptor());
-}
-#define VideoGlyph_2_(x, y) VideoGlyph_3_((x), (y), 0)
-static inline Glyph *VideoGlyph_3_(int x, int y, int plane)
-{
-   UtilClampCoordinate(&x, VIDEO_WIDTH >> VideoGlyphLog2Width());
-   UtilClampCoordinate(&y, VIDEO_HEIGHT >> VideoGlyphLog2Height());
-   UtilClampCoordinate(&plane, VideoModeLowNibble());
-   return VideoGlyph__3_(x, y, plane);
-}
+#define VideoGlyph_(...) \
+   UTIL_OVERLOAD(VideoGlyph_, __VA_ARGS__)
+#  define VideoGlyph__2_(x, y) \
+      VideoGlyph__3_((x), (y), 0)
+   static inline Glyph *VideoGlyph__3_(int x, int y, int plane) {
+      // Coordinates (x,y) must be inside the glyph grid:
+      assert(x >= 0 && x < (VIDEO_WIDTH  >> VideoGlyphLog2Width()));
+      assert(y >= 0 && y < (VIDEO_HEIGHT >> VideoGlyphLog2Height()));
+      int index = x + y  * (VIDEO_WIDTH  >> VideoGlyphLog2Width());
+      return VideoPlane(plane) + (index << VideoModeElementDescriptor());
+   }
+#  define VideoGlyph_2_(x, y) VideoGlyph_3_((x), (y), 0)
+   static inline Glyph *VideoGlyph_3_(int x, int y, int plane) {
+      UtilClampCoordinate(&x, VIDEO_WIDTH >> VideoGlyphLog2Width());
+      UtilClampCoordinate(&y, VIDEO_HEIGHT >> VideoGlyphLog2Height());
+      UtilClampCoordinate(&plane, VideoModeLowNibble());
+      return VideoGlyph__3_(x, y, plane);
+   }
 
 // Glyph8 *VideoGlyph8(int x, int y, [plane[=0]]);
 // Return the Glyph8 at glyph coordinates (x,y) in the video framebuffer.
@@ -235,26 +288,26 @@ static inline Glyph *VideoGlyph_3_(int x, int y, int plane)
 //   which indicates the bit plane index (zero-indexed).
 // - Bounds checking: if the (x,y) glyph coordinates are outside the bounds of
 //   the screen, they will be clamped to the nearest valid edge. And likewise
-//   the plane will be clamped to [0, max numbeof of planes[
-#define VideoGlyph8(...) UTIL_OVERLOAD(VideoGlyph8, __VA_ARGS__)
+//   the plane will be clamped to [0, max number of planes[
+#define VideoGlyph8(...) \
+   UTIL_OVERLOAD(VideoGlyph8, __VA_ARGS__)
 // Same as function `VideoGlyph8()`, but no bounds checking.
-#define VideoGlyph8_(...) UTIL_OVERLOAD(VideoGlyph8_, __VA_ARGS__)
-#define VideoGlyph8__2_(x, y) VideoGlyph8__3_((x), (y), 0)
-static inline Glyph8 *VideoGlyph8__3_(int x, int y, int plane)
-{
-   assert(x >= 0 && x < (VIDEO_WIDTH  >> GLYPH8_WIDTH_LOG2));
-   assert(y >= 0 && y < (VIDEO_HEIGHT >> GLYPH8_HEIGHT_LOG2));
-   int offset = x + y * (VIDEO_WIDTH  >> GLYPH8_WIDTH_LOG2);
-   return VideoPlane(plane) + offset;
-}
-#define VideoGlyph8_2_(x, y) VideoGlyph8_3_((x), (y), 0)
-static inline Glyph8 *VideoGlyph8_3_(int x, int y, int plane)
-{
-   UtilClampCoordinate(&x, VIDEO_WIDTH  >> GLYPH8_WIDTH_LOG2);
-   UtilClampCoordinate(&y, VIDEO_HEIGHT >> GLYPH8_HEIGHT_LOG2);
-   UtilClampCoordinate(&plane, VideoModeLowNibble());
-   return VideoGlyph8__3_(x, y, plane);
-}
+#define VideoGlyph8_(...) \
+   UTIL_OVERLOAD(VideoGlyph8_, __VA_ARGS__)
+#  define VideoGlyph8__2_(x, y) VideoGlyph8__3_((x), (y), 0)
+   static inline Glyph8 *VideoGlyph8__3_(int x, int y, int plane) {
+      assert(x >= 0 && x < (VIDEO_WIDTH  >> GLYPH8_WIDTH_LOG2));
+      assert(y >= 0 && y < (VIDEO_HEIGHT >> GLYPH8_HEIGHT_LOG2));
+      int offset = x + y * (VIDEO_WIDTH  >> GLYPH8_WIDTH_LOG2);
+      return VideoPlane(plane) + offset;
+   }
+#  define VideoGlyph8_2_(x, y) VideoGlyph8_3_((x), (y), 0)
+   static inline Glyph8 *VideoGlyph8_3_(int x, int y, int plane) {
+      UtilClampCoordinate(&x, VIDEO_WIDTH  >> GLYPH8_WIDTH_LOG2);
+      UtilClampCoordinate(&y, VIDEO_HEIGHT >> GLYPH8_HEIGHT_LOG2);
+      UtilClampCoordinate(&plane, VideoModeLowNibble());
+      return VideoGlyph8__3_(x, y, plane);
+   }
 
 // Glyph16 *VideoGlyph16(int x, int y, [plane[=0]]);
 // Return the Glyph16 at glyph coordinates (x,y) in the video framebuffer.
@@ -263,26 +316,26 @@ static inline Glyph8 *VideoGlyph8_3_(int x, int y, int plane)
 //   which indicates the bit plane index (zero-indexed).
 // - Bounds checking: if the (x,y) glyph coordinates are outside the bounds of
 //   the screen, they will be clamped to the nearest valid edge. And likewise
-//   the plane will be clamped to [0, max numbeof of planes[
-#define VideoGlyph16(...) UTIL_OVERLOAD(VideoGlyph16, __VA_ARGS__)
+//   the plane will be clamped to [0, max number of planes[
+#define VideoGlyph16(...) \
+   UTIL_OVERLOAD(VideoGlyph16, __VA_ARGS__)
 // Same as function `VideoGlyph16()`, but no bounds checking.
-#define VideoGlyph16_(...) UTIL_OVERLOAD(VideoGlyph16_, __VA_ARGS__)
-#define VideoGlyph16__2_(x, y) VideoGlyph16__3_((x), (y), 0)
-static inline Glyph16 *VideoGlyph16__3_(int x, int y, int plane)
-{
-   assert(x >= 0 && x < (VIDEO_WIDTH >> GLYPH16_WIDTH_LOG2));
-   assert(y >= 0 && y < (VIDEO_HEIGHT >> GLYPH16_HEIGHT_LOG2));
-   int offset = x + y * (VIDEO_WIDTH >> GLYPH16_WIDTH_LOG2);
-   return VideoPlaneAs(Glyph16, plane) + offset;
-}
-#define VideoGlyph16_2_(x, y) VideoGlyph16_3_((x), (y), 0)
-static inline Glyph16 *VideoGlyph16_3_(int x, int y, int plane)
-{
-   UtilClampCoordinate(&x, VIDEO_WIDTH >> GLYPH16_WIDTH_LOG2);
-   UtilClampCoordinate(&y, VIDEO_HEIGHT >> GLYPH16_HEIGHT_LOG2);
-   UtilClampCoordinate(&plane, VideoModeLowNibble());
-   return VideoGlyph16__3_(x, y, plane);
-}
+#define VideoGlyph16_(...) \
+   UTIL_OVERLOAD(VideoGlyph16_, __VA_ARGS__)
+#  define VideoGlyph16__2_(x, y) VideoGlyph16__3_((x), (y), 0)
+   static inline Glyph16 *VideoGlyph16__3_(int x, int y, int plane) {
+      assert(x >= 0 && x < (VIDEO_WIDTH  >> GLYPH16_WIDTH_LOG2));
+      assert(y >= 0 && y < (VIDEO_HEIGHT >> GLYPH16_HEIGHT_LOG2));
+      int offset = x + y * (VIDEO_WIDTH  >> GLYPH16_WIDTH_LOG2);
+      return VideoPlaneAs(Glyph16, plane) + offset;
+   }
+#  define VideoGlyph16_2_(x, y) VideoGlyph16_3_((x), (y), 0)
+   static inline Glyph16 *VideoGlyph16_3_(int x, int y, int plane) {
+      UtilClampCoordinate(&x, VIDEO_WIDTH  >> GLYPH16_WIDTH_LOG2);
+      UtilClampCoordinate(&y, VIDEO_HEIGHT >> GLYPH16_HEIGHT_LOG2);
+      UtilClampCoordinate(&plane, VideoModeLowNibble());
+      return VideoGlyph16__3_(x, y, plane);
+   }
 
 // Glyph32 *VideoGlyph32(int x, int y, [plane[=0]]);
 // Return the Glyph32 at glyph coordinates (x,y) in the video framebuffer.
@@ -291,26 +344,26 @@ static inline Glyph16 *VideoGlyph16_3_(int x, int y, int plane)
 //   which indicates the bit plane index (zero-indexed).
 // - Bounds checking: if the (x,y) glyph coordinates are outside the bounds of
 //   the screen, they will be clamped to the nearest valid edge. And likewise
-//   the plane will be clamped to [0, max numbeof of planes[
-#define VideoGlyph32(...) UTIL_OVERLOAD(VideoGlyph32, __VA_ARGS__)
+//   the plane will be clamped to [0, max number of planes[
+#define VideoGlyph32(...) \
+   UTIL_OVERLOAD(VideoGlyph32, __VA_ARGS__)
 // Same as function `VideoGlyph32()`, but no bounds checking.
-#define VideoGlyph32_(...) UTIL_OVERLOAD(VideoGlyph32_, __VA_ARGS__)
-#define VideoGlyph32__2_(x, y) VideoGlyph32__3_((x), (y), 0)
-static inline Glyph32 *VideoGlyph32__3_(int x, int y, int plane)
-{
-   assert(x >= 0 && x < (VIDEO_WIDTH >> GLYPH32_WIDTH_LOG2));
-   assert(y >= 0 && y < (VIDEO_HEIGHT >> GLYPH32_HEIGHT_LOG2));
-   int offset = x + y * (VIDEO_WIDTH >> GLYPH32_WIDTH_LOG2);
-   return VideoPlaneAs(Glyph32, plane) + offset;
-}
-#define VideoGlyph32_2_(x, y) VideoGlyph32_3_((x), (y), 0)
-static inline Glyph32 *VideoGlyph32_3_(int x, int y, int plane)
-{
-   UtilClampCoordinate(&x, VIDEO_WIDTH >> GLYPH32_WIDTH_LOG2);
-   UtilClampCoordinate(&y, VIDEO_HEIGHT >> GLYPH32_HEIGHT_LOG2);
-   UtilClampCoordinate(&plane, VideoModeLowNibble());
-   return VideoGlyph32__3_(x, y, plane);
-}
+#define VideoGlyph32_(...) \
+   UTIL_OVERLOAD(VideoGlyph32_, __VA_ARGS__)
+#  define VideoGlyph32__2_(x, y) VideoGlyph32__3_((x), (y), 0)
+   static inline Glyph32 *VideoGlyph32__3_(int x, int y, int plane) {
+      assert(x >= 0 && x < (VIDEO_WIDTH  >> GLYPH32_WIDTH_LOG2));
+      assert(y >= 0 && y < (VIDEO_HEIGHT >> GLYPH32_HEIGHT_LOG2));
+      int offset = x + y * (VIDEO_WIDTH  >> GLYPH32_WIDTH_LOG2);
+      return VideoPlaneAs(Glyph32, plane) + offset;
+   }
+#  define VideoGlyph32_2_(x, y) VideoGlyph32_3_((x), (y), 0)
+   static inline Glyph32 *VideoGlyph32_3_(int x, int y, int plane) {
+      UtilClampCoordinate(&x, VIDEO_WIDTH  >> GLYPH32_WIDTH_LOG2);
+      UtilClampCoordinate(&y, VIDEO_HEIGHT >> GLYPH32_HEIGHT_LOG2);
+      UtilClampCoordinate(&plane, VideoModeLowNibble());
+      return VideoGlyph32__3_(x, y, plane);
+   }
 
 // Glyph64 *VideoGlyph64(int x, int y, [plane[=0]]);
 // Return the Glyph64 at glyph coordinates (x,y) in the video framebuffer.
@@ -319,26 +372,26 @@ static inline Glyph32 *VideoGlyph32_3_(int x, int y, int plane)
 //   which indicates the bit plane index (zero-indexed).
 // - Bounds checking: if the (x,y) glyph coordinates are outside the bounds of
 //   the screen, they will be clamped to the nearest valid edge. And likewise
-//   the plane will be clamped to [0, max numbeof of planes[
-#define VideoGlyph64(...) UTIL_OVERLOAD(VideoGlyph64, __VA_ARGS__)
+//   the plane will be clamped to [0, max number of planes[
+#define VideoGlyph64(...) \
+   UTIL_OVERLOAD(VideoGlyph64, __VA_ARGS__)
 // Same as function `VideoGlyph64()`, but no bounds checking.
-#define VideoGlyph64_(...) UTIL_OVERLOAD(VideoGlyph64_, __VA_ARGS__)
-#define VideoGlyph64__2_(x, y) VideoGlyph64__3_((x), (y), 0)
-static inline Glyph64 *VideoGlyph64__3_(int x, int y, int plane)
-{
-   assert(x >= 0 && x < (VIDEO_WIDTH >> GLYPH64_WIDTH_LOG2));
-   assert(y >= 0 && y < (VIDEO_HEIGHT >> GLYPH64_HEIGHT_LOG2));
-   int offset = x + y * (VIDEO_WIDTH >> GLYPH64_WIDTH_LOG2);
-   return VideoPlaneAs(Glyph64, plane) + offset;
-}
-#define VideoGlyph64_2_(x, y) VideoGlyph64_3_((x), (y), 0)
-static inline Glyph64 *VideoGlyph64_3_(int x, int y, int plane)
-{
-   UtilClampCoordinate(&x, VIDEO_WIDTH >> GLYPH64_WIDTH_LOG2);
-   UtilClampCoordinate(&y, VIDEO_HEIGHT >> GLYPH64_HEIGHT_LOG2);
-   UtilClampCoordinate(&plane, VideoModeLowNibble());
-   return VideoGlyph64__3_(x, y, plane);
-}
+#define VideoGlyph64_(...) \
+   UTIL_OVERLOAD(VideoGlyph64_, __VA_ARGS__)
+#  define VideoGlyph64__2_(x, y) VideoGlyph64__3_((x), (y), 0)
+   static inline Glyph64 *VideoGlyph64__3_(int x, int y, int plane) {
+      assert(x >= 0 && x < (VIDEO_WIDTH  >> GLYPH64_WIDTH_LOG2));
+      assert(y >= 0 && y < (VIDEO_HEIGHT >> GLYPH64_HEIGHT_LOG2));
+      int offset = x + y * (VIDEO_WIDTH  >> GLYPH64_WIDTH_LOG2);
+      return VideoPlaneAs(Glyph64, plane) + offset;
+   }
+#  define VideoGlyph64_2_(x, y) VideoGlyph64_3_((x), (y), 0)
+   static inline Glyph64 *VideoGlyph64_3_(int x, int y, int plane) {
+      UtilClampCoordinate(&x, VIDEO_WIDTH  >> GLYPH64_WIDTH_LOG2);
+      UtilClampCoordinate(&y, VIDEO_HEIGHT >> GLYPH64_HEIGHT_LOG2);
+      UtilClampCoordinate(&plane, VideoModeLowNibble());
+      return VideoGlyph64__3_(x, y, plane);
+   }
 
 // Glyph128 *VideoGlyph128(int x, int y, [plane[=0]]);
 // Return the Glyph128 at glyph coordinates (x,y) in the video framebuffer.
@@ -347,26 +400,26 @@ static inline Glyph64 *VideoGlyph64_3_(int x, int y, int plane)
 //   which indicates the bit plane index (zero-indexed).
 // - Bounds checking: if the (x,y) glyph coordinates are outside the bounds of
 //   the screen, they will be clamped to the nearest valid edge. And likewise
-//   the plane will be clamped to [0, max numbeof of planes[
-#define VideoGlyph128(...) UTIL_OVERLOAD(VideoGlyph128, __VA_ARGS__)
+//   the plane will be clamped to [0, max number of planes[
+#define VideoGlyph128(...) \
+   UTIL_OVERLOAD(VideoGlyph128, __VA_ARGS__)
 // Same as function `VideoGlyph128()`, but no bounds checking.
-#define VideoGlyph128_(...) UTIL_OVERLOAD(VideoGlyph128_, __VA_ARGS__)
-#define VideoGlyph128__2_(x, y) VideoGlyph128__3_((x), (y), 0)
-static inline Glyph128 *VideoGlyph128__3_(int x, int y, int plane)
-{
-   assert(x >= 0 && x < (VIDEO_WIDTH >> GLYPH128_WIDTH_LOG2));
-   assert(y >= 0 && y < (VIDEO_HEIGHT >> GLYPH128_HEIGHT_LOG2));
-   int offset = x + y * (VIDEO_WIDTH >> GLYPH128_WIDTH_LOG2);
-   return VideoPlaneAs(Glyph128, plane) + offset;
-}
-#define VideoGlyph128_2_(x, y) VideoGlyph128_3_((x), (y), 0)
-static inline Glyph128 *VideoGlyph128_3_(int x, int y, int plane)
-{
-   UtilClampCoordinate(&x, VIDEO_WIDTH >> GLYPH128_WIDTH_LOG2);
-   UtilClampCoordinate(&y, VIDEO_HEIGHT >> GLYPH128_HEIGHT_LOG2);
-   UtilClampCoordinate(&plane, VideoModeLowNibble());
-   return VideoGlyph128__3_(x, y, plane);
-}
+#define VideoGlyph128_(...) \
+   UTIL_OVERLOAD(VideoGlyph128_, __VA_ARGS__)
+#  define VideoGlyph128__2_(x, y) VideoGlyph128__3_((x), (y), 0)
+   static inline Glyph128 *VideoGlyph128__3_(int x, int y, int plane) {
+      assert(x >= 0 && x < (VIDEO_WIDTH  >> GLYPH128_WIDTH_LOG2));
+      assert(y >= 0 && y < (VIDEO_HEIGHT >> GLYPH128_HEIGHT_LOG2));
+      int offset = x + y * (VIDEO_WIDTH  >> GLYPH128_WIDTH_LOG2);
+      return VideoPlaneAs(Glyph128, plane) + offset;
+   }
+#  define VideoGlyph128_2_(x, y) VideoGlyph128_3_((x), (y), 0)
+   static inline Glyph128 *VideoGlyph128_3_(int x, int y, int plane) {
+      UtilClampCoordinate(&x, VIDEO_WIDTH  >> GLYPH128_WIDTH_LOG2);
+      UtilClampCoordinate(&y, VIDEO_HEIGHT >> GLYPH128_HEIGHT_LOG2);
+      UtilClampCoordinate(&plane, VideoModeLowNibble());
+      return VideoGlyph128__3_(x, y, plane);
+   }
 
 // Glyph256 *VideoGlyph256(int x, int y, [plane[=0]]);
 // Return the Glyph256 at glyph coordinates (x,y) in the video framebuffer.
@@ -375,26 +428,27 @@ static inline Glyph128 *VideoGlyph128_3_(int x, int y, int plane)
 //   which indicates the bit plane index (zero-indexed).
 // - Bounds checking: if the (x,y) glyph coordinates are outside the bounds of
 //   the screen, they will be clamped to the nearest valid edge. And likewise
-//   the plane will be clamped to [0, max numbeof of planes[
-#define VideoGlyph256(...) UTIL_OVERLOAD(VideoGlyph256, __VA_ARGS__)
+//   the plane will be clamped to [0, max number of planes[
+#define VideoGlyph256(...) \
+   UTIL_OVERLOAD(VideoGlyph256, __VA_ARGS__)
 // Same as function `VideoGlyph256()`, but no bounds checking.
-#define VideoGlyph256_(...) UTIL_OVERLOAD(VideoGlyph256_, __VA_ARGS__)
-#define VideoGlyph256__2_(x, y) VideoGlyph256__3_((x), (y), 0)
-static inline Glyph256 *VideoGlyph256__3_(int x, int y, int plane)
-{
-   assert(x >= 0 && x < (VIDEO_WIDTH >> GLYPH256_WIDTH_LOG2));
-   assert(y >= 0 && y < (VIDEO_HEIGHT >> GLYPH256_HEIGHT_LOG2));
-   int offset = x + y * (VIDEO_WIDTH >> GLYPH256_WIDTH_LOG2);
-   return VideoPlaneAs(Glyph256, plane) + offset;
-}
-#define VideoGlyph256_2_(x, y) VideoGlyph256_3_((x), (y), 0)
-static inline Glyph256 *VideoGlyph256_3_(int x, int y, int plane)
-{
-   UtilClampCoordinate(&x, VIDEO_WIDTH >> GLYPH256_WIDTH_LOG2);
-   UtilClampCoordinate(&y, VIDEO_HEIGHT >> GLYPH256_HEIGHT_LOG2);
-   UtilClampCoordinate(&plane, VideoModeLowNibble());
-   return VideoGlyph256__3_(x, y, plane);
-}
+#define VideoGlyph256_(...) \
+   UTIL_OVERLOAD(VideoGlyph256_, __VA_ARGS__)
+#  define VideoGlyph256__2_(x, y) VideoGlyph256__3_((x), (y), 0)
+   static inline Glyph256 *VideoGlyph256__3_(int x, int y, int plane) {
+      assert(x >= 0 && x < (VIDEO_WIDTH  >> GLYPH256_WIDTH_LOG2));
+      assert(y >= 0 && y < (VIDEO_HEIGHT >> GLYPH256_HEIGHT_LOG2));
+      int offset = x + y * (VIDEO_WIDTH  >> GLYPH256_WIDTH_LOG2);
+      return VideoPlaneAs(Glyph256, plane) + offset;
+   }
+#  define VideoGlyph256_2_(x, y) VideoGlyph256_3_((x), (y), 0)
+   static inline Glyph256 *VideoGlyph256_3_(int x, int y, int plane) {
+      UtilClampCoordinate(&x, VIDEO_WIDTH  >> GLYPH256_WIDTH_LOG2);
+      UtilClampCoordinate(&y, VIDEO_HEIGHT >> GLYPH256_HEIGHT_LOG2);
+      UtilClampCoordinate(&plane, VideoModeLowNibble());
+      return VideoGlyph256__3_(x, y, plane);
+   }
+
 
 // Clear the glyphs in the Framebuffer (ie set them all to zero)
 #define VideoGlyphClear() \
@@ -403,62 +457,70 @@ static inline Glyph256 *VideoGlyph256_3_(int x, int y, int plane)
 // TODO, make it: void VideoGlyphSetAll([Glyph<...> glyph]), [int plane = 0]]);
 //       it could accept up to two args.
 //
-// void VideoGlyphSetAll([Glyph glyph)
+// void VideoGlyphSetAll([Glyph glyph, [int plane]])
 // Set all the glyphs of the video framebuffer to the given one.
-// If no argument is given, "clear" all the glyphs (ie. then set them all to 0).
+// no argument: "clear" all the glyphs (ie. then set them all to 0).
+// one argument: set all the glyphs to the given value.
+// two arguments: set all the glyphs of the given plane to the given value
 #define VideoGlyphSetAll(...) \
    UTIL_OVERLOAD(VideoGlyphSetAll, __VA_ARGS__)
-#define VideoGlyphSetAll_0_() \
-   memset(VIDEO_FRAMEBUFFER, 0, VideoAttributeOffset())
-#define VideoGlyphSetAll_1_(glyph)        \
-   _Generic((glyph),                      \
-       uint8_t: VideoGlyphSetAll_1_8_,    \
-       uint16_t: VideoGlyphSetAll_1_16_,  \
-       uint32_t: VideoGlyphSetAll_1_32_,  \
-       uint64_t: VideoGlyphSetAll_1_64_,  \
-       Glyph128: VideoGlyphSetAll_1_128_, \
-       Glyph256: VideoGlyphSetAll_1_256_)((glyph))
-static inline void VideoGlyphSetAll_1_64_(uint64_t g)
-{
-   int end = VideoAttributeOffset() >> PIXELS_8x8;
-   for (int i = 0; i < end; i++)
-      VIDEO_FRAMEBUFFER_AS(uint64_t)[i] = g;
-}
-static inline void VideoGlyphSetAll_1_16_(uint16_t g)
-{
-   union {
-      uint16_t u16[4];
-      uint64_t u64;
-   } mem = {.u16 = {g, g, g, g}};
-   VideoGlyphSetAll_1_64_(mem.u64);
-}
-static inline void VideoGlyphSetAll_1_32_(uint32_t g)
-{
-   union {
-      uint16_t u32[2];
-      uint64_t u64;
-   } mem = {.u32 = {g, g}};
-   VideoGlyphSetAll_1_64_(mem.u64);
-}
-static inline void VideoGlyphSetAll_1_8_(uint8_t g)
-{
-   // Would calling VideoGlyphSetAll_1_64_ be faster or slower than memset?
-   memset(VIDEO_FRAMEBUFFER, g, VideoAttributeOffset());
-}
-static inline void VideoGlyphSetAll_1_128_(Glyph128 g)
-{
-   // We're not 100% sure to have an exact number of Glyph128
-   int end = VideoAttributeOffset() >> PIXELS_8x16;
-   for (int i = 0; i < end; i++)
-      VIDEO_FRAMEBUFFER_AS(Glyph128)[i] = g;
-}
-static inline void VideoGlyphSetAll_1_256_(Glyph256 g)
-{
-   // We're not 100% sure to have an exact number of Glyph256
-   int end = VideoAttributeOffset() >> PIXELS_16x16;
-   for (int i = 0; i < end; i++)
-      VIDEO_FRAMEBUFFER_AS(Glyph256)[i] = g;
-}
+#  define VideoGlyphSetAll_0_() \
+      memset(VIDEO_FRAMEBUFFER, 0, VideoAttributeOffset())
+#  define VideoGlyphSetAll_1_(glyph)        \
+      _Generic((glyph)                    , \
+         uint8_t:  VideoGlyphSetAll_1_8_  , \
+         uint16_t: VideoGlyphSetAll_1_16_ , \
+         uint32_t: VideoGlyphSetAll_1_32_ , \
+         uint64_t: VideoGlyphSetAll_1_64_ , \
+         Glyph128: VideoGlyphSetAll_1_128_, \
+         Glyph256: VideoGlyphSetAll_1_256_  \
+      )((glyph))
+   static inline void VideoGlyphSetAll_1_64_(uint64_t g) {
+      int end = VideoAttributeOffset() >> PIXELS_8x8;
+      for (int i = 0; i < end; i++)
+         VIDEO_FRAMEBUFFER_AS(uint64_t)[i] = g;
+   }
+   static inline void VideoGlyphSetAll_1_16_(uint16_t g) {
+      union {
+         uint16_t u16[4];
+         uint64_t u64;
+      } mem = {.u16 = {g, g, g, g}};
+      VideoGlyphSetAll_1_64_(mem.u64);
+   }
+   static inline void VideoGlyphSetAll_1_32_(uint32_t g) {
+      union {
+         uint16_t u32[2];
+         uint64_t u64;
+      } mem = {.u32 = {g, g}};
+      VideoGlyphSetAll_1_64_(mem.u64);
+   }
+   static inline void VideoGlyphSetAll_1_8_(uint8_t g) {
+      // Would calling VideoGlyphSetAll_1_64_ be faster or slower than memset?
+      memset(VIDEO_FRAMEBUFFER, g, VideoAttributeOffset());
+   }
+   static inline void VideoGlyphSetAll_1_128_(Glyph128 g) {
+      // We're not 100% sure to have an exact number of Glyph128
+      int end = VideoAttributeOffset() >> PIXELS_8x16;
+      for (int i = 0; i < end; i++)
+         VIDEO_FRAMEBUFFER_AS(Glyph128)[i] = g;
+   }
+   static inline void VideoGlyphSetAll_1_256_(Glyph256 g) {
+      // We're not 100% sure to have an exact number of Glyph256
+      int end = VideoAttributeOffset() >> PIXELS_16x16;
+      for (int i = 0; i < end; i++)
+         VIDEO_FRAMEBUFFER_AS(Glyph256)[i] = g;
+   }
+#  define VideoGlyphSetAll_2_(glyph, plane) \
+      _Generic((glyph)                    , \
+         uint8_t:  VideoGlyphSetAll_2_8_  , \
+         uint16_t: VideoGlyphSetAll_2_16_ , \
+         uint32_t: VideoGlyphSetAll_2_32_ , \
+         uint64_t: VideoGlyphSetAll_2_64_ , \
+         Glyph128: VideoGlyphSetAll_2_128_, \
+         Glyph256: VideoGlyphSetAll_2_256_  \
+      )((glyph), (plane))
+   //TODO: implement VideoGlyphSetAll_2_*_
+
 
 //------------------------------------------------------------------------------
 // Tile Modes (TODO)
@@ -470,8 +532,45 @@ static inline void VideoGlyphSetAll_1_256_(Glyph256 g)
 
 
 //------------------------------------------------------------------------------
-// Access to Pixels bytes (in pixel modes)
+// Access to Pixels
 //------------------------------------------------------------------------------
+
+// Access to pixel bytes (in pixel modes only)
+// Same as VideoPixels(), but no bounds-checking
+#define VideoPixels_(...)               UTIL_OVERLOAD(VideoPixels_, __VA_ARGS__)
+#  define VideoPixels__3_(x,y, plane)  *VideoPixels__function_((x),(y), (plane))
+#  define VideoPixels__2_(x,y)         *VideoPixels__function_((x),(y), 0)
+   static inline uint8_t *VideoPixels__function_(int x, int y, int plane) {
+      assert(x >= 0 && x < VIDEO_WIDTH);
+      assert(y >= 0 && y < VIDEO_HEIGHT);
+      int n = VideoModeLowNibble();
+      assert(plane >= 0 && plane < n);
+      // n <= 8  => planes of bytes which contains 8 (= 2^3) bit colors
+      // n == 9  => each byte contains 4 (= 2^2) quarter colors
+      // n == 10 => each byte contains 2 (= 2^1) nibble colors
+      // n == 11 => each byte contains 1 (= 2^0) color
+      return VIDEO_FRAMEBUFFER + y * VIDEO_WIDTH
+         + ((n <= 8) ? ((x >> 3) + VideoPlaneOffset(plane)) : (x >> (11 - n)));
+   }
+
+// VideoPixels(x,y, [plane=0]) gives a lvalue to the bytes containing the
+// pixel(S) at coordinate (x,y) (in the given plane).
+// - Bounds checking: if the pixel (x,y) is outside the bounds of the screen,
+//   coordinates will be clamped to the nearest valid edge. And likewise
+//   the plane will be clamped to [0, max number of planes[
+#define VideoPixels(...)                 UTIL_OVERLOAD(VideoPixels, __VA_ARGS__)
+#  define VideoPixels_3_(x,y, plane)    *VideoPixels_function_((x),(y), (plane))
+#  define VideoPixels_2_(x,y)           *VideoPixels_function_((x),(y), 0)
+   static inline uint8_t *VideoPixels_function_(int x, int y, int plane) {
+      UtilClampCoordinate(&x, VIDEO_WIDTH);
+      UtilClampCoordinate(&y, VIDEO_HEIGHT);
+      int n = VideoModeLowNibble();
+      UtilClampCoordinate(&plane, n);
+      assert(plane >= 0 && plane < n);
+      return VIDEO_FRAMEBUFFER + y * VIDEO_WIDTH
+         + ((n <= 8) ? ((x >> 3) + VideoPlaneOffset(plane)) : (x >> (11 - n)));
+   }
+
 
 #ifdef KONPU_OPTION_OPTIMIZE_VIDEO_MODE
 // Same as function `VideoGetPixel`, but no bounds checking.
@@ -533,8 +632,7 @@ int VideoGetPixel_inline_(int x, int y)
    // reconstruct the pixel color bit by bit. (hopefully loops are unrolled)
 
    // Attribute modes
-   if (VideoModeHasAttributes())
-   {
+   if (VideoModeHasAttributes()) {
 #if 0
 #define ls elem // same as VideoGlyphLog2Sizeof();
          int lw = (ls + 3) >> 1;  // same as VideoGlyphLog2Width();
@@ -580,10 +678,11 @@ int VideoGetPixel_inline_(int x, int y)
       // int px = GlyphPixelAt(VideoGlyph_(x,y), x%glyph_width, y%glyph_height);
 
       int px;          // the bit pixel
-      int w;           // width of the glyph grid
-      int h;           // height of the glyph grid
       int attr_offset; // offset for the start of the attributes
       switch (elem) {
+         int w;        // width of the glyph grid
+         int h;        // height of the glyph grid
+
          case PIXELS_2x4:
             w = VIDEO_WIDTH  >> 1;
             h = VIDEO_HEIGHT >> 2;
@@ -637,11 +736,11 @@ int VideoGetPixel_inline_(int x, int y)
       }
 
       // Look for the attribute under the pixel
-      w = AttributeWidthLog2();
-      x >>= w;
+      int w_log2 = AttributeWidthLog2();
+      x >>= w_log2;
       y >>= AttributeHeightLog2();
       uint8_t *attr = VIDEO_FRAMEBUFFER + attr_offset
-                    + ((x + y * (VIDEO_WIDTH >> w)) << AttributeHasTwoBytes());
+                    + ((x + y * (VIDEO_WIDTH >> w_log2)) << AttributeHasTwoBytes());
 
       // Return its fg or bg color depending on whether px is on or off.
       return (px) ? AttributeGetForeground(attr)
@@ -697,7 +796,37 @@ int VideoGetPixel_inline_(int x, int y)
    // Glyph bitplanes / Tile modes:
    switch (low_nibble) {
       // One single glyph plane
-      case  1: return 0; // TODO
+/*      case  1:
+         ; int w = VIDEO_WIDTH;
+         switch (elem) {
+            case PIXELS_2x4:
+               w >>= 1;
+               return GlyphPixelAt_8_(VIDEO_FRAMEBUFFER
+                     [(x >> 1) + (y >> 2) * w], x & 1, x & 3);
+            case PIXELS_4x4:
+               w >>= 2;
+               return GlyphPixelAt_16_(VIDEO_FRAMEBUFFER_AS(Glyph16)
+                     [(x >> 2) + (y >> 2) * w], x & 3, x & 3);
+            case PIXELS_4x8:
+               w >>= 2;
+               return GlyphPixelAt_32_(VIDEO_FRAMEBUFFER_AS(Glyph32)
+                     [(x >> 2) + (y >> 3) * w], x & 3, y & 7);
+            case PIXELS_8x8:
+               w >>= 3;
+               return GlyphPixelAt_64_(VIDEO_FRAMEBUFFER_AS(Glyph64)
+                     [(x >> 3) + (y >> 3) * w], x & 7, y & 7);
+            case PIXELS_8x16:
+               w >>= 3;
+               return GlyphPixelAt_128_(VIDEO_FRAMEBUFFER_AS(Glyph128)
+                     [(x >> 3) + (y >> 4) * w], x & 7, y & 15);
+            case PIXELS_16x16:
+               w >>= 4;
+               return GlyphPixelAt_256_(VIDEO_FRAMEBUFFER_AS(Glyph256)
+                     [(x >> 4) + (y >> 4) * w], x & 15, y & 15);
+            default:
+               VIDEO_ERROR();
+         }
+*/    case  1: // fallthrough
 
       // Several glyph bit planes (construct glyph)
       case  2: // fallthrough
@@ -709,7 +838,55 @@ int VideoGetPixel_inline_(int x, int y)
       case  7: // fallthrough
 #endif
       case  8: ;
-         return 0; // TODO
+         int px = 0;
+         int w = VIDEO_WIDTH;
+         switch (elem) {
+            case PIXELS_2x4:
+               w >>= 1;
+               for (int plane = 0; plane < low_nibble; plane++)
+                  px |= GlyphPixelAt_8_(VIDEO_FRAMEBUFFER
+                        [(x >> 1) + (y >> 2) * w], x & 1, x & 3) << plane;
+               return px;
+            case PIXELS_4x4:
+               w >>= 2;
+               for(int plane = 0; plane < low_nibble; plane++)
+                  px |= GlyphPixelAt_16_(VIDEO_FRAMEBUFFER_AS(Glyph16)
+                        [(x >> 2) + (y >> 2) * w], x & 3, x & 3) << plane;
+               return px;
+            case PIXELS_4x8:
+               w >>= 2;
+               for (int plane = 0; plane < low_nibble; plane++)
+                  px |= GlyphPixelAt_32_(VIDEO_FRAMEBUFFER_AS(Glyph32)
+                        [(x >> 2) + (y >> 3) * w], x & 3, y & 7) << plane;
+               return px;
+            case PIXELS_8x8:
+               w >>= 3;
+               Glyph64 *glyph = VIDEO_FRAMEBUFFER_AS(Glyph64) + (x >> 3) + (y >> 3) * w;
+               for (int plane = 0; plane < low_nibble; plane++) {
+                  px |= GlyphPixelAt_64_(*glyph, x & 7, y & 7) << plane;
+                  glyph += VIDEO_SIZE / low_nibble;
+               }
+
+/*               for (int plane = 0; plane < low_nibble; plane++)
+                  px |= GlyphPixelAt_64_(VideoPlaneAs(Glyph64, plane)
+                        [(x >> 3) + (y >> 3) * w], x & 7, y & 7) << plane;
+*/
+               return px;
+            case PIXELS_8x16:
+               w >>= 3;
+               for (int plane = 0; plane < low_nibble; plane++)
+                  px |= GlyphPixelAt_128_(VIDEO_FRAMEBUFFER_AS(Glyph128)
+                        [(x >> 3) + (y >> 4) * w], x & 7, y & 15) << plane;
+               return px;
+            case PIXELS_16x16:
+               w >>= 4;
+               for (int plane = 0; plane < low_nibble; plane++)
+                  px |= GlyphPixelAt_256_(VIDEO_FRAMEBUFFER_AS(Glyph256)
+                     [(x >> 4) + (y >> 4) * w], x & 15, y & 15) << plane;
+               return px;
+            default:
+               VIDEO_ERROR();
+         }
 
       // Tiles modes:
       case  9: return 0; // TODO
@@ -723,8 +900,13 @@ int VideoGetPixel_inline_(int x, int y)
 }
 
 // Internal only - Use or VideoSetPixel [or VideoSetPixel_] instead.
-static inline void VideoSetPixel_inline_(int x, int y, int color)
+static C_HINT_ALWAYS_INLINE
+void VideoSetPixel_inline_(int x, int y, int color)
 {
+   // Use the safe function for proper bounds checking.
+   assert(x >= 0 && x < VIDEO_WIDTH);
+   assert(y >= 0 && y < VIDEO_HEIGHT);
+
    (void)x;
    (void)y;
    (void)color; /* TODO*/
@@ -734,7 +916,8 @@ static inline void VideoSetPixel_inline_(int x, int y, int color)
 // if (x,y) is out of the screen, return the default background color instead.
 static inline int VideoGetPixel(int x, int y)
 {
-   return (x < 0 || x >= VIDEO_WIDTH || y < 0 || y >= VIDEO_HEIGHT) ? COLOR_DEFAULT_BG : VideoGetPixel_(x, y);
+   return (x < 0 || x >= VIDEO_WIDTH || y < 0 || y >= VIDEO_HEIGHT) ?
+      COLOR_DEFAULT_BG : VideoGetPixel_(x, y);
    // We could return the border color? It could make sense, however the
    // border color is always in 256 color mode, but the framebuffer isn't.
 }
@@ -778,7 +961,7 @@ static inline void VideoRenderToARGB(uint32_t *frame_out, int alpha)
    for (int y = 0; y < VIDEO_HEIGHT; y++) {
       for (int x = 0; x < VIDEO_WIDTH; x++) {
          const int color = VideoGetPixel_(x, y);
-         const uint8_t *rgb = COLOR_RGB((palette != NULL) ? palette[color] : color);
+         const uint8_t *rgb = ColorToRGB((palette)? palette[color] : color);
          *frame_out++ = A | (rgb[0] << 16) | (rgb[1] << 8) | rgb[2];
       }
    }
@@ -793,7 +976,7 @@ static inline void VideoRenderToARGB_(void *buffer, int alpha)
    for (int y = 0; y < VIDEO_HEIGHT; y++) {
       for (int x = 0; x < VIDEO_WIDTH; x++) {
          const int color = VideoGetPixel_(x,y);
-         const uint8_t *rgb = COLOR_RGB((palette != NULL) ? palette[color] : color);
+         const uint8_t *rgb = ColorToRGB((palette) ? palette[color] : color);
          *frame = A;
          memcpy(frame + 1, rgb, 3);
          frame += (1+3);
@@ -809,7 +992,7 @@ static inline void VideoRenderToRGB(void *buffer)
    for (int y = 0; y < VIDEO_HEIGHT; y++) {
       for (int x = 0; x < VIDEO_WIDTH; x++) {
          const int color = VideoGetPixel_(x, y);
-         const uint8_t *rgb = COLOR_RGB((palette != NULL) ? palette[color] : color);
+         const uint8_t *rgb = ColorToRGB((palette)? palette[color] : color);
          memcpy(frame, rgb, 3);
          frame += 3;
       }
