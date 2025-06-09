@@ -1,5 +1,7 @@
-
 #include "key.h"
+
+// Static checks of memory addresses
+#include "memory_.h"
 MEMORY_STATIC_ASSERT(KEY_STATE_ADDRESS,    uint64_t);
 MEMORY_STATIC_ASSERT(KEY_PREVIOUS_ADDRESS, uint64_t);
 

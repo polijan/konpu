@@ -1,5 +1,5 @@
-#ifndef  KONPU_GLYPH_H
-#define  KONPU_GLYPH_H
+#ifndef  KONPU_GLYPH_H_
+#define  KONPU_GLYPH_H_
 #include "bits.h"
 #include "video_mode.h"
 
@@ -1645,4 +1645,4 @@ static inline int glyph_width(uint64_t glyph)
 }
 #endif
 
-#endif //KONPU_GLYPH_H
+#endif //include guard

@@ -1,6 +1,7 @@
 #include "stack.h"
 
-// Static checks of Video memory addresses:
+// Static checks of memory addresses
+#include "memory_.h"
 MEMORY_STATIC_ASSERT(STACK_VAR_ADDRESS, var);
 MEMORY_STATIC_ASSERT(STACK_TYPE_ADDRESS, Type);
 MEMORY_STATIC_ASSERT(STACK_SIZE_ADDRESS, int16_t);

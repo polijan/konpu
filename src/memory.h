@@ -1,46 +1,51 @@
-#ifndef  KONPU_MEMORY_H
-#define  KONPU_MEMORY_H
+#ifndef  KONPU_MEMORY_H_
+#define  KONPU_MEMORY_H_
 #include "c.h"
-
-
-#define ADDRESS_AFTER(ADDRESS_NAME) \
-   ((int32_t)(ADDRESS_NAME + ADDRESS_NAME##_CAP_))
-
-
-// Expand to a few `static_assert` statements to ensure that the given address
-// is a valid address in Konpu's RAM and is aligned with the given C type.
-#define MEMORY_STATIC_ASSERT(ram_address, C_TYPENAME)                  \
-        static_assert((ram_address) >= 0, "RAM address must be >= 0"); \
-        static_assert((ram_address) < KONPU_MEMORY_SIZE,               \
-                      "RAM address must be < KONPU_MEMORY_SIZE");      \
-        static_assert((ram_address) % alignof(C_TYPENAME) == 0,        \
-                      "RAM address alignement")
 
 
 //------------------------------------------------------------------------------
 // Konpu's ROM
-//------------------------------------------------------------------------------
+//
 // A valid Konpu's ROM Address should be in the range [0, KONPU_ROM_SIZE[
-// It fits in 14 bits.
+//------------------------------------------------------------------------------
 
+#define KONPU_ROM_ADDRESS_AFTER_(ADDRESS_NAME)   \
+   ((int32_t)(ADDRESS_NAME + ADDRESS_NAME##_CAP_))
 
 // Notable Addresses in Konpu's ROM
 #define KONPU_ROM_VERSION              0
 #define KONPU_ROM_VERSION_CAP_         (1/*major*/ +1/*minor*/ +2/*patch*/)
-#define KONPU_ROM_RESOLUTION           ADDRESS_AFTER(KONPU_ROM_VERSION)
+#define KONPU_ROM_RESOLUTION           KONPU_ROM_ADDRESS_AFTER_(KONPU_ROM_VERSION)
 #define KONPU_ROM_RESOLUTION_CAP_      (2 * 11/*possible resolutions*/)
-#define KONPU_ROM_COLOR                ADDRESS_AFTER(KONPU_ROM_RESOLUTION)
+#define KONPU_ROM_COLOR                KONPU_ROM_ADDRESS_AFTER_(KONPU_ROM_RESOLUTION)
 #define KONPU_ROM_COLOR_CAP_           (256 /*colors*/ * 8 /*Lab + kd + RGB*/)
-#define KONPU_ROM_PALETTE              ADDRESS_AFTER(KONPU_ROM_COLOR)
+#define KONPU_ROM_PALETTE              KONPU_ROM_ADDRESS_AFTER_(KONPU_ROM_COLOR)
 #define KONPU_ROM_PALETTE_CAP_         128
-#define KONPU_ROM_WAV_HEADER           ADDRESS_AFTER(KONPU_ROM_PALETTE)
+#define KONPU_ROM_FONT                 KONPU_ROM_ADDRESS_AFTER_(KONPU_ROM_PALETTE)
+#define KONPU_ROM_FONT_CAP_            (95*(2+4+4+4)+123*(8+8+8))
+        // 95 printable ascii height 4(Glyph16, 2bytes), 5,6,7(Glyph32, 4bytes)
+        // 123 (pu) Glyph64s (8 bytes) with height 5,6,7
+#define KONPU_ROM_WAV_HEADER           KONPU_ROM_ADDRESS_AFTER_(KONPU_ROM_FONT)
 #define KONPU_ROM_WAV_HEADER_CAP_      44
-#define KONPU_ROM_URL                  ADDRESS_AFTER(KONPU_ROM_WAV_HEADER)
+#define KONPU_ROM_URL                  KONPU_ROM_ADDRESS_AFTER_(KONPU_ROM_WAV_HEADER)
 #define KONPU_ROM_URL_CAP_             64
 
-// Konpu's ROM
-#define KONPU_ROM_SIZE  ADDRESS_AFTER(KONPU_ROM_URL)
-extern const uint8_t KonpuROM[KONPU_ROM_SIZE];
+// Size of the ROM
+#define KONPU_ROM_SIZE                 KONPU_ROM_ADDRESS_AFTER_(KONPU_ROM_URL)
+
+// The ROM as a byte array
+extern  alignas(max_align_t)
+#if defined(__GNUC__)
+//  C allows accessing of all objects as bytes, but the other way around is UB
+//  (strict aliasing). However, it is common practice to use byte arrays to
+//  store other objects and most compilers simply allow this. There is a
+//  proposal for C to formally allow the access of byte arrays as other types,
+//  see: https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3254.pdf
+//
+//  Here, for GCC/clang, specifically mark that strict aliasing should not apply
+    __attribute__((__may_alias__))
+#endif
+const uint8_t KonpuROM[KONPU_ROM_SIZE];
 
 
 //------------------------------------------------------------------------------
@@ -50,25 +55,26 @@ extern const uint8_t KonpuROM[KONPU_ROM_SIZE];
 // [0, KONPU_MEMORY_SIZE[. It fits in 20 bits.
 //------------------------------------------------------------------------------
 
+#define KONPU_MEMORY_ADDRESS_AFTER_(ADDRESS_NAME) \
+   ((int32_t)(ADDRESS_NAME + ADDRESS_NAME##_CAP_))
+
+
 // Size in bytes of Konpu's RAM memory.
-#define KONPU_MEMORY_SIZE  1048576   // (for now 2^20 bit, ie a full megabyte)
+#define KONPU_MEMORY_SIZE  1048576   // (for now 2^20 bits, i.e. one megabyte)
 
 // Global byte array that serves as Konpu's RAM memory
-extern  alignas(max_align_t)
+extern alignas(max_align_t)
 #if defined(__GNUC__)
-//      C allows accessing of all objects as bytes, but the other way around is
-//      UB (strict aliasing). However, it is common practice to use byte arrays
-//      to store other objects and most compilers simply allow this. There is a
-//      proposal for C to formally allow the access of byte arrays as other
-//      types, see: https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3254.pdf
+//  C allows accessing of all objects as bytes, but the other way around is UB
+//  (strict aliasing). However, it is common practice to use byte arrays to
+//  store other objects and most compilers simply allow this. There is a
+//  proposal for C to formally allow the access of byte arrays as other types,
+//  see: https://www.open-std.org/jtc1/sc22/wg14/www/docs/n3254.pdf
 //
-//      Here, for GCC/clang, specifically mark that strict aliasing should not
-//      apply:
-        __attribute__((__may_alias__))
+//  Here, for GCC/clang, specifically mark that strict aliasing should not apply
+    __attribute__((__may_alias__))
 #endif
 uint8_t KonpuMemory[KONPU_MEMORY_SIZE];
-
-
 
 
 static inline int32_t AddressOf(void *pointer)
@@ -78,7 +84,6 @@ static inline int32_t AddressOf(void *pointer)
    // assert(addr >= 0 && addr < KONPU_MEMORY_SIZE);
    return addr;
 }
-
 
 //------------------------------------------------------------------------------
 // Video Framebuffer
@@ -102,13 +107,13 @@ static inline int32_t AddressOf(void *pointer)
 //
 #define VIDEO_FRAMEBUFFER_ADDRESS        0
 #define VIDEO_FRAMEBUFFER_ADDRESS_CAP_   VIDEO_SIZE
-#define VIDEO_RENDER_ERRORS_ADDRESS      ADDRESS_AFTER(VIDEO_FRAMEBUFFER_ADDRESS)
+#define VIDEO_RENDER_ERRORS_ADDRESS      KONPU_MEMORY_ADDRESS_AFTER_(VIDEO_FRAMEBUFFER_ADDRESS)
 #define VIDEO_RENDER_ERRORS_ADDRESS_CAP_ sizeof(uint32_t)
-#define VIDEO_WIDTH_ADDRESS              ADDRESS_AFTER(VIDEO_RENDER_ERRORS_ADDRESS)
+#define VIDEO_WIDTH_ADDRESS              KONPU_MEMORY_ADDRESS_AFTER_(VIDEO_RENDER_ERRORS_ADDRESS)
 #define VIDEO_WIDTH_ADDRESS_CAP_         sizeof(int16_t)
-#define VIDEO_HEIGHT_ADDRESS             ADDRESS_AFTER(VIDEO_WIDTH_ADDRESS)
+#define VIDEO_HEIGHT_ADDRESS             KONPU_MEMORY_ADDRESS_AFTER_(VIDEO_WIDTH_ADDRESS)
 #define VIDEO_HEIGHT_ADDRESS_CAP_        sizeof(int16_t)
-#define VIDEO_MODE_ADDRESS               ADDRESS_AFTER(VIDEO_HEIGHT_ADDRESS)
+#define VIDEO_MODE_ADDRESS               KONPU_MEMORY_ADDRESS_AFTER_(VIDEO_HEIGHT_ADDRESS)
 #define VIDEO_MODE_ADDRESS_CAP_          1
 
 //------------------------------------------------------------------------------
@@ -124,13 +129,13 @@ static inline int32_t AddressOf(void *pointer)
 // COLOR_DEFAULT_BG = default "paper" color
 // COLOR_PALETTE = palette area
 //------------------------------------------------------------------------------
-#define COLOR_BORDER_ADDRESS             ADDRESS_AFTER(VIDEO_MODE_ADDRESS)
+#define COLOR_BORDER_ADDRESS             KONPU_MEMORY_ADDRESS_AFTER_(VIDEO_MODE_ADDRESS)
 #define COLOR_BORDER_ADDRESS_CAP_        1
-#define COLOR_DEFAULT_FG_ADDRESS         ADDRESS_AFTER(COLOR_BORDER_ADDRESS)
+#define COLOR_DEFAULT_FG_ADDRESS         KONPU_MEMORY_ADDRESS_AFTER_(COLOR_BORDER_ADDRESS)
 #define COLOR_DEFAULT_FG_ADDRESS_CAP_    1
-#define COLOR_DEFAULT_BG_ADDRESS         ADDRESS_AFTER(COLOR_DEFAULT_FG_ADDRESS)
+#define COLOR_DEFAULT_BG_ADDRESS         KONPU_MEMORY_ADDRESS_AFTER_(COLOR_DEFAULT_FG_ADDRESS)
 #define COLOR_DEFAULT_BG_ADDRESS_CAP_    1
-#define COLOR_PALETTE_ADDRESS            ADDRESS_AFTER(COLOR_DEFAULT_BG_ADDRESS)
+#define COLOR_PALETTE_ADDRESS            KONPU_MEMORY_ADDRESS_AFTER_(COLOR_DEFAULT_BG_ADDRESS)
 #define COLOR_PALETTE_ADDRESS_CAP_       128
 
 //------------------------------------------------------------------------------
@@ -138,12 +143,12 @@ static inline int32_t AddressOf(void *pointer)
 // KEY_STATE: the state of each key on the keyboard (see keyboard.h)
 // KEY_PREVIOUS: a copy of the keyboard state prior to the previous update.
 //------------------------------------------------------------------------------
-#define KEY_MOD_ADDRESS             ADDRESS_AFTER(COLOR_PALETTE_ADDRESS)
+#define KEY_MOD_ADDRESS             KONPU_MEMORY_ADDRESS_AFTER_(COLOR_PALETTE_ADDRESS)
 #define KEY_MOD_ADDRESS_CAP_        4 // make sure to pad so that
                                     // KEY_STATE_ADDRESS is aligned for uint64s
-#define KEY_STATE_ADDRESS           ADDRESS_AFTER(KEY_MOD_ADDRESS)
+#define KEY_STATE_ADDRESS           KONPU_MEMORY_ADDRESS_AFTER_(KEY_MOD_ADDRESS)
 #define KEY_STATE_ADDRESS_CAP_      32 // 256 key states stored as bits
-#define KEY_PREVIOUS_ADDRESS        ADDRESS_AFTER(KEY_STATE_ADDRESS)
+#define KEY_PREVIOUS_ADDRESS        KONPU_MEMORY_ADDRESS_AFTER_(KEY_STATE_ADDRESS)
 #define KEY_PREVIOUS_ADDRESS_CAP_   KEY_STATE_ADDRESS_CAP_
 
 
@@ -167,9 +172,9 @@ static inline int32_t AddressOf(void *pointer)
 //
 #define STACK_VAR_ADDRESS                69632  // TODO:address at 68k for now...
 #define STACK_VAR_ADDRESS_CAP_           (STACK_CAPACITY * sizeof(var))
-#define STACK_SIZE_ADDRESS               ADDRESS_AFTER(STACK_VAR_ADDRESS)
+#define STACK_SIZE_ADDRESS               KONPU_MEMORY_ADDRESS_AFTER_(STACK_VAR_ADDRESS)
 #define STACK_SIZE_ADDRESS_CAP_          sizeof(int16_t)
-#define STACK_TYPE_ADDRESS               ADDRESS_AFTER(STACK_SIZE_ADDRESS)
+#define STACK_TYPE_ADDRESS               KONPU_MEMORY_ADDRESS_AFTER_(STACK_SIZE_ADDRESS)
 #define STACK_TYPE_ADDRESS_CAP_          (STACK_CAPACITY * sizeof(Type))
 
 //------------------------------------------------------------------------------
@@ -180,14 +185,14 @@ static inline int32_t AddressOf(void *pointer)
 // the main memory block, extra space is also needed for tracking which heap
 // blocks are checked out and the size of each block.
 //------------------------------------------------------------------------------
-#define HEAP_ADDRESS                     ADDRESS_AFTER(STACK_TYPE_ADDRESS)
+#define HEAP_ADDRESS                     KONPU_MEMORY_ADDRESS_AFTER_(STACK_TYPE_ADDRESS)
 #define HEAP_ADDRESS_CAP_                524288  // 512 Kilobytes
-#define HEAP_CTRL_ADDRESS                ADDRESS_AFTER(HEAP_ADDRESS)
+#define HEAP_CTRL_ADDRESS                KONPU_MEMORY_ADDRESS_AFTER_(HEAP_ADDRESS)
 #define HEAP_CTRL_ADDRESS_CAP_           65536   //  64 Kilobytes
 
 
 // Here be dragons...
-#define HEAP_CTRL_OVERFLOW_ADDRESS       ADDRESS_AFTER(HEAP_CTRL_ADDRESS)
+#define HEAP_CTRL_OVERFLOW_ADDRESS       KONPU_MEMORY_ADDRESS_AFTER_(HEAP_CTRL_ADDRESS)
 
 
-#endif //KONPU_MEMORY_H
+#endif //include guard
