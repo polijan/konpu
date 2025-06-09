@@ -2,6 +2,7 @@
 #include "init.h"
 
 // Static checks of Video memory addresses:
+#include "memory_.h"
 MEMORY_STATIC_ASSERT(VIDEO_FRAMEBUFFER_ADDRESS, uint16_t);
 MEMORY_STATIC_ASSERT(VIDEO_FRAMEBUFFER_ADDRESS, uint32_t);
 MEMORY_STATIC_ASSERT(VIDEO_FRAMEBUFFER_ADDRESS, uint64_t);
