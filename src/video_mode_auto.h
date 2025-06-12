@@ -1,7 +1,7 @@
 // THIS PREPROCESSOR CODE IS AUTO-GENERATED (see tools)
 // DO NOT EDIT / DO NOT INCLUDE DIRECTLY
 
-#if   VIDEO_SIZE_FACTOR_ == 7
+#if   VIDEO_FACTOR_ == 7
 #  if defined(KONPU_OPTION_OPTIMIZE_VIDEO_MODE) && !defined(KONPU_OPTION_FORCE_VIDEO_MODE_WIDTH)
 #     if KONPU_OPTION_OPTIMIZE_VIDEO_MODE == 1
 #        define VIDEO_WIDTH   480
@@ -339,7 +339,7 @@
 #        define VIDEO_WIDTH   448
 #     else
 #        error "KONPU_OPTION_OPTIMIZE_VIDEO_MODE has invalid value"
-#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO
+#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO_MODE
 #  endif
 #  if defined(KONPU_OPTION_OPTIMIZE_VIDEO_MODE) && !defined(KONPU_OPTION_FORCE_VIDEO_MODE_HEIGHT)
 #     if KONPU_OPTION_OPTIMIZE_VIDEO_MODE == 1
@@ -678,9 +678,9 @@
 #        define VIDEO_HEIGHT   448
 #     else
 #        error "KONPU_OPTION_OPTIMIZE_VIDEO_MODE has invalid value"
-#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO
+#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO_MODE
 #  endif
-#elif VIDEO_SIZE_FACTOR_ == 6
+#elif VIDEO_FACTOR_ == 6
 #  if defined(KONPU_OPTION_OPTIMIZE_VIDEO_MODE) && !defined(KONPU_OPTION_FORCE_VIDEO_MODE_WIDTH)
 #     if KONPU_OPTION_OPTIMIZE_VIDEO_MODE == 1
 #        define VIDEO_WIDTH   480
@@ -1004,7 +1004,7 @@
 #        define VIDEO_WIDTH   432
 #     else
 #        error "KONPU_OPTION_OPTIMIZE_VIDEO_MODE has invalid value"
-#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO
+#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO_MODE
 #  endif
 #  if defined(KONPU_OPTION_OPTIMIZE_VIDEO_MODE) && !defined(KONPU_OPTION_FORCE_VIDEO_MODE_HEIGHT)
 #     if KONPU_OPTION_OPTIMIZE_VIDEO_MODE == 1
@@ -1329,9 +1329,9 @@
 #        define VIDEO_HEIGHT   432
 #     else
 #        error "KONPU_OPTION_OPTIMIZE_VIDEO_MODE has invalid value"
-#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO
+#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO_MODE
 #  endif
-#elif VIDEO_SIZE_FACTOR_ == 5
+#elif VIDEO_FACTOR_ == 5
 #  if defined(KONPU_OPTION_OPTIMIZE_VIDEO_MODE) && !defined(KONPU_OPTION_FORCE_VIDEO_MODE_WIDTH)
 #     if KONPU_OPTION_OPTIMIZE_VIDEO_MODE == 1
 #        define VIDEO_WIDTH   400
@@ -1655,7 +1655,7 @@
 #        define VIDEO_WIDTH   360
 #     else
 #        error "KONPU_OPTION_OPTIMIZE_VIDEO_MODE has invalid value"
-#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO
+#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO_MODE
 #  endif
 #  if defined(KONPU_OPTION_OPTIMIZE_VIDEO_MODE) && !defined(KONPU_OPTION_FORCE_VIDEO_MODE_HEIGHT)
 #     if KONPU_OPTION_OPTIMIZE_VIDEO_MODE == 1
@@ -1980,9 +1980,9 @@
 #        define VIDEO_HEIGHT   360
 #     else
 #        error "KONPU_OPTION_OPTIMIZE_VIDEO_MODE has invalid value"
-#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO
+#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO_MODE
 #  endif
-#elif VIDEO_SIZE_FACTOR_ == 3
+#elif VIDEO_FACTOR_ == 3
 #  if defined(KONPU_OPTION_OPTIMIZE_VIDEO_MODE) && !defined(KONPU_OPTION_FORCE_VIDEO_MODE_WIDTH)
 #     if KONPU_OPTION_OPTIMIZE_VIDEO_MODE == 1
 #        define VIDEO_WIDTH   320
@@ -2306,7 +2306,7 @@
 #        define VIDEO_WIDTH   288
 #     else
 #        error "KONPU_OPTION_OPTIMIZE_VIDEO_MODE has invalid value"
-#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO
+#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO_MODE
 #  endif
 #  if defined(KONPU_OPTION_OPTIMIZE_VIDEO_MODE) && !defined(KONPU_OPTION_FORCE_VIDEO_MODE_HEIGHT)
 #     if KONPU_OPTION_OPTIMIZE_VIDEO_MODE == 1
@@ -2631,9 +2631,9 @@
 #        define VIDEO_HEIGHT   288
 #     else
 #        error "KONPU_OPTION_OPTIMIZE_VIDEO_MODE has invalid value"
-#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO
+#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO_MODE
 #  endif
-#elif VIDEO_SIZE_FACTOR_ == 3
+#elif VIDEO_FACTOR_ == 3
 #  if defined(KONPU_OPTION_OPTIMIZE_VIDEO_MODE) && !defined(KONPU_OPTION_FORCE_VIDEO_MODE_WIDTH)
 #     if KONPU_OPTION_OPTIMIZE_VIDEO_MODE == 1
 #        define VIDEO_WIDTH   320
@@ -2957,7 +2957,7 @@
 #        define VIDEO_WIDTH   288
 #     else
 #        error "KONPU_OPTION_OPTIMIZE_VIDEO_MODE has invalid value"
-#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO
+#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO_MODE
 #  endif
 #  if defined(KONPU_OPTION_OPTIMIZE_VIDEO_MODE) && !defined(KONPU_OPTION_FORCE_VIDEO_MODE_HEIGHT)
 #     if KONPU_OPTION_OPTIMIZE_VIDEO_MODE == 1
@@ -3282,9 +3282,9 @@
 #        define VIDEO_HEIGHT   288
 #     else
 #        error "KONPU_OPTION_OPTIMIZE_VIDEO_MODE has invalid value"
-#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO
+#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO_MODE
 #  endif
-#elif VIDEO_SIZE_FACTOR_ == 2
+#elif VIDEO_FACTOR_ == 2
 #  if defined(KONPU_OPTION_OPTIMIZE_VIDEO_MODE) && !defined(KONPU_OPTION_FORCE_VIDEO_MODE_WIDTH)
 #     if KONPU_OPTION_OPTIMIZE_VIDEO_MODE == 1
 #        define VIDEO_WIDTH   288
@@ -3608,7 +3608,7 @@
 #        define VIDEO_WIDTH   256
 #     else
 #        error "KONPU_OPTION_OPTIMIZE_VIDEO_MODE has invalid value"
-#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO
+#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO_MODE
 #  endif
 #  if defined(KONPU_OPTION_OPTIMIZE_VIDEO_MODE) && !defined(KONPU_OPTION_FORCE_VIDEO_MODE_HEIGHT)
 #     if KONPU_OPTION_OPTIMIZE_VIDEO_MODE == 1
@@ -3933,8 +3933,8 @@
 #        define VIDEO_HEIGHT   256
 #     else
 #        error "KONPU_OPTION_OPTIMIZE_VIDEO_MODE has invalid value"
-#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO
+#     endif // end check value of KONPU_OPTION_OPTIMIZE_VIDEO_MODE
 #  endif
 #elif defined(KONPU_OPTION_OPTIMIZE_VIDEO_MODE)
-#  error "KONPU_OPTION_OPTIMIZE_VIDEO_MODE cannot be used with this VIDEO_SIZE_FACTOR_"
-#endif //VIDEO_SIZE_FACTOR_
+#  error "KONPU_OPTION_OPTIMIZE_VIDEO_MODE cannot be used with this VIDEO_FACTOR_"
+#endif //VIDEO_FACTOR_

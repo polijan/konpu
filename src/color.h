@@ -1,6 +1,7 @@
-#ifndef  KONPU_COLOR_H
-#define  KONPU_COLOR_H
-#include "memory.h"
+#ifndef  KONPU_COLOR_H_
+#define  KONPU_COLOR_H_
+#include "ram.h"
+#include "rom.h"
 #include "video_mode.h"
 
 //#include <math.h>
@@ -41,17 +42,17 @@ extern float roundf(float x);
 // master colors). It allows distinct for 2,4,8,8,16,32,64 colors subpalettes
 // in distinct areas.
 //------------------------------------------------------------------------------
-#define COLOR_PALETTE128  (KonpuMemory + COLOR_PALETTE_ADDRESS)
-#define COLOR_PALETTE2     COLOR_PALETTE128
+#define COLOR_PALETTE128  (RAM + RAM_COLOR_PALETTE)
+#define COLOR_PALETTE2    COLOR_PALETTE128
 #define COLOR_PALETTE4    (COLOR_PALETTE2  + 2)
 #define COLOR_PALETTE8    (COLOR_PALETTE4  + 4)
 #define COLOR_PALETTE16   (COLOR_PALETTE8  + 8)
 #define COLOR_PALETTE32   (COLOR_PALETTE16 + 16)
 #define COLOR_PALETTE64   (COLOR_PALETTE32 + 32)
 
-#define COLOR_BORDER       KonpuMemory[COLOR_BORDER_ADDRESS]
-#define COLOR_DEFAULT_FG   KonpuMemory[COLOR_DEFAULT_FG_ADDRESS]
-#define COLOR_DEFAULT_BG   KonpuMemory[COLOR_DEFAULT_BG_ADDRESS]
+#define COLOR_BORDER      RAM[RAM_COLOR_BORDER]
+#define COLOR_DEFAULT_FG  RAM[RAM_COLOR_DEFAULT_FG]
+#define COLOR_DEFAULT_BG  RAM[RAM_COLOR_DEFAULT_BG]
 
 
 // Return the palette in-use or NULL (in 256 color modes)
@@ -66,15 +67,15 @@ extern float roundf(float x);
 // ```
 static inline uint8_t *ColorPalette(void)
 {
-   int offset = VideoColorDepth();
+   int offset = ColorDepth();
    switch(offset) {
       case 8:  return NULL;        // 256 colors
-#if (VIDEO_SIZE_FACTOR_ % 7 != 0)
+#if (VIDEO_FACTOR_ % 7 != 0)
       case 7:  offset  = 0; break; // 128 color palette
 #endif
       default: offset -= 2; break; // 2,4,8,16,32,64 color palettes
    }
-   return KonpuMemory + COLOR_PALETTE_ADDRESS + offset;
+   return RAM + RAM_COLOR_PALETTE + offset;
 }
 
 
@@ -90,7 +91,7 @@ struct ColorLABi  { int     L, a, b; };
 // A struct to represent a (Lab, Chroma, Hue) Polar OkLab color
 struct ColorLCHf  { float L, C, h; };
 
-#define COLOR_ROM(i)  (KonpuROM[KONPU_ROM_COLOR + (i)])
+#define COLOR_ROM(i)  (ROM[ROM_COLOR + (i)])
 
 
 // Conversion LABf -> LABi (ie multiply by 510)
@@ -240,7 +241,7 @@ static inline float ColorHue(int color)
 // Return a pointer from which gamma-encoded sRGB 8-bits components
 // corresponding to the given color can be read
 static inline const uint8_t* ColorToRGB(int color)
-{ return KonpuROM + KONPU_ROM_COLOR + 5 + (color << 3); }
+{ return ROM + ROM_COLOR + 5 + (color << 3); }
 
 
 // sRGB color, linear float components in [0,1]
@@ -548,4 +549,4 @@ ColorLABfToRGBf(struct ColorLABf c)
 #define COLOR_CSS_LIGHT_GRAY               235   // #D3D3D3   0.039485
 #define COLOR_CSS_GAINSBORO                248   // #DCDCDC   0.013372
 
-#endif //KONPU_COLOR_H
+#endif //include_guard

@@ -8,12 +8,11 @@
 
 #include "printer.h" // TODO: for fast ugly DEBUG(), remove.
 
+// Video Register for Errors:
+static uint32_t  video_register_errors = 0;
+// Expose address of static video registers variable for read-only access.
+const uint32_t *VIDEO_REGISTER_ERRORS_ = &video_register_errors;
 
-// Elsewhere in Konpu, VIDEO_RENDER_ERRORS is read-only,
-// but in backend code, we need to be able to write to it:
-#undef  VIDEO_RENDER_ERRORS
-#define VIDEO_RENDER_ERRORS \
-   (*(uint32_t*)(KonpuMemory + VIDEO_RENDER_ERRORS_ADDRESS))
 
 // An icon for ilo Konpu (TODO)
 #define ICON_WIDTH           64
@@ -87,7 +86,7 @@ int VideoBackendInit(int zoom_desired_max)
    assert(sdl.renderer == NULL);
    assert(sdl.texture  == NULL);
 
-   VIDEO_RENDER_ERRORS = 0;
+   video_register_errors = 0;
    // Make sure that at first render, the texture will be allocated and the
    // border redrawn.
    sdl.width  = -1;
@@ -112,8 +111,7 @@ int VideoBackendInit(int zoom_desired_max)
    int zoom = 0;
    SDL_DisplayMode display;
    if (SDL_GetDesktopDisplayMode(0, &display) == 0) {
-      zoom = UTIL_MIN(display.w / VIDEO_MODE_WIDTH_MAX,
-                      display.h / VIDEO_MODE_HEIGHT_MAX);
+      zoom = UTIL_MIN(display.w/VIDEO_MAX_WIDTH, display.h/VIDEO_MAX_HEIGHT);
       if (zoom < 2) {
          zoom = 0; // try to go full screen
       } else if (zoom > zoom_desired_max) {
@@ -130,7 +128,7 @@ DEBUG("%dx%d -> zoom=%d\n", display.w, display.h, zoom); //TODO:REMOVE
    if (zoom <= 0)  win_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
    sdl.window = SDL_CreateWindow("ilo Konpu",
                   SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                  zoom * VIDEO_MODE_WIDTH_MAX, zoom * VIDEO_MODE_HEIGHT_MAX,
+                  zoom * VIDEO_MAX_WIDTH, zoom * VIDEO_MAX_HEIGHT,
                   win_flags);
    if (sdl.window == NULL) goto error;
 
@@ -257,7 +255,7 @@ int VideoRender(void)
    // Render
    int err = SDL_RenderCopy(sdl.renderer, sdl.texture, NULL, NULL);
    if (err) {
-      VIDEO_RENDER_ERRORS++;
+      video_register_errors++;
       return err;
    }
    SDL_RenderPresent(sdl.renderer);

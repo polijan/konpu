@@ -1,9 +1,9 @@
 // Konpu's Heap allocator
 // This allocator works from a fixed block of memory.
 
-#ifndef  KONPU_HEAP_H
-#define  KONPU_HEAP_H
-#include "memory.h"
+#ifndef  KONPU_HEAP_H_
+#define  KONPU_HEAP_H_
+#include "ram.h"
 #include "var.h"
 
 // The size in bytes of the smallest possible allocation from the Heap.
@@ -14,8 +14,8 @@
 // in the Heap.
 #define HEAP_ALIGNMENT   8
 
-#define HEAP_MEMORY           (KonpuMemory + HEAP_ADDRESS)
-#define HEAP_CTRL             (KonpuMemory + HEAP_CTRL_ADDRESS)
+#define HEAP_MEMORY      (RAM + RAM_HEAP)
+#define HEAP_CTRL        (RAM + RAM_HEAP_CTRL)
 
 // Returns a pointer from a 16-bit heap address
 static inline
@@ -50,14 +50,6 @@ uint16_t HeapAddress(void *pointer)
 
 #define HeapPointerCapacity(pointer)  HeapCapacityAt(HeapAddress(pointer))
 
-/*
-// Size plays a similar role as `size_t` but signed
-typedef int32_t  Size;
-
-// Same as the `sizeof` operator but return a Size (instead of size_t)
-#define SizeOf(T) \
-        ((Size)sizeof(T))
-*/
 
 
 // Similar to <stdlib.h>'s `malloc` function:
@@ -75,4 +67,4 @@ void *HeapRealloc(void *ptr, int32_t new_size);
 void  HeapFree(void* pointer);
 
 
-#endif //KONPU_HEAP_H
+#endif //include guard

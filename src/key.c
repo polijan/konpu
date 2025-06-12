@@ -1,10 +1,5 @@
 #include "key.h"
 
-// Static checks of memory addresses
-#include "memory_.h"
-MEMORY_STATIC_ASSERT(KEY_STATE_ADDRESS,    uint64_t);
-MEMORY_STATIC_ASSERT(KEY_PREVIOUS_ADDRESS, uint64_t);
-
 #include "platform_include.h"
 #if KONPU_PLATFORM_SDL_ANY
 void KeyUpdate(void)
@@ -33,7 +28,7 @@ void KeyUpdate(void)
       if (state[k + 192])  c3 |= bit;
    }
    // Update previous state and new state in memory
-   memcpy(KEY_PREVIOUS, KEY_STATE, KEY_STATE_ADDRESS_CAP_);
+   memcpy(KEY_PREVIOUS, KEY_STATE, RAM_KEY_STATE_SZ_);
    KEY_STATE[0] = c0;
    KEY_STATE[1] = c1;
    KEY_STATE[2] = c2;

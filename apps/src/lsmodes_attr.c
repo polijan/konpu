@@ -13,10 +13,10 @@ int AppInit(void)
    Printer("Mo- |Resolution |     Glyphs       |     Attributes\n");
    Printer("de  |Sz8  Pixels|  Res.    Type    |Offset  Res.   Type\n");
    for (int i = 128; i < 255; i++) {
-      int nbytes = VideoSetMode(i);
+      int nbytes = VideoMode(i);
       if (nbytes == 0) continue;
 
-      enum VideoElementPixelSize elem_sz = VideoModeElementDescriptor();
+      enum VideoElementDimension elem_sz = VideoModeDimension();
       Printer("%3d  %2d  %3dx%3d  %3dx%2d  Glyph%d%s  %5d  %3dx%2d  ATTRIBUTE_%s_%s",
          i, nbytes,
          VIDEO_WIDTH, VIDEO_HEIGHT,
@@ -24,7 +24,7 @@ int AppInit(void)
          8 * (1 << elem_sz), (elem_sz == 0)? "  " : ((elem_sz < 4)? " " : ""),
          VideoAttributeOffset(),
          VIDEO_WIDTH  >> AttributeWidthLog2(), VIDEO_HEIGHT >> AttributeHeightLog2(),
-         elem_size_str[AttributePixelSize()],
+         elem_size_str[AttributeDimension()],
          attr_color_type[AttributeColorType()]
       );
 

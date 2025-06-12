@@ -16,15 +16,15 @@ int AppInit(void)
    int valid = 0;
    Printer("Mode Sz8x8   Res.  #Colors Framebuffer content and layout\n");
    for (int i = 0; i < 255; i++) {
-      int nbytes = VideoModeResolution(i);
+      int nbytes = VideoMode_(i);
       if (nbytes == 0) continue;
 
       valid++;
-      VideoSetMode(i);
+      VideoMode(i);
       Printer("%3d   %2d   %3dx%3d   %3d   ",
-         i, nbytes, VIDEO_WIDTH, VIDEO_HEIGHT, 1 << VideoColorDepth());
+         i, nbytes, VIDEO_WIDTH, VIDEO_HEIGHT, 1 << ColorDepth());
 
-      enum VideoElementPixelSize elem_size = VideoModeElementDescriptor();
+      enum VideoElementDimension elem_size = VideoModeDimension();
       int low_nibble = VideoModeLowNibble();
 
       // Attribute Modes -------------------------------------------------------
@@ -39,7 +39,7 @@ int AppInit(void)
                VIDEO_HEIGHT >> VideoGlyphLog2Height());
          }
          Printer(" + ATTRIBUTE_%s_%s (%dx%d @offset %d)",
-            elem_pixel_size_str[AttributePixelSize()] ,
+            elem_pixel_size_str[AttributeDimension()] ,
             attr_color_type_str[AttributeColorType()] ,
             VIDEO_WIDTH  >> AttributeWidthLog2(),
             VIDEO_HEIGHT >> AttributeHeightLog2(),

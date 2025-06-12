@@ -5,12 +5,6 @@
 
 #include "heap.h"
 #include "init.h"
-
-// Static checks of memory addresses
-#include "memory_.h"
-MEMORY_STATIC_ASSERT(HEAP_ADDRESS, var);
-MEMORY_STATIC_ASSERT(HEAP_CTRL_ADDRESS, uint8_t);
-
 #include "var.h"
 #include <string.h>
 

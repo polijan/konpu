@@ -5,7 +5,7 @@ int AppInit(void); // TODO: add this in the generated konpu.h ???
 
 static void SHOW(int mode, const char *msg)
 {
-   int sz = VideoSetMode(mode);
+   int sz = VideoMode(mode);
    Printer("%3d x %3d - %2d bytes per 8x8 - %s\n",
       VIDEO_WIDTH, VIDEO_HEIGHT, sz, msg);
    VideoRender();
@@ -24,7 +24,7 @@ int AppInit(void)
    SHOW(122, "16 color non-attribute modes");   // 32
    SHOW(  5, "32 color modes (bitplanes)");     // 40
    SHOW(  6, "64 color modes (bitplanes)");     // 48
-#if (VIDEO_SIZE_FACTOR_ % 7 == 0)
+#if (VIDEO_FACTOR_ % 7 == 0)
    SHOW(  7, "128 color modes (bitplanes)");    // 56
 #endif
    SHOW(123, "256 color non-attribute modes");  // 64

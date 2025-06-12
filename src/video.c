@@ -1,29 +1,25 @@
 #include "video.h"
 #include "init.h"
 
-// Static checks of Video memory addresses:
-#include "memory_.h"
-MEMORY_STATIC_ASSERT(VIDEO_FRAMEBUFFER_ADDRESS, uint16_t);
-MEMORY_STATIC_ASSERT(VIDEO_FRAMEBUFFER_ADDRESS, uint32_t);
-MEMORY_STATIC_ASSERT(VIDEO_FRAMEBUFFER_ADDRESS, uint64_t);
-MEMORY_STATIC_ASSERT(VIDEO_FRAMEBUFFER_ADDRESS, uint64_t);
-MEMORY_STATIC_ASSERT(VIDEO_FRAMEBUFFER_ADDRESS, Glyph128);
-MEMORY_STATIC_ASSERT(VIDEO_FRAMEBUFFER_ADDRESS, Glyph256);
+// Video Registers
+static uint8_t  video_register_mode;
+static int16_t  video_register_width;
+static int16_t  video_register_height;
+// Expose address of static video registers variable for read-only access.
+const uint8_t  *VIDEO_REGISTER_MODE_   = &video_register_mode;
+const int16_t  *VIDEO_REGISTER_WIDTH_  = &video_register_width;
+const int16_t  *VIDEO_REGISTER_HEIGHT_ = &video_register_height;
 
-MEMORY_STATIC_ASSERT(VIDEO_RENDER_ERRORS_ADDRESS, uint32_t);
-MEMORY_STATIC_ASSERT(VIDEO_WIDTH_ADDRESS, const int16_t);
-MEMORY_STATIC_ASSERT(VIDEO_HEIGHT_ADDRESS, const int16_t);
-MEMORY_STATIC_ASSERT(VIDEO_MODE_ADDRESS, const uint8_t);
 
 //------------------------------------------------------------------------------
 
 void VideoInit(void)
-{ VideoSetMode(VIDEO_MODE_DEFAULT);
+{ VideoMode(VIDEO_MODE_DEFAULT);
 
   // We need to reset the attributes...
   int attr_offset = VideoAttributeOffset();
   int attr = COLOR_PALETTE16[1] << 4 | COLOR_PALETTE16[0];
-  memset(VIDEO_FRAMEBUFFER + attr_offset, attr, VIDEO_SIZE - attr_offset);
+  memset(VIDEO_BUFFER + attr_offset, attr, VIDEO_SIZE - attr_offset);
 }
 
 //#include <string.h>
@@ -33,7 +29,7 @@ void VideoReset(void)
 
    // Clear the glyphs
    int attr_offset = VideoAttributeOffset();
-   memset(VIDEO_FRAMEBUFFER, 0, attr_offset);
+   memset(VIDEO_BUFFER, 0, attr_offset);
 }
 
 int VideoGetPixel_(int x, int y)
@@ -43,8 +39,9 @@ void VideoSetPixel_(int x, int y, int color)
 { VideoSetPixel_inline_(x,y, color); }
 
 
-int VideoModeResolution(uint8_t mode)
+int VideoMode_(int mode)
 {
+   if (mode < 0 || mode > 255) return 0;
    unsigned element_descriptor = (mode >> 4) & 0x7;
    if (element_descriptor == 6) return 0; // descriptor should not be 6
    unsigned attribute_bit = mode >> 7;
@@ -59,7 +56,7 @@ int VideoModeResolution(uint8_t mode)
 
    // Planar modes (and error case where low_nibble would be 0)
    if (low_nibble <= 8) {
-#if (VIDEO_SIZE_FACTOR_ % 7 != 0)
+#if (VIDEO_FACTOR_ % 7 != 0)
       if (low_nibble == 7) return 0;
 #endif
       return 8 * low_nibble;
@@ -90,10 +87,10 @@ int VideoModeResolution(uint8_t mode)
    return 0;
 }
 
-int VideoSetMode(uint8_t mode)
+int VideoMode(int mode)
 {
    int index;
-   int res = VideoModeResolution(mode);
+   int res = VideoMode_(mode);
    switch (res) {
       case  0: return res;
       case  8: index =  0 * 2; break;
@@ -105,17 +102,15 @@ int VideoSetMode(uint8_t mode)
       case 32: index =  6 * 2; break;
       case 40: index =  7 * 2; break;
       case 48: index =  8 * 2; break;
-#if (VIDEO_SIZE_FACTOR_ % 7 == 0)
+#if (VIDEO_FACTOR_ % 7 == 0)
       case 56: index =  9 * 2; break;
 #endif
       case 64: index = 10 * 2; break;
       default: unreachable();
    }
 
-   // VIDEO_WIDTH,_HEIGHT,_MODE are const, because at any other place, they
-   // should be read-only. But here, we modify them:
-   *(int16_t*)(KonpuMemory + VIDEO_WIDTH_ADDRESS)  = 8 * KonpuROM[KONPU_ROM_RESOLUTION + index];
-   *(int16_t*)(KonpuMemory + VIDEO_HEIGHT_ADDRESS) = 8 * KonpuROM[KONPU_ROM_RESOLUTION + index + 1];
-   KonpuMemory[VIDEO_MODE_ADDRESS] = mode;
+   video_register_width  = 8 * ROM[ROM_RESOLUTION + index];
+   video_register_height = 8 * ROM[ROM_RESOLUTION + index + 1];
+   video_register_mode   = mode;
    return res;
 }

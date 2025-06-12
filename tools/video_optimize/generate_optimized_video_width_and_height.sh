@@ -41,12 +41,12 @@ gen_code() {
 echo '// THIS PREPROCESSOR CODE IS AUTO-GENERATED (see tools)'
 echo '// DO NOT EDIT / DO NOT INCLUDE DIRECTLY'
 echo
-echo '#if   VIDEO_SIZE_FACTOR_ == 7'; gen_code modes_factor7.txt
-echo '#elif VIDEO_SIZE_FACTOR_ == 6'; gen_code modes_factor6.txt
-echo '#elif VIDEO_SIZE_FACTOR_ == 5'; gen_code modes_factor5.txt
-echo '#elif VIDEO_SIZE_FACTOR_ == 3'; gen_code modes_factor4.txt
-echo '#elif VIDEO_SIZE_FACTOR_ == 3'; gen_code modes_factor3.txt
-echo '#elif VIDEO_SIZE_FACTOR_ == 2'; gen_code modes_factor2.txt
+echo '#if   VIDEO_FACTOR_ == 7'; gen_code modes_factor7.txt
+echo '#elif VIDEO_FACTOR_ == 6'; gen_code modes_factor6.txt
+echo '#elif VIDEO_FACTOR_ == 5'; gen_code modes_factor5.txt
+echo '#elif VIDEO_FACTOR_ == 3'; gen_code modes_factor4.txt
+echo '#elif VIDEO_FACTOR_ == 3'; gen_code modes_factor3.txt
+echo '#elif VIDEO_FACTOR_ == 2'; gen_code modes_factor2.txt
 echo '#elif defined(KONPU_OPTION_OPTIMIZE_VIDEO_MODE)'
-echo '#  error "KONPU_OPTION_OPTIMIZE_VIDEO_MODE cannot be used with this VIDEO_SIZE_FACTOR_"'
-echo '#endif //VIDEO_SIZE_FACTOR_'
+echo '#  error "KONPU_OPTION_OPTIMIZE_VIDEO_MODE cannot be used with this VIDEO_FACTOR_"'
+echo '#endif //VIDEO_FACTOR_'

@@ -1,11 +1,5 @@
 #include "stack.h"
 
-// Static checks of memory addresses
-#include "memory_.h"
-MEMORY_STATIC_ASSERT(STACK_VAR_ADDRESS, var);
-MEMORY_STATIC_ASSERT(STACK_TYPE_ADDRESS, Type);
-MEMORY_STATIC_ASSERT(STACK_SIZE_ADDRESS, int16_t);
-
 // void StackInit(void)
 // { memset(STACK_MEMORY, 0, STACK_MEMORY_OVERFLOW - STACK_MEMORY); }
 

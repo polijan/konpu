@@ -1,14 +1,11 @@
-#include "memory.h"
+#include "rom.h"
 
-// Definition of Konpu's RAM memory
-alignas(max_align_t)
-#if defined(__GNUC__)
-    __attribute__((__may_alias__))
-#endif
-uint8_t KonpuMemory[KONPU_MEMORY_SIZE];
+//------------------------------------------------------------------------------
+// Include things we need to stuff into the ROM
+//------------------------------------------------------------------------------
+#include "video_mode.h"
 
-
-// Include constants glyph definition but prevent inclusion of glyph.h
+// Constants glyph definition (but prevent inclusion of glyph.h)
 #define KONPU_GLYPH_H_
 #define GLYPH8(hex)   ((uint8_t)0x##hex##U)
 #define GLYPH16(hex)  ((uint16_t)0x##hex##U)
@@ -17,21 +14,38 @@ uint8_t KonpuMemory[KONPU_MEMORY_SIZE];
 #include "glyph_constants/glyph_ascii.h"
 #include "glyph_constants/glyph_tokipona.h"
 
+//------------------------------------------------------------------------------
+// Static checks on the ROM addresses to verify their aligments if they
+// may hold something else than just raw bytes.
+//------------------------------------------------------------------------------
+
+// static_assert(ROM_FONT % alignof(uint64_t) == 0);
+
+
+//------------------------------------------------------------------------------
 // Definition of Konpu's ROM and its content
+//------------------------------------------------------------------------------
 alignas(max_align_t)
 #if defined(__GNUC__)
     __attribute__((__may_alias__))
 #endif
-const uint8_t KonpuROM[KONPU_ROM_SIZE] = {
-   // Konpu Version:
+const uint8_t ROM[ROM_SIZE] = {
+
+   //---------------------------------------------------------------------------
+   // ROM Section: Version
+   //---------------------------------------------------------------------------
    KONPU_VERSION_MAJOR, // Major
    KONPU_VERSION_MINOR, // Minor
    // Patch (encoded as 16-bit LITTLE endian):
    (KONPU_VERSION_PATCH & 0xFF), (KONPU_VERSION_PATCH >> 8),
 
-   // Possible Framebuffer Resolutions (size in 8x8 cells)
+   //---------------------------------------------------------------------------
+   // ROM Section: Resolution
+   //
+   // This gives the possible Framebuffer Resolutions (size in 8x8 cells)
    // (framebuffer "factor" --> see: tools/resfinder)
-#if VIDEO_SIZE_FACTOR_ == 7
+   //---------------------------------------------------------------------------
+#if VIDEO_FACTOR_ == 7
    // 20160 bytes (~19.7Kb) -- also allow 7 bitplanes
 
    //------..---------.--------.-----.-----------------------------------------
@@ -50,7 +64,7 @@ const uint8_t KonpuROM[KONPU_ROM_SIZE] = {
    28, 15, // 224x120 |1.86666 |48| 6 bitplanes, i.e.  64 colors
    24, 15, // 192x120 |1.6     |56| 7 bitplanes, i.e. 128 colors
    21, 15, // 168x120 |1.4     |64| 256-color byte pixels / 8 bitplanes
-#elif VIDEO_SIZE_FACTOR_ == 6
+#elif VIDEO_FACTOR_ == 6
    // 17280 bytes (~16.9Kb)
    // this factor lends itself well to favor wide ratio (1.6 - 1.875)
    // exception the default for 256 color mode, but even then it could be
@@ -66,22 +80,22 @@ const uint8_t KonpuROM[KONPU_ROM_SIZE] = {
    24, 15, // 192x120 |1.6     |48|
     0,  0, // > NOT AVAILABLE <|56|
    18, 15, // 144x120 |1.2     |64|
-#elif VIDEO_SIZE_FACTOR_ == 5
+#elif VIDEO_FACTOR_ == 5
    // 14400 bytes (~14Kb)            odd (in mode <= 24)
    50, 36, // 400x288 |1.38888 | 8|
    50, 32, // 400x256 |1.5265  | 9|
- 45, 32, // 360x256 |1.40625 |10|  *
-//   48, 30, // 384x240 |1.6     |10|
+   45, 32, // 360x256 |1.40625 |10|  *
+// 48, 30, // 384x240 |1.6     |10|
    40, 30, // 320x240 |1.33333 |12|
- 36, 25, // 288x200 |1.44    |16|  *
-//   30, 30, // 240x240 | 1      |16|
+   36, 25, // 288x200 |1.44    |16|  *
+// 30, 30, // 240x240 | 1      |16|
    30, 20, // 240x160 |1.5     |24|
    25, 18, // 200x144 |1.38888 |32|
    24, 15, // 192x120 |1.6     |40|
    20, 15, // 160x120 |1.33333 |48|
     0,  0, // > NOT AVAILABLE <|56|
    15, 15, // 120x120 |1       |64|  144x100px (AR=1.44) common for 256c pixels
-#elif VIDEO_SIZE_FACTOR_ == 4
+#elif VIDEO_FACTOR_ == 4
    // 11520 bytes (~11.25Kb)
    // this factor lends itself well to favor almost square ratios (1.06 - 1-25)
    40, 36, // 320x288 |1.11111 | 8|
@@ -95,7 +109,7 @@ const uint8_t KonpuROM[KONPU_ROM_SIZE] = {
    16, 15, // 128x120 |1.06666 |48|
     0,  0, // > NOT AVAILABLE <|56|
    15, 12, // 120x96  |1.25    |64|
-#elif VIDEO_SIZE_FACTOR_ == 3
+#elif VIDEO_FACTOR_ == 3
    // 8640 bytes (~8.4Kb)
    40, 27, // 320x216 |1.48148 | 8|  *
    40, 24, // 320x192 |1.66666 | 9|
@@ -108,7 +122,7 @@ const uint8_t KonpuROM[KONPU_ROM_SIZE] = {
    18, 10, // 144x80  |1.8     |48|
     0,  0, // > NOT AVAILABLE <|56|
    15,  9, // 120x172 |1.66666 |64|
-#elif VIDEO_SIZE_FACTOR_ == 2
+#elif VIDEO_FACTOR_ == 2
    // 5760 bytes (~5.6Kb)
    36, 20, // 288x160 |1.8     | 8|
    32, 20, // 256x160 |1.6     | 9|
@@ -122,7 +136,7 @@ const uint8_t KonpuROM[KONPU_ROM_SIZE] = {
     0,  0, // > NOT AVAILABLE <|56|
    10,  9, //  80x72  |1.11111 |64|
 #else
-#   error "This VIDEO_SIZE_FACTOR_ is not implemented"
+#   error "This VIDEO_FACTOR_ is not implemented"
    ??, ??, // ???x??? |?       | 8|
    ??, ??, // ???x??? |?       | 9|
    ??, ??, // ???x??? |?       |10|
@@ -136,11 +150,15 @@ const uint8_t KonpuROM[KONPU_ROM_SIZE] = {
    ??, ??, // ???x??? |?       |64|
 #endif
 
-   // Color Palette: OkLab components multiplied by 510 and rounded to 8-bits
+   //---------------------------------------------------------------------------
+   // ROM Section: Color
+   //
+   // OkLab components multiplied by 510 and rounded to 8-bits
    // + space-partitioning k-d tree info on the palette in L,a,b space [note:
    // (median) color 127 means no child node] + 8-bits gamma sRGB components.
    // Generated by `kule-generate-konpu-rom` (see: tools/kule).
    //
+   //---------------------------------------------------------------------------
    // Color #|OkLab: L/2, a-12,  b+30 |kd: left, right |RGB: R,   G,   B
    //--------|------------------------|----------------|-----------------
    /*    0  */         0,  -12,   30  ,     127, 127   ,     0,   0,   0,
@@ -400,12 +418,17 @@ const uint8_t KonpuROM[KONPU_ROM_SIZE] = {
    /*  254  */       245,  -16,   58  ,     127, 127   ,   251, 243, 200,
    /*  255  */       255,  -12,   30  ,     127, 127   ,   255, 255, 255,
 
+   //---------------------------------------------------------------------------
+   // ROM Section: Palette
+   //---------------------------------------------------------------------------
    // Default 2-color palette:
-     3, 254, //2, 250,
+   11, 254,
+   //darblue/lgith yellow: more extreme: 3, 254,
+   //2, 250,
    // Default 4-color palette:
-     8, 240, 187, 183,
+   32, 252, 145, 181,  // marine blue, light yellow, red, cyan    //8, 240, 187, 183,
    // Default 8-color palette:
-     6,   7,   8,   9,  10,  11,  12,  13,
+   20, 102, 179, 241, 175, 114, 164, 255,
    // Default 16-color palette:
       2, 199, 198, 226,  20, 107, 121, 227,
      90, 162, 249, 251, 105, 143, 144, 245,
@@ -421,14 +444,15 @@ const uint8_t KonpuROM[KONPU_ROM_SIZE] = {
    126, 127,
 
 
-// FONTS: Add glyphs in LITTLE ENDIAN
-#define ADD_GLYPH8(X)     X
-#define ADD_GLYPH16(X)    (X & 0xFFu), ((X>>8) & 0xFFu)
-#define ADD_GLYPH32(X)                                                         \
-   (X & 0xFFu), ((X>>8) & 0xFFu), ((X>>16) & 0xFFu), ((X>>24) & 0xFFu)
-#define ADD_GLYPH64(X)                                                         \
-   (X & 0xFFu),       ((X>>8) & 0xFFu),  ((X>>16) & 0xFFu), ((X>>24) & 0xFFu), \
-   ((X>>32) & 0xFFu), ((X>>40) & 0xFFu), ((X>>48) & 0xFFu), ((X>>56) & 0xFFu)
+   //---------------------------------------------------------------------------
+   // ROM Section: Font
+   //---------------------------------------------------------------------------
+   // Macro helpers to add Glyphs in LITTLE ENDIAN.
+#  define ADD_GLYPH8(X)   X
+#  define ADD_GLYPH16(X)  (X & 0xFFu), ((X>>8) & 0xFFu)
+#  define ADD_GLYPH32(X)  ADD_GLYPH16(X), ((X>>16) & 0xFFu), ((X>>24) & 0xFFu)
+#  define ADD_GLYPH64(X)  ADD_GLYPH32(X), ((X>>32) & 0xFFu), ((X>>40) & 0xFFu),\
+                                          ((X>>48) & 0xFFu), ((X>>56) & 0xFFu)
 
    // ASCII4's printable ascii (characters 32-126)
 #  define ASCII4(g)  ADD_GLYPH16(UTIL_CAT(GLYPH16_ASCII4_, g))
@@ -478,30 +502,8 @@ const uint8_t KonpuROM[KONPU_ROM_SIZE] = {
    ASCII5(LEFT_CURLY_BACKET), ASCII5(VERTICAL_BAR), ASCII5(RIGHT_CURLY_BRACKET),
    ASCII5(TILDE),
 
-   // Sitelen Pona characters, height 5 (pu120:ale-wile, pu+3:kin/namako/oko)
-#  define SP5(g)   ADD_GLYPH64(UTIL_CAT(GLYPH64_TOKIPONA6_, g))
-   SP5(A), SP5(AKESI), SP5(ALA), SP5(ALASA), SP5(ALE), SP5(ANPA), SP5(ANTE),
-   SP5(ANU), SP5(AWEN), SP5(E), SP5(EN), SP5(ESUN), SP5(IJO), SP5(IKE),
-   SP5(ILO), SP5(INSA), SP5(JAKI), SP5(JAN), SP5(JELO), SP5(JO), SP5(KALA),
-   SP5(KALAMA), SP5(KAMA), SP5(KASI), SP5(KEN), SP5(KEPEKEN), SP5(KILI),
-   SP5(KIWEN), SP5(KO), SP5(KON), SP5(KULE), SP5(KULUPU), SP5(KUTE), SP5(LA),
-   SP5(LAPE), SP5(LASO), SP5(LAWA), SP5(LEN), SP5(LETE), SP5(LI), SP5(LILI),
-   SP5(LINJA), SP5(LIPU), SP5(LOJE), SP5(LON), SP5(LUKA), SP5(LUKIN), SP5(LUPA),
-   SP5(MA), SP5(MAMA), SP5(MANI), SP5(MELI), SP5(MI), SP5(MIJE), SP5(MOKU),
-   SP5(MOLI), SP5(MONSI), SP5(MU), SP5(MUN), SP5(MUSI), SP5(MUTE), SP5(NANPA),
-   SP5(NASA), SP5(NASIN), SP5(NENA), SP5(NI), SP5(NIMI), SP5(NOKA), SP5(O),
-   SP5(OLIN), SP5(ONA), SP5(OPEN), SP5(PAKALA), SP5(PALI), SP5(PALISA),
-   SP5(PAN), SP5(PANA), SP5(PI), SP5(PILIN), SP5(PIMEJA), SP5(PINI), SP5(PIPI),
-   SP5(POKA), SP5(POKI), SP5(PONA), SP5(PU), SP5(SAMA), SP5(SELI), SP5(SELO),
-   SP5(SEME), SP5(SEWI), SP5(SIJELO), SP5(SIKE), SP5(SIN), SP5(SINA),
-   SP5(SINPIN), SP5(SITELEN), SP5(SONA), SP5(SOWELI), SP5(SULI), SP5(SUNO),
-   SP5(SUPA), SP5(SUWI), SP5(TAN), SP5(TASO), SP5(TAWA), SP5(TELO), SP5(TENPO),
-   SP5(TOKI), SP5(TOMO), SP5(TU), SP5(UNPA), SP5(UTA), SP5(UTALA), SP5(WALO),
-   SP5(WAN), SP5(WASO), SP5(WAWA), SP5(WEKA), SP5(WILE), SP5(KIN), SP5(NAMAKO),
-   SP5(OKO),
-
-   // ASCII7's printable ascii (characters 32-126)
-#  define ASCII6(g)  ADD_GLYPH32(UTIL_CAT(GLYPH32_ASCII6_, g))
+   // ASCII6's printable ascii (characters 32-126)
+   #  define ASCII6(g)  ADD_GLYPH32(UTIL_CAT(GLYPH32_ASCII6_, g))
    ASCII6(SPACE), ASCII6(EXCLAMATION_MARK), ASCII6(DOUBLE_QUOTE),
    ASCII6(HASHTAG), ASCII6(DOLLAR_SIGN), ASCII6(PERCENT_SIGN),
    ASCII6(AMPERSAND), ASCII6(SINGLE_QUOTE), ASCII6(LEFT_PARENTHESIS),
@@ -524,29 +526,7 @@ const uint8_t KonpuROM[KONPU_ROM_SIZE] = {
    ASCII6(LEFT_CURLY_BACKET), ASCII6(VERTICAL_BAR), ASCII6(RIGHT_CURLY_BRACKET),
    ASCII6(TILDE),
 
-   // Sitelen Pona characters, height 6 (pu120:ale-wile, pu+3:kin/namako/oko)
-#  define SP6(g)   ADD_GLYPH64(UTIL_CAT(GLYPH64_TOKIPONA6_, g))
-   SP6(A), SP6(AKESI), SP6(ALA), SP6(ALASA), SP6(ALE), SP6(ANPA), SP6(ANTE),
-   SP6(ANU), SP6(AWEN), SP6(E), SP6(EN), SP6(ESUN), SP6(IJO), SP6(IKE),
-   SP6(ILO), SP6(INSA), SP6(JAKI), SP6(JAN), SP6(JELO), SP6(JO), SP6(KALA),
-   SP6(KALAMA), SP6(KAMA), SP6(KASI), SP6(KEN), SP6(KEPEKEN), SP6(KILI),
-   SP6(KIWEN), SP6(KO), SP6(KON), SP6(KULE), SP6(KULUPU), SP6(KUTE), SP6(LA),
-   SP6(LAPE), SP6(LASO), SP6(LAWA), SP6(LEN), SP6(LETE), SP6(LI), SP6(LILI),
-   SP6(LINJA), SP6(LIPU), SP6(LOJE), SP6(LON), SP6(LUKA), SP6(LUKIN), SP6(LUPA),
-   SP6(MA), SP6(MAMA), SP6(MANI), SP6(MELI), SP6(MI), SP6(MIJE), SP6(MOKU),
-   SP6(MOLI), SP6(MONSI), SP6(MU), SP6(MUN), SP6(MUSI), SP6(MUTE), SP6(NANPA),
-   SP6(NASA), SP6(NASIN), SP6(NENA), SP6(NI), SP6(NIMI), SP6(NOKA), SP6(O),
-   SP6(OLIN), SP6(ONA), SP6(OPEN), SP6(PAKALA), SP6(PALI), SP6(PALISA),
-   SP6(PAN), SP6(PANA), SP6(PI), SP6(PILIN), SP6(PIMEJA), SP6(PINI), SP6(PIPI),
-   SP6(POKA), SP6(POKI), SP6(PONA), SP6(PU), SP6(SAMA), SP6(SELI), SP6(SELO),
-   SP6(SEME), SP6(SEWI), SP6(SIJELO), SP6(SIKE), SP6(SIN), SP6(SINA),
-   SP6(SINPIN), SP6(SITELEN), SP6(SONA), SP6(SOWELI), SP6(SULI), SP6(SUNO),
-   SP6(SUPA), SP6(SUWI), SP6(TAN), SP6(TASO), SP6(TAWA), SP6(TELO), SP6(TENPO),
-   SP6(TOKI), SP6(TOMO), SP6(TU), SP6(UNPA), SP6(UTA), SP6(UTALA), SP6(WALO),
-   SP6(WAN), SP6(WASO), SP6(WAWA), SP6(WEKA), SP6(WILE), SP6(KIN), SP6(NAMAKO),
-   SP6(OKO),
-
-   // ASCII7's printable ascii (characters 32-126)
+      // ASCII7's printable ascii (characters 32-126)
 #  define ASCII7(g)  ADD_GLYPH32(UTIL_CAT(GLYPH32_ASCII7_, g))
    ASCII7(SPACE), ASCII7(EXCLAMATION_MARK), ASCII7(DOUBLE_QUOTE),
    ASCII7(HASHTAG), ASCII7(DOLLAR_SIGN), ASCII7(PERCENT_SIGN),
@@ -570,6 +550,50 @@ const uint8_t KonpuROM[KONPU_ROM_SIZE] = {
    ASCII7(LEFT_CURLY_BACKET), ASCII7(VERTICAL_BAR), ASCII7(RIGHT_CURLY_BRACKET),
    ASCII7(TILDE),
 
+   // Sitelen Pona characters, height 5 (pu120:ale-wile, pu+3:kin/namako/oko)
+#  define SP5(g)   ADD_GLYPH64(UTIL_CAT(GLYPH64_TOKIPONA6_, g))
+   SP5(A), SP5(AKESI), SP5(ALA), SP5(ALASA), SP5(ALE), SP5(ANPA), SP5(ANTE),
+   SP5(ANU), SP5(AWEN), SP5(E), SP5(EN), SP5(ESUN), SP5(IJO), SP5(IKE),
+   SP5(ILO), SP5(INSA), SP5(JAKI), SP5(JAN), SP5(JELO), SP5(JO), SP5(KALA),
+   SP5(KALAMA), SP5(KAMA), SP5(KASI), SP5(KEN), SP5(KEPEKEN), SP5(KILI),
+   SP5(KIWEN), SP5(KO), SP5(KON), SP5(KULE), SP5(KULUPU), SP5(KUTE), SP5(LA),
+   SP5(LAPE), SP5(LASO), SP5(LAWA), SP5(LEN), SP5(LETE), SP5(LI), SP5(LILI),
+   SP5(LINJA), SP5(LIPU), SP5(LOJE), SP5(LON), SP5(LUKA), SP5(LUKIN), SP5(LUPA),
+   SP5(MA), SP5(MAMA), SP5(MANI), SP5(MELI), SP5(MI), SP5(MIJE), SP5(MOKU),
+   SP5(MOLI), SP5(MONSI), SP5(MU), SP5(MUN), SP5(MUSI), SP5(MUTE), SP5(NANPA),
+   SP5(NASA), SP5(NASIN), SP5(NENA), SP5(NI), SP5(NIMI), SP5(NOKA), SP5(O),
+   SP5(OLIN), SP5(ONA), SP5(OPEN), SP5(PAKALA), SP5(PALI), SP5(PALISA),
+   SP5(PAN), SP5(PANA), SP5(PI), SP5(PILIN), SP5(PIMEJA), SP5(PINI), SP5(PIPI),
+   SP5(POKA), SP5(POKI), SP5(PONA), SP5(PU), SP5(SAMA), SP5(SELI), SP5(SELO),
+   SP5(SEME), SP5(SEWI), SP5(SIJELO), SP5(SIKE), SP5(SIN), SP5(SINA),
+   SP5(SINPIN), SP5(SITELEN), SP5(SONA), SP5(SOWELI), SP5(SULI), SP5(SUNO),
+   SP5(SUPA), SP5(SUWI), SP5(TAN), SP5(TASO), SP5(TAWA), SP5(TELO), SP5(TENPO),
+   SP5(TOKI), SP5(TOMO), SP5(TU), SP5(UNPA), SP5(UTA), SP5(UTALA), SP5(WALO),
+   SP5(WAN), SP5(WASO), SP5(WAWA), SP5(WEKA), SP5(WILE), SP5(KIN), SP5(NAMAKO),
+   SP5(OKO),
+
+   // Sitelen Pona characters, height 6 (pu120:ale-wile, pu+3:kin/namako/oko)
+#  define SP6(g)   ADD_GLYPH64(UTIL_CAT(GLYPH64_TOKIPONA6_, g))
+   SP6(A), SP6(AKESI), SP6(ALA), SP6(ALASA), SP6(ALE), SP6(ANPA), SP6(ANTE),
+   SP6(ANU), SP6(AWEN), SP6(E), SP6(EN), SP6(ESUN), SP6(IJO), SP6(IKE),
+   SP6(ILO), SP6(INSA), SP6(JAKI), SP6(JAN), SP6(JELO), SP6(JO), SP6(KALA),
+   SP6(KALAMA), SP6(KAMA), SP6(KASI), SP6(KEN), SP6(KEPEKEN), SP6(KILI),
+   SP6(KIWEN), SP6(KO), SP6(KON), SP6(KULE), SP6(KULUPU), SP6(KUTE), SP6(LA),
+   SP6(LAPE), SP6(LASO), SP6(LAWA), SP6(LEN), SP6(LETE), SP6(LI), SP6(LILI),
+   SP6(LINJA), SP6(LIPU), SP6(LOJE), SP6(LON), SP6(LUKA), SP6(LUKIN), SP6(LUPA),
+   SP6(MA), SP6(MAMA), SP6(MANI), SP6(MELI), SP6(MI), SP6(MIJE), SP6(MOKU),
+   SP6(MOLI), SP6(MONSI), SP6(MU), SP6(MUN), SP6(MUSI), SP6(MUTE), SP6(NANPA),
+   SP6(NASA), SP6(NASIN), SP6(NENA), SP6(NI), SP6(NIMI), SP6(NOKA), SP6(O),
+   SP6(OLIN), SP6(ONA), SP6(OPEN), SP6(PAKALA), SP6(PALI), SP6(PALISA),
+   SP6(PAN), SP6(PANA), SP6(PI), SP6(PILIN), SP6(PIMEJA), SP6(PINI), SP6(PIPI),
+   SP6(POKA), SP6(POKI), SP6(PONA), SP6(PU), SP6(SAMA), SP6(SELI), SP6(SELO),
+   SP6(SEME), SP6(SEWI), SP6(SIJELO), SP6(SIKE), SP6(SIN), SP6(SINA),
+   SP6(SINPIN), SP6(SITELEN), SP6(SONA), SP6(SOWELI), SP6(SULI), SP6(SUNO),
+   SP6(SUPA), SP6(SUWI), SP6(TAN), SP6(TASO), SP6(TAWA), SP6(TELO), SP6(TENPO),
+   SP6(TOKI), SP6(TOMO), SP6(TU), SP6(UNPA), SP6(UTA), SP6(UTALA), SP6(WALO),
+   SP6(WAN), SP6(WASO), SP6(WAWA), SP6(WEKA), SP6(WILE), SP6(KIN), SP6(NAMAKO),
+   SP6(OKO),
+
    // Sitelen Pona characters, height 7 (pu120:ale-wile, pu+3:kin/namako/oko)
 #  define SP7(g)   ADD_GLYPH64(UTIL_CAT(GLYPH64_TOKIPONA7_, g))
    SP7(A), SP7(AKESI), SP7(ALA), SP7(ALASA), SP7(ALE), SP7(ANPA), SP7(ANTE),
@@ -592,10 +616,12 @@ const uint8_t KonpuROM[KONPU_ROM_SIZE] = {
    SP7(WAN), SP7(WASO), SP7(WAWA), SP7(WEKA), SP7(WILE), SP7(KIN), SP7(NAMAKO),
    SP7(OKO),
 
-
+   //---------------------------------------------------------------------------
+   // ROM Section: Wav Header
+   //
    // Wav format header, see: http://soundfile.sapp.org/doc/WaveFormat/
    // numbers are in little endian in the wav file (it doesn't matter)
-   //
+   //---------------------------------------------------------------------------
    // "RIFF" chunk description:
     'R', 'I', 'F', 'F',  // ChunkID       -> "RIFF"
    0xff,0xff,0xff,0xff,  // ChunkSize     -> (*)
@@ -618,29 +644,24 @@ const uint8_t KonpuROM[KONPU_ROM_SIZE] = {
    //     Software dealing with WAV know this means the rest of the file.
 
 
-
-
+   //---------------------------------------------------------------------------
+   // ROM Section: ...
+   //---------------------------------------------------------------------------
    // Static Strings...
-
    // Error Messages strings
 /*
    ALE,LI,PONA, 0
    PAKALA,A,'.',MI,SONA,ALA,E,TAN, ' ','(','U','n','k','n','o','w','n',' ','E','r','r','o','r',')','\0',
 
 
-
  ' ','(','N','o',' ','E','r','r','o','r',')','\0',
    PAKALA,A, MI,SONA,ALA,E,TAN, ' ','(','U','n','k','n','o','w','n',' ','E','r','r','o','r',')','\0',
 */
 
-   // Konpu URL strings
+   //---------------------------------------------------------------------------
+   // ROM Section: URL
+   //---------------------------------------------------------------------------
    'h','t','t','p','s',':','/','/','g','i','t','h','u','b','.','c','o','m','/',
    'p','o','l','i','j','a','n','/','k','o','n','p','u','\0',
+
 };
-
-
-// Static checks on the ROM for alignement:
-#include "memory_.h"
-// TODO: the fonts need to be properly aligned for retrieval as Glyph16,32,64, etc.
-//       if we don't retrieve the glyphs just byte per byte.
-// MEMORY_STATIC_ASSERT(KONPU_ROM_FONT, uint64_t);

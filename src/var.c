@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <inttypes.h>
 
-#include "memory.h"
+#include "ram.h"
 #include "error.h"
 
 void VarPrintTTY(var v, Type t)
@@ -28,14 +28,13 @@ void VarPrintTTY(var v, Type t)
       printf("&%05"PRIx32, (uint32_t)(v.address));
       if (v.address < 0)  {
          printf(" (underflow)");
-      } else if (v.address > KONPU_MEMORY_SIZE) {
+      } else if (v.address > RAM_SIZE) {
          printf(" (overflow)");
       }
       break;
    case TYPE_HEAP_ADDRESS:
       printf("@%04"PRIx16" (&%05"PRIx32")",
-                  v.uint16,
-                  HEAP_ADDRESS + 8 * (uint32_t)(v.uint16));
+                  v.uint16, RAM_HEAP + 8 * (uint32_t)(v.uint16));
       break;
    case TYPE_POINTER:
       printf("%p", v.pointer); break;

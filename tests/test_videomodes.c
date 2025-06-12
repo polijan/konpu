@@ -16,16 +16,16 @@ static const char *testDefaultVideoMode(void)
 static const char *testVideoModes(void)
 {
    for (int i = 0; i < 255; i++) {
-      if (! VideoSetMode(i)) continue;
+      if (! VideoMode(i)) continue;
       TestTrace("mode:%3d, res:%3dx%3d, ", i, VIDEO_WIDTH, VIDEO_HEIGHT);
 
       if (VideoModeHasAttributes()) { // glyph + attributes
          // framebuffer first stores the glyphs...
-         int glyph_sz = (1 << VideoModeElementDescriptor()) // <- sizeof the glyph
+         int glyph_sz = (1 << VideoModeDimension()) // <- sizeof the glyph
                       * VIDEO_WIDTH  / (1 << VideoGlyphLog2Width())
                       * VIDEO_HEIGHT / (1 << VideoGlyphLog2Height());
          TestTrace("buffer: glyph%03d[%3dx%3d]:%5d ",
-            8 * (1 << VideoModeElementDescriptor()),
+            8 * (1 << VideoModeDimension()),
             VIDEO_WIDTH  / (1 << VideoGlyphLog2Width()),
             VIDEO_HEIGHT / (1 << VideoGlyphLog2Height()),
             glyph_sz
@@ -35,7 +35,7 @@ static const char *testVideoModes(void)
                      * VIDEO_WIDTH   / (1 << AttributeWidthLog2())
                      * VIDEO_HEIGHT  / (1 << AttributeHeightLog2());
          TestTrace("+ attr%02d[%3dx%3d]x%d:%5d ",
-            8 * (1 << AttributePixelSize()),
+            8 * (1 << AttributeDimension()),
             VIDEO_WIDTH  / (1 << AttributeWidthLog2()),
             VIDEO_HEIGHT / (1 << AttributeHeightLog2()),
             1 <<  AttributeHasTwoBytes(),
@@ -53,20 +53,20 @@ static const char *testVideoModes(void)
             int pixel_sz = VIDEO_WIDTH * VIDEO_HEIGHT * bpp / 8;
             TestTrace("buffer: pixels(%d bpp) => %5d (vs %5d)\n", bpp, pixel_sz, VIDEO_SIZE);
             TestAssert("size of packed pixels vs framebuffer size", pixel_sz == VIDEO_SIZE);
-         } else if (VideoModeElementDescriptor() == PIXELS) {
+         } else if (VideoModeDimension() == PIXELS) {
             // planar pixels
             int pixel_sz = VIDEO_WIDTH * VIDEO_HEIGHT * planes / 8;
             TestTrace("planar pixels (x%d) => %5d (vs %5d)\n", planes, pixel_sz, VIDEO_SIZE);
             TestAssert("size of planar pixels vs framebuffer size", pixel_sz == VIDEO_SIZE);
          } else {
             // planar glyphs
-            int glyph_sz = (1 << VideoModeElementDescriptor())
+            int glyph_sz = (1 << VideoModeDimension())
                          * VIDEO_WIDTH  / (1 << VideoGlyphLog2Width())
                          * VIDEO_HEIGHT / (1 << VideoGlyphLog2Height())
                          * planes;
             TestTrace("planar glyphs (%d x glyph%03d[%3dx%3d]) => %5d (vs %5d)\n",
                   planes,
-                  8 * (1 << VideoModeElementDescriptor()),
+                  8 * (1 << VideoModeDimension()),
                   VIDEO_WIDTH  / (1 << VideoGlyphLog2Width()),
                   VIDEO_HEIGHT / (1 << VideoGlyphLog2Height()),
                   glyph_sz, VIDEO_SIZE

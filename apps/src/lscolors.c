@@ -1,51 +1,58 @@
 #include "konpu.h"
 int AppInit(void); // TODO: add this in the generated konpu.h ???
 
-// Booh, Ugly!
-#include <stdlib.h>
-#define SLEEP(n)                          \
-   do {                                   \
-      int ignored = system("sleep " #n);  \
-      (void)ignored;                      \
-   } while(0)
 
-
-// According to Oklab, the closest sRGB color to gray-tone is #636363.
-// The closest Konpu color to that is:
-#define NEUTRAL 53
-
-
-// Show the Konpu colors (256)
-static void kule256(void)
+static void kule(int n, int nx, int ny, uint8_t* palette)
 {
-   // Set a 256-color resolution.
-   // We can use 285x256 and thus display all colors as 16x16 grid using 256x256
-   // We use attribute backgrounds to easily display squares of colors.
-
-   VideoSetMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph64, ATTRIBUTE_8x8_256)); 
-   VideoGlyphSetAll();
-   VideoAttributeSetAll(NEUTRAL);
-
    int color = 0;
-   for (int y = 0; y < 32; y += 2) {
-      for (int x = 0; x < 32; x += 2) {
-         AttributeSetBackground(VideoAttribute(x + 2, y),     color);
-         AttributeSetBackground(VideoAttribute(x + 3, y),     color);
-         AttributeSetBackground(VideoAttribute(x + 2, y + 1), color);
-         AttributeSetBackground(VideoAttribute(x + 3, y + 1), color);
-         color++;
+   for (int y = 0; y < 32; y += 32/ny)
+   for (int x = 0; x < 32; x += 32/nx) {
+      for(int j = 0; j < 32/ny; j++)
+      for(int i = 0; i < 32/nx; i++) {
+         AttributeSetBackground(
+            VideoAttribute(x+2+i, y+j),
+            (palette)? palette[color] : color
+         );
       }
+      color++;
+      if (color >= n) return;
    }
-   assert(color == 256);
 }
 
 int AppInit(void)
 {
+   // According to Oklab, the closest sRGB color to gray-tone is #636363.
+   // The closest Konpu color to that is:
+   #define NEUTRAL 53
+
+   VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph64, ATTRIBUTE_8x8_256));
+   VideoGlyphSetAll();
+   VideoAttributeSetAll(NEUTRAL);
    COLOR_BORDER = NEUTRAL;
 
-   kule256(); 
-   Printer("%d x %d  (color=%d)\n", VIDEO_WIDTH, VIDEO_HEIGHT, 1 << VideoColorDepth());
-   VideoRender(); SLEEP(4);
-
+   int color_log2 = 1;
+   while (true) {
+      switch (color_log2) {
+         case  1: kule( 2, 2, 1, COLOR_PALETTE2);  break;
+         case  2: kule( 4, 2, 2, COLOR_PALETTE4);  break;
+         case  3: kule( 8, 4, 2, COLOR_PALETTE8);  break;
+         case  4: kule(16, 4, 4, COLOR_PALETTE16); break;
+         case  5: kule(32, 4, 8, COLOR_PALETTE32); break;
+         case  6: kule(64, 8, 8, COLOR_PALETTE2);  break; //TODO: Palette64
+         default: kule(256, 16, 16, NULL); break;
+      }
+      VideoRender();
+      TimeSleep(30);
+      KeyUpdate();
+      if (KeyIsTriggered(41)) {
+         return 0;
+      } else if (KeyIsTriggered(79)) {
+         if (color_log2 < 7) color_log2++;
+      } else if (KeyIsTriggered(80)) {
+         if (color_log2 > 1) color_log2--;
+      } else {
+         continue;
+      }
+   }
    return 0;
 }

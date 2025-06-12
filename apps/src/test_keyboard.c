@@ -19,7 +19,7 @@ static void keyboard_draw(void)
 
 int AppInit(void)
 {
-   VideoSetMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph32, ATTRIBUTE_4x8_16));
+   VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph32, ATTRIBUTE_4x8_16));
    VideoGlyphSetAll();
    VideoAttributeSetAll(0x24);
 
@@ -35,11 +35,11 @@ int AppInit(void)
       }
       VideoRender();
       KeyUpdate();
-      TimeSleep(30); 
+      TimeSleep(30);
    }
 
 MOVE:
-   TimeSleep(500); 
+   TimeSleep(500);
    KeyUpdate(); // wait for reset
    int X = VIDEO_WIDTH  >> VideoGlyphLog2Width();
    int Y = VIDEO_HEIGHT >> VideoGlyphLog2Height();
@@ -59,7 +59,7 @@ MOVE:
       *VideoGlyph32(x,y) = GLYPH32_PATTERN_FULL;
       VideoRender();
       KeyUpdate();
-      TimeSleep(30); 
+      TimeSleep(30);
    }
 
 

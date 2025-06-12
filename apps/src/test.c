@@ -13,22 +13,22 @@ int AppInit(void)
    Glyph256 sstoki    = { 0xC131496A320418E0, 0x1F20404040201807,
                           0x00F00C028241C141, 0x00030C1013242724 };
 
-VideoSetMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_8x8_FG256));
- //VideoSetMode(VIDEO_MODE_GLYPH(Glyph128));
-//VideoSetMode(217);
-//VideoSetMode(223); // weird modes with 24x15 glyph256
+VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_8x8_FG256));
+ //VideoMode(VIDEO_MODE_GLYPH(Glyph128));
+//VideoMode(217);
+//VideoMode(223); // weird modes with 24x15 glyph256
 
-//VideoSetMode(209);
+//VideoMode(209);
 
-//   VideoSetMode(185);
-//   VideoSetMode(176);
-//   VideoSetMode(147); // why does it fail? does it? TODO!
+//   VideoMode(185);
+//   VideoMode(176);
+//   VideoMode(147); // why does it fail? does it? TODO!
 
    Printer("Factor:%d Mode:%d -> %dx%d [out of max. %dx%d]\n",
-      VIDEO_SIZE_FACTOR_, VIDEO_MODE,
+      VIDEO_FACTOR_, VIDEO_MODE,
       VIDEO_WIDTH, VIDEO_HEIGHT,
-      VIDEO_MODE_WIDTH_MAX, VIDEO_MODE_HEIGHT_MAX);
-   Printer("ColorDepth: %d\n", VideoColorDepth());
+      VIDEO_MAX_WIDTH, VIDEO_MAX_HEIGHT);
+   Printer("ColorDepth: %d\n", ColorDepth());
 
    Printer("Attributes: starts at %d\n", VideoAttributeOffset());
    Printer("  Log2(width) = %d, Log2(height) = %d, Log2Sizeof ) %d\n",
@@ -39,23 +39,20 @@ VideoSetMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_8x8_FG256));
    COLOR_BORDER = 0;
    for (int i = 0; i < 90; i++) {
       for (int n = 0; n < VideoAttributeOffset(); n++) {
-         VIDEO_FRAMEBUFFER[n] = Random() % 256;
+         VIDEO_BUFFER[n] = Random() % 256;
       }
       VideoRender();
    }
 
    VideoGlyphSetAll(soweli);
    for (int n = VideoAttributeOffset(); n < VIDEO_SIZE; n++) {
-      VIDEO_FRAMEBUFFER[n] = n % 256;
+      VIDEO_BUFFER[n] = n % 256;
    }
    VideoRender();
 
    COLOR_BORDER = 55;
-   int number_of_glyphs = (VIDEO_WIDTH  >> VideoGlyphLog2Width())
-                        * (VIDEO_HEIGHT >> VideoGlyphLog2Height());
-   //assert(number_of_glyphs == VideoGlyphCount()); FIXMEEEE!
-   for (int n = 0; n < number_of_glyphs; n++) {
-      VIDEO_FRAMEBUFFER_AS(Glyph256)[n] = (n%2)? soweli256:sstoki;
+   for (int n = 0; n < VIDEO_COUNT_GLYPH256; n++) {
+      VIDEO_GLYPH256[n] = (n%2)? soweli256:sstoki;
       if (n%8) VideoRender();
    }
 
@@ -64,7 +61,7 @@ VideoSetMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_8x8_FG256));
                                     * (VIDEO_HEIGHT >> AttributeHeightLog2())
                                     ) >> AttributeHasTwoBytes();
    for (int n = 0; n < number_of_attributes_bytes; n++) {
-      VIDEO_FRAMEBUFFER[n + VideoAttributeOffset()] = (n % 16) << 4;
+      VIDEO_BUFFER[n + VideoAttributeOffset()] = (n % 16) << 4;
       if (n % (VIDEO_WIDTH >> AttributeWidthLog2()) == 0) { // <-- once per line
          VideoRender(); TimeSleep(100);
       }

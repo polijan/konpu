@@ -105,19 +105,6 @@ typedef void      Glyph;
 // Measurements
 //------------------------------------------------------------------------------
 
-// Width and Height constants:
-#define GLYPH8_WIDTH          2
-#define GLYPH8_HEIGHT         4
-#define GLYPH16_WIDTH         4
-#define GLYPH16_HEIGHT        4
-#define GLYPH32_WIDTH         4
-#define GLYPH32_HEIGHT        8
-#define GLYPH64_WIDTH         8
-#define GLYPH64_HEIGHT        8
-#define GLYPH128_WIDTH        8
-#define GLYPH128_HEIGHT       16
-#define GLYPH256_WIDTH        16
-#define GLYPH256_HEIGHT       16
 // Log2 constants of Width and Height:
 #define GLYPH8_WIDTH_LOG2     1
 #define GLYPH8_HEIGHT_LOG2    2
@@ -131,47 +118,86 @@ typedef void      Glyph;
 #define GLYPH128_HEIGHT_LOG2  4
 #define GLYPH256_WIDTH_LOG2   4
 #define GLYPH256_HEIGHT_LOG2  4
+// Log2 of Width and Height of Glyphs in the frambuffer:
+#define GLYPH_WIDTH_LOG2      ((VideoModeDimension() + 3) >> 1)
+      // VIDEO_MODE's element dimension: |0|1|2|3|4|5|
+      // log2(glyph width):              |1|2|2|3|3|4| ==> thus: (x+3)/2
+#define GLYPH_HEIGHT_LOG2     (2 + (VideoModeDimension() >> 1))
+      // VIDEO_MODE's element dimension: |0|1|2|3|4|5|
+      // log2(glyph height):             |2|2|3|3|4|4| ==> thus: 2+x/2
+      // The follow could also work:
+      // #define GLYPH_HEIGHT_LOG2  (2 + (VIDEO_MODE >> 5 & 3))
+      // One op less?... however, it's perhaps best to have the same
+      // VideoModeDimension() operation everywhere, so the compiler sees
+      // similarites and optimize?
 
-#define GlyphWidth(glyph)  _Generic((glyph), \
-        uint8_t:  GLYPH8_WIDTH             , \
-        uint16_t: GLYPH16_WIDTH            , \
-        uint32_t: GLYPH32_WIDTH            , \
-        uint64_t: GLYPH64_WIDTH            , \
-        Glyph128: GLYPH128_WIDTH           , \
-        Glyph256: GLYPH256_WIDTH             )
+// Width and Height constants:
+#define GLYPH8_WIDTH          2
+#define GLYPH8_HEIGHT         4
+#define GLYPH16_WIDTH         4
+#define GLYPH16_HEIGHT        4
+#define GLYPH32_WIDTH         4
+#define GLYPH32_HEIGHT        8
+#define GLYPH64_WIDTH         8
+#define GLYPH64_HEIGHT        8
+#define GLYPH128_WIDTH        8
+#define GLYPH128_HEIGHT       16
+#define GLYPH256_WIDTH        16
+#define GLYPH256_HEIGHT       16
+// dynamic:
+#define GLYPH_WIDTH           (1 << GLYPH_WIDTH_LOG2)
+#define GLYPH_HEIGHT          (1 << GLYPH_HEIGHT_LOG2)
 
-#define GlyphHeight(glyph)  _Generic((glyph), \
-        uint8_t:  GLYPH8_HEIGHT             , \
-        uint16_t: GLYPH16_HEIGHT            , \
-        uint32_t: GLYPH32_HEIGHT            , \
-        uint64_t: GLYPH64_HEIGHT            , \
-        Glyph128: GLYPH128_HEIGHT           , \
-        Glyph256: GLYPH256_HEIGHT             )
 
-#define GlyphWidthLog2(glyph)  _Generic((glyph), \
-        uint8_t:  GLYPH8_WIDTH_LOG2            , \
-        uint16_t: GLYPH16_WIDTH_LOG2           , \
-        uint32_t: GLYPH32_WIDTH_LOG2           , \
-        uint64_t: GLYPH64_WIDTH_LOG2           , \
-        Glyph128: GLYPH128_WIDTH_LOG2          , \
-        Glyph256: GLYPH256_WIDTH_LOG2            )
 
-#define GlyphHeightLog2(glyph)  _Generic((glyph), \
-        uint8_t:  GLYPH8_HEIGHT_LOG2            , \
-        uint16_t: GLYPH16_HEIGHT_LOG2           , \
-        uint32_t: GLYPH32_HEIGHT_LOG2           , \
-        uint64_t: GLYPH64_HEIGHT_LOG2           , \
-        Glyph128: GLYPH128_HEIGHT_LOG2          , \
-        Glyph256: GLYPH256_HEIGHT_LOG2            )
+#define GlyphWidth(glyph)         \
+   _Generic((glyph)             , \
+      uint8_t:  GLYPH8_WIDTH    , \
+      uint16_t: GLYPH16_WIDTH   , \
+      uint32_t: GLYPH32_WIDTH   , \
+      uint64_t: GLYPH64_WIDTH   , \
+      Glyph128: GLYPH128_WIDTH  , \
+      Glyph256: GLYPH256_WIDTH  , \
+      void*   : GLYPH_WIDTH     )
 
-#define GlyphIsSquare(glyph)  _Generic((glyph), \
-        uint8_t:  false                       , \
-        uint16_t: true                        , \
-        uint32_t: false                       , \
-        uint64_t: true                        , \
-        Glyph128: false                       , \
-        Glyph256: true                          )
+#define GlyphHeight(glyph)        \
+   _Generic((glyph)             , \
+      uint8_t:  GLYPH8_HEIGHT   , \
+      uint16_t: GLYPH16_HEIGHT  , \
+      uint32_t: GLYPH32_HEIGHT  , \
+      uint64_t: GLYPH64_HEIGHT  , \
+      Glyph128: GLYPH128_HEIGHT , \
+      Glyph256: GLYPH256_HEIGHT , \
+      void*   : GLYPH_HEIGHT    )
 
+#define GlyphWidthLog2(glyph)          \
+   _Generic((glyph)                  , \
+      uint8_t:  GLYPH8_WIDTH_LOG2    , \
+      uint16_t: GLYPH16_WIDTH_LOG2   , \
+      uint32_t: GLYPH32_WIDTH_LOG2   , \
+      uint64_t: GLYPH64_WIDTH_LOG2   , \
+      Glyph128: GLYPH128_WIDTH_LOG2  , \
+      Glyph256: GLYPH256_WIDTH_LOG2  , \
+      void*   : GLYPH_WIDTH_LOG2     )
+
+#define GlyphHeightLog2(glyph)         \
+   _Generic((glyph)                  , \
+      uint8_t:  GLYPH8_HEIGHT_LOG2   , \
+      uint16_t: GLYPH16_HEIGHT_LOG2  , \
+      uint32_t: GLYPH32_HEIGHT_LOG2  , \
+      uint64_t: GLYPH64_HEIGHT_LOG2  , \
+      Glyph128: GLYPH128_HEIGHT_LOG2 , \
+      Glyph256: GLYPH256_HEIGHT_LOG2 , \
+      void *  : GLYPH_HEIGHT_LOG2    )
+
+#define GlyphIsSquare(glyph)  \
+   _Generic((glyph),          \
+      uint8_t:  false       , \
+      uint16_t: true        , \
+      uint32_t: false       , \
+      uint64_t: true        , \
+      Glyph128: false       , \
+      Glyph256: true          )
 
 //------------------------------------------------------------------------------
 // GLYPH<N>(...): Construct a Glyph<N> from literals
@@ -327,7 +353,7 @@ typedef void      Glyph;
         // TODO: should it be const void* ???
         static inline uint64_t GlyphPixelAt_dynamic_(const void *g, int x, int y)
         {
-           switch (VideoModeElementDescriptor()) {
+           switch (VideoModeDimension()) {
                case PIXELS_2x4  : return GlyphPixelAt(*(uint8_t *)g, x, y);
                case PIXELS_4x4  : return GlyphPixelAt(*(uint16_t*)g, x, y);
                case PIXELS_4x8  : return GlyphPixelAt(*(uint32_t*)g, x, y);
@@ -396,7 +422,7 @@ typedef void      Glyph;
    static inline uint64_t GlyphPixelAt_dynamic_(const void *g, int x, int y)
    {
       assert(g != NULL);
-      switch (VideoModeElementDescriptor()) {
+      switch (VideoModeDimension()) {
          case PIXELS_2x4  : return GlyphPixelAt(*(const uint8_t *)g, x, y);
          case PIXELS_4x4  : return GlyphPixelAt(*(const uint16_t*)g, x, y);
          case PIXELS_4x8  : return GlyphPixelAt(*(const uint32_t*)g, x, y);

@@ -1,17 +1,17 @@
-#ifndef  KONPU_STACK_H
-#define  KONPU_STACK_H
-#include "memory.h"
+#ifndef  KONPU_STACK_H_
+#define  KONPU_STACK_H_
+#include "ram.h"
 #include "error.h"
 #include "var.h"
 
-// The var* array containing the values in the Stack.
-#define STACK_VAR_ARRAY   ((var*)(KonpuMemory + STACK_VAR_ADDRESS))
+// Array containing the values in the Stack.
+#define STACK_VAR_ARRAY   ((var*)(RAM + RAM_STACK_VAR))
 
-// The * array containing the values in the Stack.
-#define STACK_TYPE_ARRAY  ((Type*)(KonpuMemory + STACK_TYPE_ADDRESS))
+// Array containing the types of the values in the Stack.
+#define STACK_TYPE_ARRAY  ((Type*)(RAM + RAM_STACK_TYPE))
 
-// An int16_t lvalue indicating the current size of the Stack.
-#define STACK_SIZE        (*(int16_t*)(KonpuMemory + STACK_SIZE_ADDRESS))
+// Current size of the Stack (as an int16_t lvalue)
+#define STACK_SIZE        (*(int16_t*)(RAM + RAM_STACK_SIZE))
 
 
 // Returns the offset corresponding to the Waso stack level n.
@@ -88,4 +88,4 @@ static inline void StackSwap_(void)
    STACK_TYPE_ARRAY[STACK_SIZE - 1] = tmp_type;
 }
 
-#endif //KONPU_STACK_H
+#endif //include guard

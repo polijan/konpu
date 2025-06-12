@@ -19,14 +19,14 @@ include() {
 
 cd src || exit
 printf '// Single header file for ilo Konpu.\n\n'
-printf '#ifndef  KONPU_H\n'
-printf '#define  KONPU_H\n'
+printf '#ifndef  KONPU_H_\n'
+printf '#define  KONPU_H_\n'
 
 # API Includes
 include  config.h platform.h c.h \
          bits.h util.h time.h random.h options.h \
-         var.h memory.h key.h \
-         video_mode.h video_mode_auto.h glyph.h tile.h color.h attribute.h \
+         var.h rom.h video_mode.h ram.h key.h \
+         video_mode_auto.h glyph.h tile.h color.h attribute.h \
          video.h \
          error.h heap.h stack.h \
          \
@@ -35,9 +35,10 @@ include  config.h platform.h c.h \
 # Extra Resources
 include  glyph_constants/glyph_patterns_blocks.h    \
          glyph_constants/glyph_patterns_8x8.me.h    \
+         glyph_constants/glyph_ascii.h              \
          glyph_constants/glyph_tokipona.h           \
-         glyph_constants/glyph_tokipona_halfwidth.c \
+         glyph_constants/glyph_tokipona_halfwidth.h \
          glyph_constants/glyph_tukitiki.h
 
 hr
-printf '\n#endif //KONPU_H\n'
+printf '\n#endif //KONPU_H_\n'

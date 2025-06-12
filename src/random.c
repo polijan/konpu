@@ -1,5 +1,6 @@
 #include "random.h"
-#include "memory.h"
+#include "ram.h"
+#include "rom.h"
 #include "var.h"
 #include "platform_include.h"
 #if KONPU_PLATFORM_LIBC
@@ -23,9 +24,9 @@
 
 void RandomInitAsRandom(uint64_t whatever)
 {
-   whatever += 
+   whatever +=
       // Add some pointer values that may vary in Konpu
-         (uint64_t)(uintptr_t)KonpuROM + (uint64_t)(uintptr_t)KonpuMemory
+         (uint64_t)(uintptr_t)ROM + (uint64_t)(uintptr_t)RAM
       // Then add CONSTANTS that comes from our config/build
       +  (uint64_t)__STDC_VERSION__
       +  KONPU_VERSION_PATCH +

@@ -1,5 +1,5 @@
-#ifndef  KONPU_ATTRIBUTE_H
-#define  KONPU_ATTRIBUTE_H
+#ifndef  KONPU_ATTRIBUTE_H_
+#define  KONPU_ATTRIBUTE_H_
 
 // Attributes are pieces of information contained in the video framebuffer which
 // indicate the color of a glyph's pixels. They're as manipulated here via a
@@ -10,8 +10,8 @@
 
 // In attribute modes, returns the attributes pixel size.
 // Note: Return value is one of: PIXELS_2x4, PIXELS_4x4, PIXELS_4x8, PIXELS_8x8.
-static inline enum VideoElementPixelSize
-AttributePixelSize(void)         { return (VIDEO_MODE >> 2) & 3; }
+static inline enum VideoElementDimension
+AttributeDimension(void)         { return (VIDEO_MODE >> 2) & 3; }
 
 // In attribute modes, returns the log2 of an attributes' pixel width.
 // Thus, the width of an attribute is: 1 << AttributeWidthLog2().
@@ -119,4 +119,4 @@ static inline void AttributeReverse(uint8_t *attr)
    }
 }
 
-#endif //KONPU_ATTRIBUTE_H
+#endif //include guard

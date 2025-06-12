@@ -1,5 +1,5 @@
-#ifndef  KONPU_KEY_H
-#define  KONPU_KEY_H
+#ifndef  KONPU_KEY_H_
+#define  KONPU_KEY_H_
 
 // In Konpu, a key is identified by an integer whose value is as per the USB HID
 // Keyboard ScanCode. Here is a visual reference of where many keys are located
@@ -58,19 +58,19 @@
 //                                      135
 // ```
 
-#include "memory.h"
+#include "ram.h"
 #include "bits.h"
 
 // The keyboard state in Konpu's RAM: array of four uint64_t totalling 256 bits,
 // each representing the state (1=key pressed, 0=key not pressed) of a USB HID
 // keyboard scan code.
-#define KEY_STATE    ((uint64_t*)(KonpuMemory + KEY_STATE_ADDRESS))
+#define KEY_STATE    ((uint64_t*)(RAM + RAM_KEY_STATE))
 
 // A copy of the previous keyboard state prior to the last Update().
-#define KEY_PREVIOUS ((uint64_t*)(KonpuMemory + KEY_PREVIOUS_ADDRESS))
+#define KEY_PREVIOUS ((uint64_t*)(RAM + RAM_KEY_PREVIOUS))
 
 // Number of keys which we track on the keyboard (should be 256)
-#define KEY_COUNT    (CHAR_BIT * KEY_STATE_ADDRESS_CAP_)
+#define KEY_COUNT    (CHAR_BIT * RAM_KEY_STATE_SZ_)
 
 // Return true iff a key is currently pressed.
 static inline bool KeyIsDown(int key)
@@ -101,4 +101,4 @@ static inline bool KeyIsReleased(int key)
 // Update the Key state
 void KeyUpdate(void);
 
-#endif //KONPU_KEY_H
+#endif //include guard

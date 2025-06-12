@@ -29,7 +29,7 @@ static void gradient(uint32_t rgb_start, uint32_t rgb_end)
 
 int AppInit(void)
 {
-   VideoSetMode(123);
+   VideoMode(123);
 
    while (true) {
       gradient(Random() & 0xFFFFFF, Random() & 0xFFFFFF);

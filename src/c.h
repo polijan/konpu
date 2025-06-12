@@ -22,8 +22,8 @@
 //   * C_HINT_* to give more context to the compiler (usually to give it the
 //     possibility to do more optimization or provide warnings).
 
-#ifndef  KONPU_C_H
-#define  KONPU_C_H
+#ifndef  KONPU_C_H_
+#define  KONPU_C_H_
 
 //TODO:
 // - maybe C23 standard attribute are C_ATTRIBUTE_* and others attributes
@@ -468,6 +468,20 @@ static_assert(sizeof(uint_least64_t) == 8);
 #endif
 
 
+// We don't have the full <stdio.h>, but we have those facilities from it
+// They might be a bit different in that they never fail (do not return "EOF"),
+// and printf's format may be very slightly different (extra, etc.)
+int konpu_putchar_(int c);
+int konpu_puts_(const char* s);
+int konpu_printf_(const char* restrict format, ...);
+// Use konpu's function even if <stdio.h> was included:
+#define putchar(c)            konpu_putchar_(c)
+#define puts(cstring)         konpu_puts_(cstring)
+#define printf(...)           konpu__printf(__VA_ARGS__)
+#  define konpu__printf_(format, ...) \
+      konpu_printf_(format UTIL_VA_OPT_COMMA(__VA_ARGS__) __VA_ARGS__)
+
+
 // Memory functions from <string.h>. Making sure we have those:
 extern void *memset(void *dst, int ch, size_t count);
 extern void *memcpy(void *restrict dst, const void *restrict src, size_t count);
@@ -502,4 +516,4 @@ extern void *memcpy(void *restrict dst, const void *restrict src, size_t count);
 #endif
 */
 
-#endif //KONPU_C_H
+#endif //include guard
