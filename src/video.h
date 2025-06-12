@@ -230,28 +230,6 @@ static inline uint8_t *VideoAttributeAtPixel(int x, int y)
 // Access to Glyphs
 //------------------------------------------------------------------------------
 
-// In glyph modes, return the log2 of a glyph's size in bytes.
-// Note: This is same as element descriptor in the video mode.
-#define VideoGlyphLog2Sizeof() ((VIDEO_MODE >> 4) & 7)
-
-// In glyph modes, return the log2 of a glyph's pixel width.
-// Thus, the width of a glyph is: 1 << VideoGlyphLog2Width().
-#define VideoGlyphLog2Width() (((VIDEO_MODE >> 4 & 7) + 3) >> 1)
-//                      VIDEO_MODE's element descriptor: |0|1|2|3|4|5|
-//                      log2(glyph width):               |1|2|2|3|3|4|
-//                      thus, we apply (x+3)/2 to the element descriptor
-
-// In glyph modes, return the log2 of a glyph's pixel height.
-// Thus, the height of a glyph is: 1 << VideoGlyphLog2Height().
-#define VideoGlyphLog2Height() (2 + ((VIDEO_MODE >> 4 & 7) >> 1))
-//                      VIDEO_MODE's element descriptor: |0|1|2|3|4|5|
-//                      log2(glyph height):              |2|2|3|3|4|4|
-//                      thus, we apply 2+x/2 to the element descriptor
-// This also works and can be one op less:
-// #define VideoGlyphLog2Height()  (2 + (VIDEO_MODE >> 5 & 3))
-// However, it's perhaps best to have the same operations than in the element
-// descriptor and Log2Width, so the compiler sees similarites and optimize?
-
 // Glyph *VideoGlyph(int x, int y, [plane[=0]]);
 // Return the Glyph at glyph coordinates (x,y) in the video framebuffer.
 // - The video framebuffer should contain Glyph elements.
@@ -269,15 +247,15 @@ static inline uint8_t *VideoAttributeAtPixel(int x, int y)
       VideoGlyph__3_((x), (y), 0)
    static inline Glyph *VideoGlyph__3_(int x, int y, int plane) {
       // Coordinates (x,y) must be inside the glyph grid:
-      assert(x >= 0 && x < (VIDEO_WIDTH  >> VideoGlyphLog2Width()));
-      assert(y >= 0 && y < (VIDEO_HEIGHT >> VideoGlyphLog2Height()));
-      int index = x + y  * (VIDEO_WIDTH  >> VideoGlyphLog2Width());
+      assert(x >= 0 && x < VIDEO_WIDTH_GLYPH);
+      assert(y >= 0 && y < VIDEO_HEIGHT_GLYPH);
+      int index = x + y  * VIDEO_WIDTH_GLYPH;
       return VideoPlane(plane) + (index << VideoModeDimension());
    }
 #  define VideoGlyph_2_(x, y) VideoGlyph_3_((x), (y), 0)
    static inline Glyph *VideoGlyph_3_(int x, int y, int plane) {
-      UtilClampCoordinate(&x, VIDEO_WIDTH >> VideoGlyphLog2Width());
-      UtilClampCoordinate(&y, VIDEO_HEIGHT >> VideoGlyphLog2Height());
+      UtilClampCoordinate(&x, VIDEO_WIDTH_GLYPH);
+      UtilClampCoordinate(&y, VIDEO_HEIGHT_GLYPH);
       UtilClampCoordinate(&plane, VideoModeLowNibble());
       return VideoGlyph__3_(x, y, plane);
    }
@@ -297,15 +275,15 @@ static inline uint8_t *VideoAttributeAtPixel(int x, int y)
    UTIL_OVERLOAD(VideoGlyph8_, __VA_ARGS__)
 #  define VideoGlyph8__2_(x, y) VideoGlyph8__3_((x), (y), 0)
    static inline Glyph8 *VideoGlyph8__3_(int x, int y, int plane) {
-      assert(x >= 0 && x < (VIDEO_WIDTH  >> GLYPH8_WIDTH_LOG2));
-      assert(y >= 0 && y < (VIDEO_HEIGHT >> GLYPH8_HEIGHT_LOG2));
-      int offset = x + y * (VIDEO_WIDTH  >> GLYPH8_WIDTH_LOG2);
+      assert(x >= 0 && x < VIDEO_WIDTH_GLYPH8);
+      assert(y >= 0 && y < VIDEO_HEIGHT_GLYPH8);
+      int offset = x + y * VIDEO_WIDTH_GLYPH8;
       return VideoPlane(plane) + offset;
    }
 #  define VideoGlyph8_2_(x, y) VideoGlyph8_3_((x), (y), 0)
    static inline Glyph8 *VideoGlyph8_3_(int x, int y, int plane) {
-      UtilClampCoordinate(&x, VIDEO_WIDTH  >> GLYPH8_WIDTH_LOG2);
-      UtilClampCoordinate(&y, VIDEO_HEIGHT >> GLYPH8_HEIGHT_LOG2);
+      UtilClampCoordinate(&x, VIDEO_WIDTH_GLYPH8);
+      UtilClampCoordinate(&y, VIDEO_HEIGHT_GLYPH8);
       UtilClampCoordinate(&plane, VideoModeLowNibble());
       return VideoGlyph8__3_(x, y, plane);
    }
@@ -325,15 +303,15 @@ static inline uint8_t *VideoAttributeAtPixel(int x, int y)
    UTIL_OVERLOAD(VideoGlyph16_, __VA_ARGS__)
 #  define VideoGlyph16__2_(x, y) VideoGlyph16__3_((x), (y), 0)
    static inline Glyph16 *VideoGlyph16__3_(int x, int y, int plane) {
-      assert(x >= 0 && x < (VIDEO_WIDTH  >> GLYPH16_WIDTH_LOG2));
-      assert(y >= 0 && y < (VIDEO_HEIGHT >> GLYPH16_HEIGHT_LOG2));
-      int offset = x + y * (VIDEO_WIDTH  >> GLYPH16_WIDTH_LOG2);
+      assert(x >= 0 && x < VIDEO_WIDTH_GLYPH16);
+      assert(y >= 0 && y < VIDEO_HEIGHT_GLYPH16);
+      int offset = x + y * VIDEO_WIDTH_GLYPH16;
       return VideoPlaneAs(Glyph16, plane) + offset;
    }
 #  define VideoGlyph16_2_(x, y) VideoGlyph16_3_((x), (y), 0)
    static inline Glyph16 *VideoGlyph16_3_(int x, int y, int plane) {
-      UtilClampCoordinate(&x, VIDEO_WIDTH  >> GLYPH16_WIDTH_LOG2);
-      UtilClampCoordinate(&y, VIDEO_HEIGHT >> GLYPH16_HEIGHT_LOG2);
+      UtilClampCoordinate(&x, VIDEO_WIDTH_GLYPH16);
+      UtilClampCoordinate(&y, VIDEO_HEIGHT_GLYPH16);
       UtilClampCoordinate(&plane, VideoModeLowNibble());
       return VideoGlyph16__3_(x, y, plane);
    }
@@ -353,15 +331,15 @@ static inline uint8_t *VideoAttributeAtPixel(int x, int y)
    UTIL_OVERLOAD(VideoGlyph32_, __VA_ARGS__)
 #  define VideoGlyph32__2_(x, y) VideoGlyph32__3_((x), (y), 0)
    static inline Glyph32 *VideoGlyph32__3_(int x, int y, int plane) {
-      assert(x >= 0 && x < (VIDEO_WIDTH  >> GLYPH32_WIDTH_LOG2));
-      assert(y >= 0 && y < (VIDEO_HEIGHT >> GLYPH32_HEIGHT_LOG2));
-      int offset = x + y * (VIDEO_WIDTH  >> GLYPH32_WIDTH_LOG2);
+      assert(x >= 0 && x < VIDEO_WIDTH_GLYPH32);
+      assert(y >= 0 && y < VIDEO_HEIGHT_GLYPH32);
+      int offset = x + y * VIDEO_WIDTH_GLYPH32;
       return VideoPlaneAs(Glyph32, plane) + offset;
    }
 #  define VideoGlyph32_2_(x, y) VideoGlyph32_3_((x), (y), 0)
    static inline Glyph32 *VideoGlyph32_3_(int x, int y, int plane) {
-      UtilClampCoordinate(&x, VIDEO_WIDTH  >> GLYPH32_WIDTH_LOG2);
-      UtilClampCoordinate(&y, VIDEO_HEIGHT >> GLYPH32_HEIGHT_LOG2);
+      UtilClampCoordinate(&x, VIDEO_WIDTH_GLYPH32);
+      UtilClampCoordinate(&y, VIDEO_HEIGHT_GLYPH32);
       UtilClampCoordinate(&plane, VideoModeLowNibble());
       return VideoGlyph32__3_(x, y, plane);
    }
@@ -381,15 +359,15 @@ static inline uint8_t *VideoAttributeAtPixel(int x, int y)
    UTIL_OVERLOAD(VideoGlyph64_, __VA_ARGS__)
 #  define VideoGlyph64__2_(x, y) VideoGlyph64__3_((x), (y), 0)
    static inline Glyph64 *VideoGlyph64__3_(int x, int y, int plane) {
-      assert(x >= 0 && x < (VIDEO_WIDTH  >> GLYPH64_WIDTH_LOG2));
-      assert(y >= 0 && y < (VIDEO_HEIGHT >> GLYPH64_HEIGHT_LOG2));
-      int offset = x + y * (VIDEO_WIDTH  >> GLYPH64_WIDTH_LOG2);
+      assert(x >= 0 && x < VIDEO_WIDTH_GLYPH64);
+      assert(y >= 0 && y < VIDEO_HEIGHT_GLYPH64);
+      int offset = x + y * VIDEO_WIDTH_GLYPH64;
       return VideoPlaneAs(Glyph64, plane) + offset;
    }
 #  define VideoGlyph64_2_(x, y) VideoGlyph64_3_((x), (y), 0)
    static inline Glyph64 *VideoGlyph64_3_(int x, int y, int plane) {
-      UtilClampCoordinate(&x, VIDEO_WIDTH  >> GLYPH64_WIDTH_LOG2);
-      UtilClampCoordinate(&y, VIDEO_HEIGHT >> GLYPH64_HEIGHT_LOG2);
+      UtilClampCoordinate(&x, VIDEO_WIDTH_GLYPH64);
+      UtilClampCoordinate(&y, VIDEO_HEIGHT_GLYPH64);
       UtilClampCoordinate(&plane, VideoModeLowNibble());
       return VideoGlyph64__3_(x, y, plane);
    }
@@ -409,15 +387,15 @@ static inline uint8_t *VideoAttributeAtPixel(int x, int y)
    UTIL_OVERLOAD(VideoGlyph128_, __VA_ARGS__)
 #  define VideoGlyph128__2_(x, y) VideoGlyph128__3_((x), (y), 0)
    static inline Glyph128 *VideoGlyph128__3_(int x, int y, int plane) {
-      assert(x >= 0 && x < (VIDEO_WIDTH  >> GLYPH128_WIDTH_LOG2));
-      assert(y >= 0 && y < (VIDEO_HEIGHT >> GLYPH128_HEIGHT_LOG2));
-      int offset = x + y * (VIDEO_WIDTH  >> GLYPH128_WIDTH_LOG2);
+      assert(x >= 0 && x < VIDEO_WIDTH_GLYPH128);
+      assert(y >= 0 && y < VIDEO_HEIGHT_GLYPH128);
+      int offset = x + y * VIDEO_WIDTH_GLYPH128;
       return VideoPlaneAs(Glyph128, plane) + offset;
    }
 #  define VideoGlyph128_2_(x, y) VideoGlyph128_3_((x), (y), 0)
    static inline Glyph128 *VideoGlyph128_3_(int x, int y, int plane) {
-      UtilClampCoordinate(&x, VIDEO_WIDTH  >> GLYPH128_WIDTH_LOG2);
-      UtilClampCoordinate(&y, VIDEO_HEIGHT >> GLYPH128_HEIGHT_LOG2);
+      UtilClampCoordinate(&x, VIDEO_WIDTH_GLYPH128);
+      UtilClampCoordinate(&y, VIDEO_HEIGHT_GLYPH128);
       UtilClampCoordinate(&plane, VideoModeLowNibble());
       return VideoGlyph128__3_(x, y, plane);
    }
@@ -437,15 +415,15 @@ static inline uint8_t *VideoAttributeAtPixel(int x, int y)
    UTIL_OVERLOAD(VideoGlyph256_, __VA_ARGS__)
 #  define VideoGlyph256__2_(x, y) VideoGlyph256__3_((x), (y), 0)
    static inline Glyph256 *VideoGlyph256__3_(int x, int y, int plane) {
-      assert(x >= 0 && x < (VIDEO_WIDTH  >> GLYPH256_WIDTH_LOG2));
-      assert(y >= 0 && y < (VIDEO_HEIGHT >> GLYPH256_HEIGHT_LOG2));
-      int offset = x + y * (VIDEO_WIDTH  >> GLYPH256_WIDTH_LOG2);
+      assert(x >= 0 && x < VIDEO_WIDTH_GLYPH256);
+      assert(y >= 0 && y < VIDEO_HEIGHT_GLYPH256);
+      int offset = x + y * VIDEO_WIDTH_GLYPH256;
       return VideoPlaneAs(Glyph256, plane) + offset;
    }
 #  define VideoGlyph256_2_(x, y) VideoGlyph256_3_((x), (y), 0)
    static inline Glyph256 *VideoGlyph256_3_(int x, int y, int plane) {
-      UtilClampCoordinate(&x, VIDEO_WIDTH  >> GLYPH256_WIDTH_LOG2);
-      UtilClampCoordinate(&y, VIDEO_HEIGHT >> GLYPH256_HEIGHT_LOG2);
+      UtilClampCoordinate(&x, VIDEO_WIDTH_GLYPH256);
+      UtilClampCoordinate(&y, VIDEO_HEIGHT_GLYPH256);
       UtilClampCoordinate(&plane, VideoModeLowNibble());
       return VideoGlyph256__3_(x, y, plane);
    }
@@ -636,8 +614,8 @@ int VideoGetPixel_inline_(int x, int y)
    if (VideoModeHasAttributes()) {
 #if 0
 #define ls elem // same as VideoGlyphLog2Sizeof();
-         int lw = (ls + 3) >> 1;  // same as VideoGlyphLog2Width();
-         int lh = 2 + (ls >> 1);  // same as VideoGlyphLog2Height();
+         int lw = (ls + 3) >> 1;  // same as GLYPH_WIDTH_LOG2
+         int lh = 2 + (ls >> 1);  // same as GLYPH_HEIGHT_LOG2
 
          // in the glyph grid, the glyph over pixel (x,y) would be at
          // coordinates (x/w, y/h). The glyph grid is (VIDEO_GLYPH/w) wide,

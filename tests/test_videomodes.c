@@ -1,6 +1,23 @@
 // #define TEST_TRACE
 #include "test.h"
 
+
+// In glyph modes, return the log2 of a glyph's pixel width.
+// Thus, the width of a glyph is: 1 << VideoGlyphLog2Width().
+#define VideoGlyphLog2Width() (((VIDEO_MODE >> 4 & 7) + 3) >> 1)
+//                      VIDEO_MODE's element descriptor: |0|1|2|3|4|5|
+//                      log2(glyph width):               |1|2|2|3|3|4|
+//                      thus, we apply (x+3)/2 to the element descriptor
+
+// In glyph modes, return the log2 of a glyph's pixel height.
+// Thus, the height of a glyph is: 1 << VideoGlyphLog2Height().
+#define VideoGlyphLog2Height() (2 + ((VIDEO_MODE >> 4 & 7) >> 1))
+//                      VIDEO_MODE's element descriptor: |0|1|2|3|4|5|
+//                      log2(glyph height):              |2|2|3|3|4|4|
+//                      thus, we apply 2+x/2 to the element descriptor
+
+
+
 // Test: Check that the default video mode is 4x8 glyph with similarly sized
 //       standard attribute.
 static const char *testDefaultVideoMode(void)
