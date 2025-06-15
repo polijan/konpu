@@ -44,40 +44,40 @@ static const char *test_BITS(void)
    return 0;
 }
 
-static const char *testByteSwap(void) {
+static const char *testSwapByte(void) {
    uint8_t  u8  = 0xA3u;
-   TestAssert("Byte Swap u8", BITS_BYTE_SWAP(u8) == 0xA3u);
+   TestAssert("Byte Swap u8", BITS_SWAP_BYTE(u8) == 0xA3u);
 
    uint16_t u16 = 0xA2B5u;
-   TestAssert("Byte Swap u16", BITS_BYTE_SWAP(u16) == 0xB5A2u);
+   TestAssert("Byte Swap u16", BITS_SWAP_BYTE(u16) == 0xB5A2u);
 
    uint32_t u32 = 0x0245CAFEu;
-   TestAssert("Byte Swap u32", BITS_BYTE_SWAP(u32) == 0xFECA4502u);
+   TestAssert("Byte Swap u32", BITS_SWAP_BYTE(u32) == 0xFECA4502u);
 
    uint64_t u64 = 0xFACADE07DEADBEEFu;
-   TestAssert("Byte Swap u32", BITS_BYTE_SWAP(u64) == 0xEFBEADDE07DECAFAu);
+   TestAssert("Byte Swap u32", BITS_SWAP_BYTE(u64) == 0xEFBEADDE07DECAFAu);
 
    return 0;
 }
-static const char *testNibbleSwap(void) {
+static const char *testSwapNibble(void) {
    uint8_t  u8  = 0xA3u;
-   TestAssert("Nibble Swap u8", BITS_NIBBLE_SWAP(u8) == 0x3Au);
+   TestAssert("Nibble Swap u8", BITS_SWAP_NIBBLE(u8) == 0x3Au);
 
    uint16_t u16 = 0xA2B5u;
-   TestAssert("Nibble Swap u16", BITS_NIBBLE_SWAP(u16) == 0x5B2Au);
+   TestAssert("Nibble Swap u16", BITS_SWAP_NIBBLE(u16) == 0x5B2Au);
 
    uint32_t u32 = 0x0245CAFEu;
-   TestAssert("Nibble Swap u32", BITS_NIBBLE_SWAP(u32) == 0xEFAC5420u);
+   TestAssert("Nibble Swap u32", BITS_SWAP_NIBBLE(u32) == 0xEFAC5420u);
 
    uint64_t u64 = 0xFACADE07DEADBEEFu;
-   TestAssert("Nibble Swap u32", BITS_NIBBLE_SWAP(u64) == 0xFEEBDAED70EDACAFu);
+   TestAssert("Nibble Swap u32", BITS_SWAP_NIBBLE(u64) == 0xFEEBDAED70EDACAFu);
 
    return 0;
 }
-static const char *testBitSwap(void) {
+static const char *testSwapBit(void) {
    uint64_t u64 = BITS(11000010,00111101,01110101,10111110,
                        01100101,11010101,11100111,00101111);
-   TestAssert("Bit Swap u64", BITS_BIT_SWAP(u64) == BITS(
+   TestAssert("Bit Swap u64", BITS_SWAP_BIT(u64) == BITS(
       11110100,11100111,10101011,10100110,
       01111101,10101110,10111100,01000011 ));
 
@@ -95,13 +95,13 @@ static const char *testBitsExtra(void)
    TestAssert("HAS_AT_MOST_A_SINGLE_ONE (0)", BITS_HAS_AT_MOST_A_SINGLE_ONE(0));
    TestAssert("HAS_AT_MOST_A_SINGLE_ONE (8)", BITS_HAS_AT_MOST_A_SINGLE_ONE(8));
 
-   TestAssert("SET_RIGHTMOST_ZERO", 
+   TestAssert("SET_RIGHTMOST_ZERO",
       BITS_SET_RIGHTMOST_ZERO(BITS(01000111)) == BITS(01001111));
 
-   TestAssert("UNSET_RIGHTMOST_ZERO", 
+   TestAssert("UNSET_RIGHTMOST_ZERO",
       BITS_UNSET_RIGHTMOST_ONE(BITS(01001010)) == BITS(01001000));
 
-   TestAssert("BITS_ISOLATE_RIGHTMOST_ONE", 
+   TestAssert("BITS_ISOLATE_RIGHTMOST_ONE",
       BITS_ISOLATE_RIGHTMOST_ONE(BITS(01001010)) == BITS(000000010));
 
    TestAssert("BITS_ISOLATE_AND_SET_RIGHTMOST_ZERO",
@@ -109,14 +109,14 @@ static const char *testBitsExtra(void)
 
    TestAssert("BITS_RIGHT_PROPAGATE_RIGHTMOST_ONE",
       BITS_RIGHT_PROPAGATE_RIGHTMOST_ONE(BITS(01001000)) == BITS(01001111));
-   
+
    return 0;
 }
 
 TEST_BEGIN
    TestRun(test_BITS);
-   TestRun(testByteSwap);
-   TestRun(testNibbleSwap);
-   TestRun(testBitSwap);
+   TestRun(testSwapBit);
+   TestRun(testSwapNibble);
+   TestRun(testSwapByte);
    TestRun(testBitsExtra);
 TEST_END
