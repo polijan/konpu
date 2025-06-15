@@ -21,7 +21,7 @@ static void gradient(uint32_t rgb_start, uint32_t rgb_end)
                                     .b = lerpf(lab1.b, lab2.b, t), };
       int color = ColorFromLABf(gradient);
       for (int x = 0; x < VIDEO_WIDTH; x++) {
-         VideoPixels(x, y) = color;
+         PixelByteAt(x, y) = color;
       }
    }
 }

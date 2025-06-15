@@ -5,11 +5,9 @@
 #include "konpu.h"
 int AppInit(void); // TODO: add this in the generated konpu.h ???
 
-
 static const char *attr_color_type_str[] = {"16", "FG256", "BG256", "256"};
 static const char *dimension_str[] = {"2x4","4x4","4x8","8x8","8x16","16x16"};
 static const char *bpp_chunk_str[] = {"Quarter", "Nibble", "Byte"};
-
 
 int AppInit(void)
 {
@@ -37,10 +35,9 @@ int AppInit(void)
                8 << elem_dimension, VIDEO_WIDTH_GLYPH, VIDEO_HEIGHT_GLYPH);
          }
          Printer(" + ATTRIBUTE_%s_%s (%dx%d @offset %d)",
-            dimension_str[AttributeDimension()] ,
-            attr_color_type_str[AttributeColorType()] ,
-            VIDEO_WIDTH  >> AttributeWidthLog2(),
-            VIDEO_HEIGHT >> AttributeHeightLog2(),
+            dimension_str[AttributeDimension()],
+            attr_color_type_str[AttributeColorType()],
+            VIDEO_WIDTH_ATTRIBUTE, VIDEO_HEIGHT_ATTRIBUTE,
             VideoAttributeOffset());
 
       // Chunky Modes ----------------------------------------------------------
@@ -67,7 +64,7 @@ int AppInit(void)
          if (elem_dimension == PIXELS) {
             Printer("Bit-Pixel%s(as %dx%d bytes",
                (low_nibble > 1)? " Planes ":"s ",
-               VIDEO_WIDTH >> 3, VIDEO_HEIGHT);
+               VIDEO_WIDTH_PIXELBYTE_8x1, VIDEO_HEIGHT_PIXELBYTE);
          } else {
             Printer("Glyph%d%s (%dx%d",
                8 << elem_dimension, (low_nibble > 1)? " Planes":"",
