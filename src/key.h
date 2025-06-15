@@ -76,7 +76,7 @@
 static inline bool KeyIsDown(int key)
 {
    if (key < 0 || key >= KEY_COUNT) return false;
-   return BitsBitAt(KEY_STATE[key >> 6], key & 63);
+   return BITS_GET_BIT(KEY_STATE[key >> 6], key & 63);
 }
 
 // Return true iff a key is currently not pressed. Same as !KeyIsDown(key).
@@ -87,15 +87,14 @@ static inline bool KeyIsUp(int key)
 static inline bool KeyIsTriggered(int key)
 {
    if (KeyIsUp(key)) return false;
-   return !BitsBitAt(KEY_PREVIOUS[key >> 6], key & 63);
+   return !BITS_GET_BIT(KEY_PREVIOUS[key >> 6], key & 63);
 }
 
 // Return true iff a key was Down in the previous state but got Up.
 static inline bool KeyIsReleased(int key)
 {
-   if (key < 0 || key >= KEY_COUNT) return false;
    if (KeyIsDown(key)) return false;
-   return BitsBitAt(KEY_PREVIOUS[key >> 6], key & 63);
+   return BITS_GET_BIT(KEY_PREVIOUS[key >> 6], key & 63);
 }
 
 // Update the Key state

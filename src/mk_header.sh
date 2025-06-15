@@ -26,8 +26,7 @@ printf '#define  KONPU_H_\n'
 include  config.h platform.h c.h \
          bits.h util.h time.h random.h options.h \
          var.h rom.h video_mode.h ram.h key.h \
-         video_mode_auto.h glyph.h tile.h color.h attribute.h \
-         video.h \
+         video_mode_auto.h glyph.h color.h attribute.h video.h pixel.h tile.h \
          error.h heap.h stack.h \
          \
          printer.h

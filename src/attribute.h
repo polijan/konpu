@@ -16,16 +16,16 @@ AttributeDimension(void)         { return (VIDEO_MODE >> 2) & 3; }
 // In attribute modes, returns the log2 of an attributes' pixel width.
 // Thus, the width of an attribute is: 1 << AttributeWidthLog2().
 #define AttributeWidthLog2()     (((VIDEO_MODE >> 2 & 3) + 3) >> 1)
-   //                            VIDEO_MODE's attr size: |0|1|2|3|
-   //                            log2(attribute height): |1|2|2|3|
-   //                            thus, we apply (x+3)/2 to attr size.
+   //                            VIDEO_MODE's attr dimension: |0|1|2|3|
+   //                            log2(attribute height)     : |1|2|2|3|
+   //                            thus, we apply (x+3)/2 to attributes' dimension
 
 // In attribute modes, returns the log2 of an attributes' pixel height.
 // Thus, the height of an attribute is: 1 << AttributeHeightLog2().
 #define AttributeHeightLog2()    (2 + (VIDEO_MODE >> 3 & 1))
-   //                            VIDEO_MODE's attr size: |0|1|2|3|
-   //                            log2(attribute height): |2|2|3|3|
-   //                            thus, we apply 2+x/2 to attr size.
+   //                            VIDEO_MODE's attr dimension: |0|1|2|3|
+   //                            log2(attribute height):      |2|2|3|3|
+   //                            thus, we apply 2+x/2 to attribtues' dimension
 
 // In attribute modes, returns 0 if attributes point to one byte,
 //                          or 1 if they point to two bytes.
@@ -34,11 +34,32 @@ AttributeDimension(void)         { return (VIDEO_MODE >> 2) & 3; }
 #define AttributeHasTwoBytes()   ((VIDEO_MODE & 3) == ATTRIBUTE_COLORS_256)
 
 
+////////////////////////////////////////////////////////////////////////////////
+// TODO
+#define ATTRIBUTE_WIDTH_LOG2      (((VIDEO_MODE >> 2 & 3) + 3) >> 1)
+#define ATTRIBUTE_HEIGHT_LOG2     (2 + (VIDEO_MODE >> 3 & 1))
+#define ATTRIBUTE_HEIGHT          (4 << ((VIDEO_MODE >> 2 & 3) > 1))
+
+// attribute's dimension
+//
+// Dimension, D = |0|1|2|3|    Formula in D |
+//----------------+-+-+-+-+------------------------------------
+// width        = |2|4|4|8| =>
+
+// height       = |4|4|8|8| => 4 << (D>1)
+// log2(width)  = |1|2|2|3| => (D+3)/2
+// log2(height) = |2|2|3|3| => 2 + D/2
+//                            thus, we apply (x+3)/2 to attributes' dimension
+
+// size of Attribute in bytes (one or two bytes)
+#define ATTRIBUTE_SIZE           ((VIDEO_MODE & 3) - 1)
+
+
 // TODO - Are those Needed???
 // #define AttributeWidth()       ???
 // #define AttributeHeight()     (4 << (VIDEO_MODE >> 3 & 1))
 //                               // ^-- faster than 1 << AttributeHeightLog2()
-
+////////////////////////////////////////////////////////////////////////////////
 
 #include "color.h"
 

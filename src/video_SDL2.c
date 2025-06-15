@@ -5,6 +5,7 @@
 #   include "video.h"
 #   include "init.h"
 #   include "util.h"
+#   include "image.h"
 
 #include "printer.h" // TODO: for fast ugly DEBUG(), remove.
 

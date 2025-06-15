@@ -591,13 +591,13 @@ typedef void      Glyph;
            Glyph256: GlyphLineAt_256_  \
         )((glyph), (n))
         static inline unsigned GlyphLineAt_8_( uint8_t  g, int n)
-        { assert(n >= 0 && n < GLYPH8_HEIGHT);  return BitsQuarterAt(g, n); }
+        { assert(n >= 0 && n < GLYPH8_HEIGHT);  return BITS_GET_QUARTER(g, n); }
         static inline unsigned GlyphLineAt_16_(uint16_t g, int n)
-        { assert(n >= 0 && n < GLYPH16_HEIGHT); return BitsNibbleAt(g, n); }
+        { assert(n >= 0 && n < GLYPH16_HEIGHT); return BITS_GET_NIBBLE(g, n); }
         static inline unsigned GlyphLineAt_32_(uint32_t g, int n)
-        { assert(n >= 0 && n < GLYPH32_HEIGHT); return BitsNibbleAt(g, n); }
+        { assert(n >= 0 && n < GLYPH32_HEIGHT); return BITS_GET_NIBBLE(g, n); }
         static inline unsigned GlyphLineAt_64_(uint64_t g, int n)
-        { assert(n >= 0 && n < GLYPH64_HEIGHT); return BitsByteAt(g, n); }
+        { assert(n >= 0 && n < GLYPH64_HEIGHT); return BITS_GET_BYTE(g, n); }
         static inline unsigned GlyphLineAt_128_(Glyph128 g, int n)
         { assert(n >= 0 && n < GLYPH128_HEIGHT);
           return (n < 8)? GlyphLineAt_64_(g.top, n) :

@@ -6,69 +6,71 @@
 #include "color.h"
 
 //------------------------------------------------------------------------------
-// Video Buffer
+// Video Buffer, access and dimensions
 //------------------------------------------------------------------------------
 
 // Access to elements in the video buffer (only makes sene in video modes where
 // such elements exist)
-#define VIDEO_BUFFER                     (RAM + RAM_VIDEO_BUFFER)
-#define VIDEO_GLYPH                      ((void*)VIDEO_BUFFER)
-#define VIDEO_GLYPH8                     VIDEO_BUFFER
-#define VIDEO_GLYPH16                    ((uint16_t*)VIDEO_BUFFER)
-#define VIDEO_GLYPH32                    ((uint32_t*)VIDEO_BUFFER)
-#define VIDEO_GLYPH64                    ((uint64_t*)VIDEO_BUFFER)
-#define VIDEO_GLYPH128                   ((Glyph128*)VIDEO_BUFFER)
-#define VIDEO_GLYPH256                   ((Glyph256*)VIDEO_BUFFER)
-#define VIDEO_ATTRIBUTE                  (VIDEO_BUFFER + (VIDEO_WxH_ >> 3)) //TODO: verify
+#define VIDEO_BUFFER                (RAM + RAM_VIDEO_BUFFER)
+#define VIDEO_GLYPH                 ((void*)VIDEO_BUFFER)
+#define VIDEO_GLYPH8                VIDEO_BUFFER
+#define VIDEO_GLYPH16               ((uint16_t*)VIDEO_BUFFER)
+#define VIDEO_GLYPH32               ((uint32_t*)VIDEO_BUFFER)
+#define VIDEO_GLYPH64               ((uint64_t*)VIDEO_BUFFER)
+#define VIDEO_GLYPH128              ((Glyph128*)VIDEO_BUFFER)
+#define VIDEO_GLYPH256              ((Glyph256*)VIDEO_BUFFER)
+#define VIDEO_ATTRIBUTE             (VIDEO_BUFFER + (VIDEO_COUNT_PIXELS_ >> 3)) //TODO: verify
 
 // Number of such elements (when framebuffer contains element of that type)
-#define VIDEO_COUNT_GLYPH                (VIDEO_WxH_ >> (3 + VideoModeDimension()))
-#define VIDEO_COUNT_GLYPH8               (VIDEO_WxH_ >> (GLYPH8_WIDTH_LOG2   + GLYPH8_HEIGHT_LOG2))
-#define VIDEO_COUNT_GLYPH16              (VIDEO_WxH_ >> (GLYPH16_WIDTH_LOG2  + GLYPH16_HEIGHT_LOG2))
-#define VIDEO_COUNT_GLYPH32              (VIDEO_WxH_ >> (GLYPH32_WIDTH_LOG2  + GLYPH32_HEIGHT_LOG2))
-#define VIDEO_COUNT_GLYPH64              (VIDEO_WxH_ >> (GLYPH64_WIDTH_LOG2  + GLYPH64_HEIGHT_LOG2))
-#define VIDEO_COUNT_GLYPH128             (VIDEO_WxH_ >> (GLYPH128_WIDTH_LOG2 + GLYPH128_HEIGHT_LOG2))
-#define VIDEO_COUNT_GLYPH256             (VIDEO_WxH_ >> (GLYPH128_WIDTH_LOG2 + GLYPH128_HEIGHT_LOG2))
-#define VIDEO_COUNT_TILE                 (VIDEO_WxH_ >> (3 + VideoModeDimension()))
-#define VIDEO_COUNT_BIT_PIXELS_BYTE      (VIDEO_WxH_ >> 3)
-#define VIDEO_COUNT_QUARTER_PIXELS_BYTE  (VIDEO_WxH_ >> 2)
-#define VIDEO_COUNT_NIBBLE_PIXELS_BYTE   (VIDEO_WxH_ >> 1)
-#define VIDEO_COUNT_PIXELS_BYTE          //TODO. NO IT DEPENDS ON WHAT SORT OF PIXEL
-#define VIDEO_COUNT_ATTRIBUTE            //TODO: does it make sense, because attributes is wide sometimes
+#define VIDEO_COUNT_GLYPH           (VIDEO_COUNT_PIXELS_ >> (3 + VideoModeDimension()))
+#define VIDEO_COUNT_GLYPH8          (VIDEO_COUNT_PIXELS_ >> (GLYPH8_WIDTH_LOG2   + GLYPH8_HEIGHT_LOG2))
+#define VIDEO_COUNT_GLYPH16         (VIDEO_COUNT_PIXELS_ >> (GLYPH16_WIDTH_LOG2  + GLYPH16_HEIGHT_LOG2))
+#define VIDEO_COUNT_GLYPH32         (VIDEO_COUNT_PIXELS_ >> (GLYPH32_WIDTH_LOG2  + GLYPH32_HEIGHT_LOG2))
+#define VIDEO_COUNT_GLYPH64         (VIDEO_COUNT_PIXELS_ >> (GLYPH64_WIDTH_LOG2  + GLYPH64_HEIGHT_LOG2))
+#define VIDEO_COUNT_GLYPH128        (VIDEO_COUNT_PIXELS_ >> (GLYPH128_WIDTH_LOG2 + GLYPH128_HEIGHT_LOG2))
+#define VIDEO_COUNT_GLYPH256        (VIDEO_COUNT_PIXELS_ >> (GLYPH128_WIDTH_LOG2 + GLYPH128_HEIGHT_LOG2))
+#define VIDEO_COUNT_TILE            (VIDEO_COUNT_PIXELS_ >> (3 + VideoModeDimension()))
+#define VIDEO_COUNT_PIXELBYTE_8x1   (VIDEO_COUNT_PIXELS_ >> 3) // bit-pixels
+#define VIDEO_COUNT_PIXELBYTE_4x1   (VIDEO_COUNT_PIXELS_ >> 2) // quarter-pixels
+#define VIDEO_COUNT_PIXELBYTE_2x1   (VIDEO_COUNT_PIXELS_ >> 1) // nibble-pixels
+#define VIDEO_COUNT_PIXELBYTE_1x1   VIDEO_COUNT_PIXELS_        // byte-pixels
+#define VIDEO_COUNT_PIXELBYTE       //TODO. NO IT DEPENDS ON WHAT SORT OF PIXEL
+#define VIDEO_COUNT_ATTRIBUTE       //TODO: does it make sense, because attributes is wide sometimes
 
 // Width of the video framebuffer but in other "units" than pixels
 // (framebuffer must contain element of the type)
-#define VIDEO_WIDTH_GLYPH                (VIDEO_WIDTH >> GLYPH_WIDTH_LOG2)
-#define VIDEO_WIDTH_GLYPH8               (VIDEO_WIDTH >> GLYPH8_WIDTH_LOG2)
-#define VIDEO_WIDTH_GLYPH16              (VIDEO_WIDTH >> GLYPH16_WIDTH_LOG2)
-#define VIDEO_WIDTH_GLYPH32              (VIDEO_WIDTH >> GLYPH32_WIDTH_LOG2)
-#define VIDEO_WIDTH_GLYPH64              (VIDEO_WIDTH >> GLYPH64_WIDTH_LOG2)
-#define VIDEO_WIDTH_GLYPH128             (VIDEO_WIDTH >> GLYPH128_WIDTH_LOG2)
-#define VIDEO_WIDTH_GLYPH256             (VIDEO_WIDTH >> GLYPH256_WIDTH_LOG2)
-#define VIDEO_WIDTH_ATTRIBUTE            (VIDEO_WIDTH >> AttributeWidthLog2())
-#define VIDEO_WIDTH_ATTRIBUTE_2x4        (VIDEO_WIDTH >> 1)
-#define VIDEO_WIDTH_ATTRIBUTE_4x4        (VIDEO_WIDTH >> 2)
-#define VIDEO_WIDTH_ATTRIBUTE_4x8        (VIDEO_WIDTH >> 2)
-#define VIDEO_WIDTH_ATTRIBUTE_8x8        (VIDEO_WIDTH >> 3)
-#define VIDEO_WIDTH_BIT_PIXELS_BYTE      (VIDEO_WIDTH >> 3)
-#define VIDEO_WIDTH_QUARTER_PIXELS_BYTE  (VIDEO_WIDTH >> 2)
-#define VIDEO_WIDTH_NIBBLE_PIXELS_BYTE   (VIDEO_WIDTH >> 1)
+#define VIDEO_WIDTH_GLYPH           (VIDEO_WIDTH >> GLYPH_WIDTH_LOG2)
+#define VIDEO_WIDTH_GLYPH8          (VIDEO_WIDTH >> GLYPH8_WIDTH_LOG2)
+#define VIDEO_WIDTH_GLYPH16         (VIDEO_WIDTH >> GLYPH16_WIDTH_LOG2)
+#define VIDEO_WIDTH_GLYPH32         (VIDEO_WIDTH >> GLYPH32_WIDTH_LOG2)
+#define VIDEO_WIDTH_GLYPH64         (VIDEO_WIDTH >> GLYPH64_WIDTH_LOG2)
+#define VIDEO_WIDTH_GLYPH128        (VIDEO_WIDTH >> GLYPH128_WIDTH_LOG2)
+#define VIDEO_WIDTH_GLYPH256        (VIDEO_WIDTH >> GLYPH256_WIDTH_LOG2)
+#define VIDEO_WIDTH_ATTRIBUTE       (VIDEO_WIDTH >> AttributeWidthLog2())
+#define VIDEO_WIDTH_ATTRIBUTE_2x4   (VIDEO_WIDTH >> 1)
+#define VIDEO_WIDTH_ATTRIBUTE_4x4   (VIDEO_WIDTH >> 2)
+#define VIDEO_WIDTH_ATTRIBUTE_4x8   (VIDEO_WIDTH >> 2)
+#define VIDEO_WIDTH_ATTRIBUTE_8x8   (VIDEO_WIDTH >> 3)
+#define VIDEO_WIDTH_PIXELBYTE_8x1   (VIDEO_WIDTH >> 3) // bit-pixel
+#define VIDEO_WIDTH_PIXELBYTE_4x1   (VIDEO_WIDTH >> 2) // quarter-pixel
+#define VIDEO_WIDTH_PIXELBYTE_2x1   (VIDEO_WIDTH >> 1) // nibble-pixel
+#define VIDEO_WIDTH_PIXELBYTE_1x1   VIDEO_WIDTH        // byte-pixel
 
 // Height of the video framebuffer but in other "units" than pixels
 // (framebuffer must contain element of the type)
-#define VIDEO_HEIGHT_GLYPH               (VIDEO_HEIGHT >> GLYPH_HEIGHT_LOG2)
-#define VIDEO_HEIGHT_GLYPH8              (VIDEO_HEIGHT >> GLYPH8_HEIGHT_LOG2)
-#define VIDEO_HEIGHT_GLYPH16             (VIDEO_HEIGHT >> GLYPH16_HEIGHT_LOG2)
-#define VIDEO_HEIGHT_GLYPH32             (VIDEO_HEIGHT >> GLYPH32_HEIGHT_LOG2)
-#define VIDEO_HEIGHT_GLYPH64             (VIDEO_HEIGHT >> GLYPH64_HEIGHT_LOG2)
-#define VIDEO_HEIGHT_GLYPH128            (VIDEO_HEIGHT >> GLYPH128_HEIGHT_LOG2)
-#define VIDEO_HEIGHT_GLYPH256            (VIDEO_HEIGHT >> GLYPH256_HEIGHT_LOG2)
-#define VIDEO_HEIGHT_ATTRIBUTE           (VIDEO_HEIGHT >> AttributeHeightLog2())
-#define VIDEO_HEIGHT_ATTRIBUTE_2x4       (VIDEO_HEIGHT >> 2)
-#define VIDEO_HEIGHT_ATTRIBUTE_4x4       (VIDEO_HEIGHT >> 2)
-#define VIDEO_HEIGHT_ATTRIBUTE_4x8       (VIDEO_HEIGHT >> 3)
-#define VIDEO_HEIGHT_ATTRIBUTE_8x8       (VIDEO_HEIGHT >> 3)
-#define VIDEO_HEIGHT_PIXELS_BYTE         VIDEO_HEIGHT
+#define VIDEO_HEIGHT_GLYPH          (VIDEO_HEIGHT >> GLYPH_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_GLYPH8         (VIDEO_HEIGHT >> GLYPH8_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_GLYPH16        (VIDEO_HEIGHT >> GLYPH16_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_GLYPH32        (VIDEO_HEIGHT >> GLYPH32_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_GLYPH64        (VIDEO_HEIGHT >> GLYPH64_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_GLYPH128       (VIDEO_HEIGHT >> GLYPH128_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_GLYPH256       (VIDEO_HEIGHT >> GLYPH256_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_ATTRIBUTE      (VIDEO_HEIGHT >> AttributeHeightLog2())
+#define VIDEO_HEIGHT_ATTRIBUTE_2x4  (VIDEO_HEIGHT >> 2)
+#define VIDEO_HEIGHT_ATTRIBUTE_4x4  (VIDEO_HEIGHT >> 2)
+#define VIDEO_HEIGHT_ATTRIBUTE_4x8  (VIDEO_HEIGHT >> 3)
+#define VIDEO_HEIGHT_ATTRIBUTE_8x8  (VIDEO_HEIGHT >> 3)
+#define VIDEO_HEIGHT_PIXELBYTE      VIDEO_HEIGHT
 
 
 
@@ -501,418 +503,6 @@ static inline uint8_t *VideoAttributeAtPixel(int x, int y)
    //TODO: implement VideoGlyphSetAll_2_*_
 
 
-//------------------------------------------------------------------------------
-// Tile Modes (TODO)
-//------------------------------------------------------------------------------
-
-// Tile *VideoTile(int x, int y, [int plane[=0]]);
-
-// VideoTileSetAll(...)
-
-
-//------------------------------------------------------------------------------
-// Access to Pixels
-//------------------------------------------------------------------------------
-
-// Access to pixel bytes (in pixel modes only)
-// Same as VideoPixels(), but no bounds-checking
-#define VideoPixels_(...)               UTIL_OVERLOAD(VideoPixels_, __VA_ARGS__)
-#  define VideoPixels__3_(x,y, plane)  *VideoPixels__function_((x),(y), (plane))
-#  define VideoPixels__2_(x,y)         *VideoPixels__function_((x),(y), 0)
-   static inline uint8_t *VideoPixels__function_(int x, int y, int plane) {
-      assert(x >= 0 && x < VIDEO_WIDTH);
-      assert(y >= 0 && y < VIDEO_HEIGHT);
-      int n = VideoModeLowNibble();
-      assert(plane >= 0 && plane < n);
-      // n <= 8  => planes of bytes which contains 8 (= 2^3) bit colors
-      // n == 9  => each byte contains 4 (= 2^2) quarter colors
-      // n == 10 => each byte contains 2 (= 2^1) nibble colors
-      // n == 11 => each byte contains 1 (= 2^0) color
-      return VIDEO_BUFFER + y * VIDEO_WIDTH
-         + ((n <= 8) ? ((x >> 3) + VideoPlaneOffset(plane)) : (x >> (11 - n)));
-   }
-
-// VideoPixels(x,y, [plane=0]) gives a lvalue to the bytes containing the
-// pixel(S) at coordinate (x,y) (in the given plane).
-// - Bounds checking: if the pixel (x,y) is outside the bounds of the screen,
-//   coordinates will be clamped to the nearest valid edge. And likewise
-//   the plane will be clamped to [0, max number of planes[
-#define VideoPixels(...)                 UTIL_OVERLOAD(VideoPixels, __VA_ARGS__)
-#  define VideoPixels_3_(x,y, plane)    *VideoPixels_function_((x),(y), (plane))
-#  define VideoPixels_2_(x,y)           *VideoPixels_function_((x),(y), 0)
-   static inline uint8_t *VideoPixels_function_(int x, int y, int plane) {
-      UtilClampCoordinate(&x, VIDEO_WIDTH);
-      UtilClampCoordinate(&y, VIDEO_HEIGHT);
-      int n = VideoModeLowNibble();
-      UtilClampCoordinate(&plane, n);
-      assert(plane >= 0 && plane < n);
-      return VIDEO_BUFFER + y * VIDEO_WIDTH
-         + ((n <= 8) ? ((x >> 3) + VideoPlaneOffset(plane)) : (x >> (11 - n)));
-   }
-
-
-#ifdef KONPU_OPTION_OPTIMIZE_VIDEO_MODE
-// Same as function `VideoGetPixel`, but no bounds checking.
-#define VideoGetPixel_(x, y) VideoGetPixel_inline_((x), (y))
-// Same as function `VideoSetPixel`, but no bounds checking.
-#define VideoSetPixel_(x, y, color) VideoSetPixel_inline_((x), (y), (color))
-#else
-// Same as function `VideoGetPixel`, but no bounds checking.
-int VideoGetPixel_(int x, int y);
-// Same as function `VideoSetPixel`, but no bounds checking.
-void VideoSetPixel_(int x, int y, int color);
-#endif
-// Use `VideoGetPixel` instead.
-static C_HINT_ALWAYS_INLINE
-int VideoGetPixel_inline_(int x, int y)
-{
-   // Use the safe function for proper bounds checking.
-   assert(x >= 0 && x < VIDEO_WIDTH);
-   assert(y >= 0 && y < VIDEO_HEIGHT);
-
-   // How to react on an error condition (presumably this can only happen if the
-   // user has somehow inputed some invalid video mode with a poke).
-#ifndef KONPU_COMPILE_OPTION_USER_MUST_NOT_POKE_AROUND
-#  define VIDEO_ERROR()  return 0
-#else
-#  define VIDEO_ERROR()  unreachable()
-#endif
-
-   enum VideoElementDimension elem = VideoModeDimension();
-   int low_nibble = VideoModeLowNibble();
-
-   // Glyph:
-   //
-   // Elem. Descript| where is the Glyph in
-   //---------------|-----------------------------------------------------
-   // 0 PIXELS_2x4  | FRAMEBUFFER_AS(uint8_t)[x/2 + y/4 * VIDEO_WIDTH/4]
-   // 1 PIXELS_4x4  | FRAMEBUFFER_AS(uint16_t)[x/4 + y/4 * VIDEO_WIDTH/4]
-   // 2 PIXELS_4x8  | FRAMEBUFFER_AS(uint32_t)[x/4 + y/8 * VIDEO_WIDTH/8]
-   // 3 PIXELS_8x8  | FRAMEBUFFER_AS(uint64_t)[x/8 + y/8 * VIDEO_WIDTH/8]
-   // 4 PIXELS_8x16 | FRAMEBUFFER_AS(Glyph128)[x/8 + y/16 *VIDEO_WIDTH/16]
-   // 5 PIXELS_16x16| FRAMEBUFFER_AS(Glyph256)[x/16 +y/16 *VIDEO_WIDTH/16]
-
-   // 1       2x4     8
-   // 2       4x4    16
-   //
-
-   // - chunky-pixels or just 1 bitplane:
-   //
-   // low| chunk size  |  pixel is at this byte  | chunk index for the
-   // nib|  (aka bpp)  |  in the framebuffer     | pixel in that byte
-   // ---|-------------|-------------------------|--------------------
-   //  1 | 1 (bit)     | x / 8 + y * VIDEO_WIDTH |   x % 8
-   //  9 | 2 (quarter) | x / 4 + y * VIDEO_WIDTH |   x % 4
-   // 10 | 4 (nibble)  | x / 2 + y * VIDEO_WIDTH |   x % 2
-   // 11 | 8 (byte)    |   x   + y * VIDEO_WIDTH |     0
-   //
-   // - several bitplanes:
-   // access is same as 1 bit, but we have to iterate through every plane and
-   // reconstruct the pixel color bit by bit. (hopefully loops are unrolled)
-
-   // Attribute modes
-   if (VideoModeHasAttributes()) {
-#if 0
-#define ls elem // same as VideoGlyphLog2Sizeof();
-         int lw = (ls + 3) >> 1;  // same as GLYPH_WIDTH_LOG2
-         int lh = 2 + (ls >> 1);  // same as GLYPH_HEIGHT_LOG2
-
-         // in the glyph grid, the glyph over pixel (x,y) would be at
-         // coordinates (x/w, y/h). The glyph grid is (VIDEO_GLYPH/w) wide,
-         int offset = (x>>lw) + (y>>lh) * (VIDEO_GLYPH>>lw);
-
-         // ... and the bit for the pixel would be at coordinates (w%w, y%h) in
-         // that glyph, ie that is bit at index: bit = x%w + y%h * w,
-         // transforming the modulo because of power of 2: x%w = x & (w-1)
-         int bit =  (x & ((1<<lw) - 1))         // <--   x%w
-                 + ((y & ((1<<lh) - 1)) >> lw); // <-- + y%h * w
-
-
-         int px = BitsBitAt(VIDEO_BUFFER + (offset << ls), )
-#endif
-
-      // Look the Attribute and Glyph pixel under the given pixel:
-      // Elem   | Glyph corresponding to pixel (x,y)  | Bit for the pixel|
-      // Descrip|                                     | in that Glyph    |
-      //--------|-------------------------------------|------------------|
-      // 0 2x4  | V<uint8_t >[x/2 + y/4 * V_WIDTH/2]  | x%2 + 2*y%4      |
-      // 1 4x4  | V<uint16_t>[x/4 + y/4 * V_WIDTH/4]  | x%4 + 4*y%4      |
-      // 2 4x8  | V<uint32_t>[x/4 + y/8 * V_WIDTH/8]  | x%4 + 4*y%8      |
-      // 3 8x8  | V<uint64_t>[x/8 + y/8 * V_WIDTH/8]  | x%8 + 8*y%8      |
-      // 4 8x16 | V<Glyph128>[x/8 + y/16 * V_WIDTH/16]| x%8 + 8*y%16     |
-      // 5 16x16| V<Glyph256>[x/16 +y/16 * V_WIDTH/16]| x%16 + 16*y%16   |
-
-      // Look the Attribute and Glyph pixel under the given pixel:
-      // Elem   | Glyph corresponding to pixel (x,y)  | Bit for the pixel|
-      // Descrip|                                     | in that Glyph    |
-      //--------|-------------------------------------|------------------|
-      // 0 2x4  | V<uint8_t >[x/2 + y/4 * V_WIDTH/2]  | x%2 , y%4      |
-      // 1 4x4  | V<uint16_t>[x/4 + y/4 * V_WIDTH/4]  | x%4 , y%4      |
-      // 2 4x8  | V<uint32_t>[x/4 + y/8 * V_WIDTH/8]  | x%4 , y%8      |
-      // 3 8x8  | V<uint64_t>[x/8 + y/8 * V_WIDTH/8]  | x%8 , y%8      |
-      // 4 8x16 | V<Glyph128>[x/8 + y/16 * V_WIDTH/16]| x%8 , y%16     |
-      // 5 16x16| V<Glyph256>[x/16 +y/16 * V_WIDTH/16]| x%16, y%16     |
-      // 7 8x1  | V[x/8 + y * V_WIDTH/8]
-
-      // int px = GlyphPixelAt(VideoGlyph_(x,y), x%glyph_width, y%glyph_height);
-
-      int px;          // the bit pixel
-      int attr_offset; // offset for the start of the attributes
-      switch (elem) {
-         int w;        // width of the glyph grid
-         int h;        // height of the glyph grid
-
-         case PIXELS_2x4:
-            w = VIDEO_WIDTH  >> 1;
-            h = VIDEO_HEIGHT >> 2;
-            attr_offset = (w * h) << PIXELS_2x4;
-            px = GlyphPixelAt_8_(VIDEO_GLYPH8
-                  [(x >> 1) + (y >> 2) * w], x & 1, x & 3);
-            break;
-         case PIXELS_4x4:
-            w = VIDEO_WIDTH  >> 2;
-            h = VIDEO_HEIGHT >> 2;
-            attr_offset = (w * h) << PIXELS_4x4;
-            px = GlyphPixelAt_16_(VIDEO_GLYPH16
-                  [(x >> 2) + (y >> 2) * w], x & 3, x & 3);
-            break;
-         case PIXELS_4x8:
-            w = VIDEO_WIDTH  >> 2;
-            h = VIDEO_HEIGHT >> 3;
-            attr_offset = (w * h) << PIXELS_4x8;
-            px = GlyphPixelAt_32_(VIDEO_GLYPH32
-                  [(x >> 2) + (y >> 3) * w], x & 3, y & 7);
-            break;
-         case PIXELS_8x8:
-            w = VIDEO_WIDTH  >> 3;
-            h = VIDEO_HEIGHT >> 3;
-            attr_offset = (w * h) << PIXELS_8x8;
-            px = GlyphPixelAt_64_(VIDEO_GLYPH64
-                  [(x >> 3) + (y >> 3) * w], x & 7, y & 7);
-            break;
-         case PIXELS_8x16:
-            w = VIDEO_WIDTH  >> 3;
-            h = VIDEO_HEIGHT >> 4;
-            attr_offset = (w * h) << PIXELS_8x16;
-            px = GlyphPixelAt_128_(VIDEO_GLYPH128
-                  [(x >> 3) + (y >> 4) * w], x & 7, y & 15);
-            break;
-         case PIXELS_16x16:
-            w = VIDEO_WIDTH  >> 4;
-            h = VIDEO_HEIGHT >> 4;
-            attr_offset = (w * h) << PIXELS_16x16;
-            px = GlyphPixelAt_256_(VIDEO_GLYPH256
-                  [(x >> 4) + (y >> 4) * w], x & 15, y & 15);
-            break;
-         case PIXELS:
-            w = VIDEO_WIDTH >> 3;
-            h = VIDEO_HEIGHT;
-            attr_offset = w * h;
-            px = BitsBitAt(VIDEO_BUFFER[(x >> 3) + y * w], x & 7);
-            break;
-         default:
-            VIDEO_ERROR();
-      }
-
-      // Look for the attribute under the pixel
-      int w_log2 = AttributeWidthLog2();
-      x >>= w_log2;
-      y >>= AttributeHeightLog2();
-      uint8_t *attr = VIDEO_BUFFER + attr_offset
-                    + ((x + y * (VIDEO_WIDTH >> w_log2)) << AttributeHasTwoBytes());
-
-      // Return its fg or bg color depending on whether px is on or off.
-      return (px) ? AttributeGetForeground(attr)
-                  : AttributeGetBackground(attr);
-   }
-
-   // Pixel modes:
-   //
-   // - chunky-pixels or just 1 bitplane:
-   //
-   // low| chunk size  |  pixel is at this byte  | chunk index for the
-   // nib|  (aka bpp)  |  in the framebuffer     | pixel in that byte
-   // ---|-------------|-------------------------|--------------------
-   //  1 | 1 (bit)     | x / 8 + y * VIDEO_WIDTH |   x % 8
-   //  9 | 2 (quarter) | x / 4 + y * VIDEO_WIDTH |   x % 4
-   // 10 | 4 (nibble)  | x / 2 + y * VIDEO_WIDTH |   x % 2
-   // 11 | 8 (byte)    |   x   + y * VIDEO_WIDTH |     0
-   //
-   // - several bitplanes:
-   // access is same as 1 bit, but we have to iterate through every plane and
-   // reconstruct the pixel color bit by bit. (hopefully loops are unrolled)
-   if (elem == PIXELS) {
-      uint8_t *ptr = VIDEO_BUFFER + y * VIDEO_WIDTH;
-      switch (low_nibble) {
-         // Single-plane bit Pixels or Chunk Pixels
-         case  1: return BitsBitAt(ptr[x >> 3], x & 7);
-         case  9: return BitsQuarterAt(ptr[x >> 2], x & 3);
-         case 10: return BitsNibbleAt(ptr[x >> 1], x & 1);
-         case 11: return ptr[x];
-
-         // Several bitplanes
-         case  2: // fallthrough
-         case  3: // fallthrough
-         case  4: // fallthrough
-         case  5: // fallthrough
-         case  6: // fallthrough
-#if (VIDEO_FACTOR_ % 7 == 0)
-         case  7: // fallthrough
-#endif
-         case  8: ;
-            int color = 0;
-            int plane_size = VIDEO_SIZE / low_nibble;
-            for (int plane = 0; plane < low_nibble; plane++) {
-               color |= BitsBitAt(ptr[x >> 3], x & 7) << plane;
-               ptr += plane_size;
-            }
-            return color;
-
-         default: VIDEO_ERROR();
-      }
-   }
-
-   // Glyph bitplanes / Tile modes:
-   switch (low_nibble) {
-      // One single glyph plane
-/*      case  1:
-         ; int w = VIDEO_WIDTH;
-         switch (elem) {
-            case PIXELS_2x4:
-               w >>= 1;
-               return GlyphPixelAt_8_(VIDEO_GLYPH8
-                     [(x >> 1) + (y >> 2) * w], x & 1, x & 3);
-            case PIXELS_4x4:
-               w >>= 2;
-               return GlyphPixelAt_16_(VIDEO_GLYPH16
-                     [(x >> 2) + (y >> 2) * w], x & 3, x & 3);
-            case PIXELS_4x8:
-               w >>= 2;
-               return GlyphPixelAt_32_(VIDEO_GLYPH32
-                     [(x >> 2) + (y >> 3) * w], x & 3, y & 7);
-            case PIXELS_8x8:
-               w >>= 3;
-               return GlyphPixelAt_64_(VIDEO_GLYPH64
-                     [(x >> 3) + (y >> 3) * w], x & 7, y & 7);
-            case PIXELS_8x16:
-               w >>= 3;
-               return GlyphPixelAt_128_(VIDEO_GLYPH128
-                     [(x >> 3) + (y >> 4) * w], x & 7, y & 15);
-            case PIXELS_16x16:
-               w >>= 4;
-               return GlyphPixelAt_256_(VIDEO_GLYPH256
-                     [(x >> 4) + (y >> 4) * w], x & 15, y & 15);
-            default:
-               VIDEO_ERROR();
-         }
-*/    case  1: // fallthrough
-
-      // Several glyph bit planes (construct glyph)
-      case  2: // fallthrough
-      case  3: // fallthrough
-      case  4: // fallthrough
-      case  5: // fallthrough
-      case  6: // fallthrough
-#if (VIDEO_FACTOR_ % 7 == 0)
-      case  7: // fallthrough
-#endif
-      case  8: ;
-         int px = 0;
-         int w = VIDEO_WIDTH;
-         switch (elem) {
-            case PIXELS_2x4:
-               w >>= 1;
-               for (int plane = 0; plane < low_nibble; plane++)
-                  px |= GlyphPixelAt_8_(VIDEO_GLYPH8
-                        [(x >> 1) + (y >> 2) * w], x & 1, x & 3) << plane;
-               return px;
-            case PIXELS_4x4:
-               w >>= 2;
-               for(int plane = 0; plane < low_nibble; plane++)
-                  px |= GlyphPixelAt_16_(VIDEO_GLYPH16
-                        [(x >> 2) + (y >> 2) * w], x & 3, x & 3) << plane;
-               return px;
-            case PIXELS_4x8:
-               w >>= 2;
-               for (int plane = 0; plane < low_nibble; plane++)
-                  px |= GlyphPixelAt_32_(VIDEO_GLYPH32
-                        [(x >> 2) + (y >> 3) * w], x & 3, y & 7) << plane;
-               return px;
-            case PIXELS_8x8:
-               w >>= 3;
-               Glyph64 *glyph = VIDEO_GLYPH64 + (x >> 3) + (y >> 3) * w;
-               for (int plane = 0; plane < low_nibble; plane++) {
-                  px |= GlyphPixelAt_64_(*glyph, x & 7, y & 7) << plane;
-                  glyph += VIDEO_SIZE / low_nibble;
-               }
-
-/*               for (int plane = 0; plane < low_nibble; plane++)
-                  px |= GlyphPixelAt_64_(VideoPlaneAs(Glyph64, plane)
-                        [(x >> 3) + (y >> 3) * w], x & 7, y & 7) << plane;
-*/
-               return px;
-            case PIXELS_8x16:
-               w >>= 3;
-               for (int plane = 0; plane < low_nibble; plane++)
-                  px |= GlyphPixelAt_128_(VIDEO_GLYPH128
-                        [(x >> 3) + (y >> 4) * w], x & 7, y & 15) << plane;
-               return px;
-            case PIXELS_16x16:
-               w >>= 4;
-               for (int plane = 0; plane < low_nibble; plane++)
-                  px |= GlyphPixelAt_256_(VIDEO_GLYPH256
-                     [(x >> 4) + (y >> 4) * w], x & 15, y & 15) << plane;
-               return px;
-            default:
-               VIDEO_ERROR();
-         }
-
-      // Tiles modes:
-      case  9: return 0; // TODO
-      case 10: return 0; // TODO
-      case 11: return 0; // TODO
-
-      default: VIDEO_ERROR();
-   }
-
-#undef VIDEO_ERROR
-}
-
-// Internal only - Use or VideoSetPixel [or VideoSetPixel_] instead.
-static C_HINT_ALWAYS_INLINE
-void VideoSetPixel_inline_(int x, int y, int color)
-{
-   // Use the safe function for proper bounds checking.
-   assert(x >= 0 && x < VIDEO_WIDTH);
-   assert(y >= 0 && y < VIDEO_HEIGHT);
-
-   (void)x;
-   (void)y;
-   (void)color; /* TODO*/
-}
-
-// Return the color of the pixel (x,y).
-// if (x,y) is out of the screen, return the default background color instead.
-static inline int VideoGetPixel(int x, int y)
-{
-   return (x < 0 || x >= VIDEO_WIDTH || y < 0 || y >= VIDEO_HEIGHT) ?
-      COLOR_DEFAULT_BG : VideoGetPixel_(x, y);
-   // We could return the border color? It could make sense, however the
-   // border color is always in 256 color mode, but the framebuffer isn't.
-}
-
-// Set the color of the pixel (x,y).
-// If (x,y) is out of the screen, do nothing.
-// TODO: update the description:
-// In attribute modes other than "bg256", it colors the foreground attribute at
-// the (x,y) pixel coordinates with the given color
-// In fg256 attribute mode, it colors ththis could color the foreground attribute with this color
-static inline void VideoSetPixel(int x, int y, int color)
-{
-   if (x < 0 || x >= VIDEO_WIDTH || y < 0 || y >= VIDEO_HEIGHT)
-      return;
-   VideoSetPixel_(x, y, color);
-}
 
 //------------------------------------------------------------------------------
 // Rendering the Framebuffer
@@ -923,53 +513,5 @@ static inline void VideoSetPixel(int x, int y, int color)
 // counter will also be increased by one).
 int VideoRender(void);
 
-// Render the video framebuffer into a memory buffer. The graphics are rendered
-// in ARGB form as 8bits-gamma-encoded sRGB color + the given alpha component.
-//
-static inline void VideoRenderToARGB(uint32_t *frame_out, int alpha)
-{
-   const uint32_t A = (uint32_t)alpha << 24;
-   const uint8_t *palette = ColorPalette();
-
-   for (int y = 0; y < VIDEO_HEIGHT; y++) {
-      for (int x = 0; x < VIDEO_WIDTH; x++) {
-         const int color = VideoGetPixel_(x, y);
-         const uint8_t *rgb = ColorToRGB((palette)? palette[color] : color);
-         *frame_out++ = A | (rgb[0] << 16) | (rgb[1] << 8) | rgb[2];
-      }
-   }
-}
-/* TODO: uint32_t??? This invites endianness issues?
-static inline void VideoRenderToARGB_(void *buffer, int alpha)
-{
-   uint8_t *frame = buffer;
-   const int A = (uint32_t)alpha << 24;
-   const uint8_t *palette = ColorPalette();
-
-   for (int y = 0; y < VIDEO_HEIGHT; y++) {
-      for (int x = 0; x < VIDEO_WIDTH; x++) {
-         const int color = VideoGetPixel_(x,y);
-         const uint8_t *rgb = ColorToRGB((palette) ? palette[color] : color);
-         *frame = A;
-         memcpy(frame + 1, rgb, 3);
-         frame += (1+3);
-      }
-   }
-}*/
-
-static inline void VideoRenderToRGB(void *buffer)
-{
-   uint8_t *frame = buffer;
-   const uint8_t *palette = ColorPalette();
-
-   for (int y = 0; y < VIDEO_HEIGHT; y++) {
-      for (int x = 0; x < VIDEO_WIDTH; x++) {
-         const int color = VideoGetPixel_(x, y);
-         const uint8_t *rgb = ColorToRGB((palette)? palette[color] : color);
-         memcpy(frame, rgb, 3);
-         frame += 3;
-      }
-   }
-}
 
 #endif //include guard

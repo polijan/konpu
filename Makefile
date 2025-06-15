@@ -71,18 +71,37 @@ LDFLAGS = -rdynamic -ldl -lm $(shell sdl2-config --libs) $(LDFLAGS_EXTRA)
 # disable implicit rules and builtin variables, I prefer to be explicit.
 MAKEFLAGS += -rR
 
-.PHONY: all konpu test tests apps cppcheck clean cleanall print-%
+.PHONY: all      konpu tests apps tools                                     \
+        clean    clean-konpu clean-apps clean-tools                         \
+        cleanall cleanall-konpu cleanall-tests cleanall-apps cleanall-tools \
+        test cppcheck print-%                                               \
 
 all: konpu tests apps
 
-clean:
-	rm -f obj/* tests/bin/*
+clean: clean-konpu clean-tests clean-apps
 
-cleanall: clean
-	rm -f bin/konpu include/konpu.h lib/libkonpu.* apps/lib/*
+cleanall: cleanall-konpu cleanall-tests cleanall-apps
 
-print-%: # Use make print-<VARIABLE> to print out a variable from this Makefile
-	@echo '$(subst ','\'',$*=$($*))'
+
+#clean: clean-konpu clean-apps
+#	rm -f obj/* tests/bin/*
+#
+#cleanall: clean
+#	rm -f bin/konpu include/konpu.h lib/libkonpu.* apps/lib/*
+
+
+#-------------------------------------------------------------------------------
+# tools: simply invoke tools' Makefile via dev-make-tools
+#-------------------------------------------------------------------------------
+
+tools:
+	@dev-make-tools
+
+clean-tools:
+	@dev-make-tools clean
+
+cleanall-tools:
+	@dev-make-tools cleanall
 
 
 #-------------------------------------------------------------------------------
@@ -97,6 +116,12 @@ KONPU_OBJS    = $(patsubst src/%.c, obj/%.o, $(KONPU_SRCS))
 KONPU_DEPS    = $(patsubst src/%.c, obj/%.d, $(KONPU_SRCS))
 
 konpu: include/konpu.h lib/libkonpu.a bin/konpu #lib/libkonpu.so
+
+clean_konpu:
+	rm -f obj/* tests/bin/*
+
+cleanall_konpu: clean_konpu
+	rm -f bin/konpu include/konpu.h lib/libkonpu.*
 
 -include $(KONPU_DEPS)
 
@@ -132,17 +157,16 @@ obj/%.o: src/%.c
 
 #-------------------------------------------------------------------------------
 # tests:
-#
-# target test  => compile and run the tests
-# target tests => compile the tests
 #-------------------------------------------------------------------------------
 TESTS_SRCS = $(wildcard tests/*.c)
 TESTS_BINS = $(patsubst tests/%.c, tests/bin/%, $(TESTS_SRCS))
 
-test: tests
-	@dev-run-tests
-
 tests: $(TESTS_BINS)
+
+clean-tests:
+
+cleanall-tests: clean-tests
+	rm -f tests/bin/*
 
 tests/bin/%: tests/%.c lib/libkonpu.a include/konpu.h tests/test.h
 	@printf "\033[34mcompiling %s:\033[m " $<
@@ -157,6 +181,11 @@ APPS_LIBS = $(patsubst apps/src/%.c, apps/lib/%.so, $(APPS_SRCS))
 
 apps: $(APPS_LIBS)
 
+clean-apps:
+
+cleanall-apps: clean-apps
+	rm -f apps/lib/*
+
 apps/lib/%.so: apps/src/%.c include/konpu.h
 	@printf "\033[32mcreating application (shared lib %s):\033[m " $@
 	@mkdir -p $(@D)
@@ -165,12 +194,18 @@ apps/lib/%.so: apps/src/%.c include/konpu.h
 
 
 #-------------------------------------------------------------------------------
-# konpu:
-# - generate konpu.h in include/
-# - build static library in lib/ (and objects in obj)
-# - generate a main calling KonpuMain and build konpu binary in bin/
+# Special targets
 #-------------------------------------------------------------------------------
 
+# Use make print-<VARIABLE> to print out a variable from this Makefile
+print-%:
+	@echo '$(subst ','\'',$*=$($*))'
+
+# Run the tests
+test: tests
+	@dev-run-tests
+
+# Static C source code check
 cppcheck: include/konpu.h
 	@printf "\033[33mcppcheck src\033[m\n"
 	cppcheck -i tmp  --force src
@@ -180,4 +215,3 @@ cppcheck: include/konpu.h
 	cppcheck -i tmp  -I include  apps/src
 	@printf "\033[33mcppcheck tools\033[m\n"
 	cppcheck -i tmp  tools
-

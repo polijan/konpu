@@ -30,9 +30,10 @@ extern const uint32_t  *VIDEO_REGISTER_ERRORS_;
 
 #if (INT_WIDTH >= 32) || (VIDEO_FACTOR_ == 1)
 //  Number of pixels in the framebuffer
-#   define VIDEO_WxH_  (VIDEO_WIDTH * VIDEO_HEIGHT)
+#   define VIDEO_COUNT_PIXELS_  (VIDEO_WIDTH * VIDEO_HEIGHT)
 #else
-#   define VIDEO_WxH_  ((int32_t)VIDEO_WIDTH * (int32_t)VIDEO_HEIGHT)
+//  Number of pixels in the framebuffer
+#   define VIDEO_COUNT_PIXELS_  ((int32_t)VIDEO_WIDTH * (int32_t)VIDEO_HEIGHT)
 #endif
 
 // Count of video errors when rendering the framebuffer

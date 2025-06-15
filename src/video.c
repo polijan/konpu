@@ -32,13 +32,6 @@ void VideoReset(void)
    memset(VIDEO_BUFFER, 0, attr_offset);
 }
 
-int VideoGetPixel_(int x, int y)
-{ return VideoGetPixel_inline_(x,y); }
-
-void VideoSetPixel_(int x, int y, int color)
-{ VideoSetPixel_inline_(x,y, color); }
-
-
 int VideoMode_(int mode)
 {
    if (mode < 0 || mode > 255) return 0;
