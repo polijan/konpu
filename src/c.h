@@ -468,18 +468,29 @@ static_assert(sizeof(uint_least64_t) == 8);
 #endif
 
 
-// We don't have the full <stdio.h>, but we have those facilities from it
-// They might be a bit different in that they never fail (do not return "EOF"),
-// and printf's format may be very slightly different (extra, etc.)
-int konpu_putchar_(int c);
-int konpu_puts_(const char* s);
-int konpu_printf_(const char* restrict format, ...);
+// Konpu does NOT include <stdlib.h> but provides the `abs` function.
+// Trying to take the absolute value of the most negative integer is not defined
+#define abs(x)  c_abs_(x)
+#   if defined(__GNUC__)
+#     define c_abs_(x)  __builtin_abs(x)
+#   else
+      static inline int c_abs_(int n)
+      { return (n > 0 ? n : -n); }
+#   endif
+
+
+// Konpu does NOT include <stdio.h>, but provides some facilities from it.
+// (They might be a bit different in that they never fail (don't return "EOF"),
+//  and printf's format may be very slightly different (extra, etc.))
+int c_putchar_(int c);
+int c_puts_(const char* s);
+int c_printf_(const char* restrict format, ...);
 // Use konpu's function even if <stdio.h> was included:
-#define putchar(c)            konpu_putchar_(c)
-#define puts(cstring)         konpu_puts_(cstring)
-#define printf(...)           konpu__printf(__VA_ARGS__)
-#  define konpu__printf_(format, ...) \
-      konpu_printf_(format UTIL_VA_OPT_COMMA(__VA_ARGS__) __VA_ARGS__)
+#define putchar(c)       c_putchar_(c)
+#define puts(cstring)    c_puts_(cstring)
+#define printf(...)      c__printf_(__VA_ARGS__)
+#  define c__printf_(format, ...) \
+      c_printf_(format UTIL_VA_OPT_COMMA(__VA_ARGS__) __VA_ARGS__)
 
 
 // Memory functions from <string.h>. Making sure we have those:

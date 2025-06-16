@@ -1,18 +1,18 @@
 #include "c.h"
 
-int konpu_putchar_(int c) {
+int c_putchar_(int c) {
    // TODO
    (void)c;
    return c;
 }
 
-int konpu_puts_(const char* s) {
+int c_puts_(const char* s) {
    // TODO
    (void)s;
    return 0;
 }
 
-int konpu_printf_(const char* restrict format, ...) {
+int c_printf_(const char* restrict format, ...) {
    // TODO
    (void)format;
    return 0;
