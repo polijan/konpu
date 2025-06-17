@@ -72,7 +72,11 @@
 // Number of keys which we track on the keyboard (should be 256)
 #define KEY_COUNT    (CHAR_BIT * RAM_KEY_STATE_SZ_)
 
-// Return true iff a key is currently pressed.
+// Return non-zero iff any key is currently pressed
+static inline uint64_t KeyIsAnyDown(void)
+{ return KEY_STATE[0] | KEY_STATE[1] | KEY_STATE[2] | KEY_STATE[3]; }
+
+// Return true iff the given key is currently pressed.
 static inline bool KeyIsDown(int key)
 {
    if (key < 0 || key >= KEY_COUNT) return false;
