@@ -2,6 +2,21 @@
 #define  KONPU_BITS_H_
 #include "c.h"
 
+// uint32_t or unsigned int, whatever is the larger type
+#if UINT_WIDTH >= 32
+   typedef unsigned int BITS_MAX32_T;
+#else
+   typedef uint32_t BITS_MAX32_T;
+#endif
+
+// uint64_t or unsigned int, whatever is the larger type
+#if UINT_WIDTH >= 64
+   typedef unsigned int BITS_MAX64_T;
+#else
+   typedef uint64_t BITS_MAX64_T;
+#endif
+
+
 //------------------------------------------------------------------------------
 // Chunk Terminology in ilo Konpu:
 //------------------------------------------------------------------------------
@@ -86,7 +101,8 @@
 //    as an extra parameter)
 //
 // BITS_GET_*(bits, index) --> get a chunk element from bits
-// BITS_SET_*(bits, index, value) --> return bits with chunk set to value
+// BITS_SET_*(bits, index, value) --> return an unsigned integer with same value
+//                                 as bits but with chunk set to the given value
 // BITS_SWAP_*(bits) --> return bits array with chunk place is reversed
 //     return type is same as what  was input
 // BITS_REV_*(bits) --> return the array but the bits inside each chunk are
@@ -108,9 +124,9 @@
    )((uint), (index), (bit))
    static inline unsigned BITS_SET_BIT_u_(unsigned x, unsigned n, unsigned bit)
    { return (x & ~(1u << n)) | (bit << n); }
-   static inline uint32_t BITS_SET_BIT_u32_(uint32_t x, unsigned n, uint32_t bit)
+   static inline BITS_MAX32_T BITS_SET_BIT_u32_(uint32_t x, unsigned n, BITS_MAX32_T bit)
    { return (x & ~(UINT32_C(1) << n)) | (bit << n); }
-   static inline uint64_t BITS_SET_BIT_u64_(uint64_t x, unsigned n, uint64_t bit)
+   static inline BITS_MAX64_T BITS_SET_BIT_u64_(uint64_t x, unsigned n, BITS_MAX64_T bit)
    { return (x & ~(UINT64_C(1) << n)) | (bit << n); }
 
 #define BITS_SET_QUARTER(uint, index, quarter) \
@@ -121,9 +137,9 @@
    )((uint), (index), (quarter))
    static inline unsigned BITS_SET_QUARTER_u_(unsigned x, unsigned n, unsigned quarter)
    { n <<= 1; return (x & ~(0x3u << n)) | (quarter << n); }
-   static inline uint32_t BITS_SET_QUARTER_u32_(uint32_t x, unsigned n, uint32_t quarter)
+   static inline BITS_MAX32_T BITS_SET_QUARTER_u32_(uint32_t x, unsigned n, BITS_MAX32_T quarter)
    { n <<= 1; return (x & ~(UINT32_C(3) << n)) | (quarter << n); }
-   static inline uint64_t BITS_SET_QUARTER_u64_(uint64_t x, unsigned n, uint64_t quarter)
+   static inline BITS_MAX64_T BITS_SET_QUARTER_u64_(uint64_t x, unsigned n, BITS_MAX64_T quarter)
    { n <<= 1; return (x & ~(UINT64_C(3) << n)) | (quarter << n); }
 
 #define BITS_SET_NIBBLE(uint, index, nibble) \
@@ -134,9 +150,9 @@
    )((uint), (index), (nibble))
    static inline unsigned BITS_SET_NIBBLE_u_(unsigned x, unsigned n, unsigned nibble)
    { n <<= 2; return (x & ~(0xFu << n)) | (nibble << n); }
-   static inline uint32_t BITS_SET_NIBBLE_u32_(uint32_t x, unsigned n, uint32_t nibble)
+   static inline BITS_MAX32_T BITS_SET_NIBBLE_u32_(uint32_t x, unsigned n, BITS_MAX32_T nibble)
    { n <<= 2; return (x & ~(UINT32_C(0xF) << n)) | (nibble << n); }
-   static inline uint64_t BITS_SET_NIBBLE_u64_(uint64_t x, unsigned n, uint64_t nibble)
+   static inline BITS_MAX64_T BITS_SET_NIBBLE_u64_(uint64_t x, unsigned n, BITS_MAX64_T nibble)
    { n <<= 2; return (x & ~(UINT64_C(0xF) << n)) | (nibble << n); }
 
 #define BITS_SET_BYTE(uint, index, byte)                      \
@@ -147,9 +163,9 @@
       uint64_t: BITS_SET_BYTE_u64_((uint), (index), (byte))   )
    static inline unsigned BITS_SET_BYTE_u_(unsigned x, unsigned n, unsigned byte)
    { n <<= 3; return (x & ~(0xFFu << n)) | (byte << n); }
-   static inline uint32_t BITS_SET_BYTE_u32_(uint32_t x, unsigned n, uint32_t byte)
+   static inline BITS_MAX32_T BITS_SET_BYTE_u32_(uint32_t x, unsigned n, BITS_MAX32_T byte)
    { n <<= 3; return (x & ~(UINT32_C(0xFF) << n)) | (byte << n); }
-   static inline uint64_t BITS_SET_BYTE_u64_(uint64_t x, unsigned n, uint64_t byte)
+   static inline BITS_MAX64_T BITS_SET_BYTE_u64_(uint64_t x, unsigned n, BITS_MAX64_T byte)
    { n <<= 3; return (x & ~(UINT64_C(0xFF) << n)) | (byte << n); }
 
 
