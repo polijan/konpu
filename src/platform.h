@@ -163,10 +163,14 @@
                                  && (KONPU_PLATFORM_LIBC != 1)
 #   error("KONPU_PLATFORM_LIBC defined but not set to 0 or 1")
 #endif
-// - Step 3) Set up a default value if none was provided
-//           (1 if POSIX or WINDOWS platform is enabled, otherwise 0)
+// - Step 3) Set up a default value if none was provided:
+//    |-> 1 if __STD_HOSTED__ is non 0 or POSIX or WINDOWS platform is enabled,
+//    '->  otherwise 0
 #ifndef KONPU_PLATFORM_LIBC
-#   if KONPU_PLATFORM_POSIX || KONPU_PLATFORM_WINDOWS
+#   ifndef __STDC_HOSTED__ // <-- since C99, this macro actually must be defined
+#      define __STDC_HOSTED__ 0
+#   endif
+#   if __STDC_HOSTED__ || KONPU_PLATFORM_POSIX || KONPU_PLATFORM_WINDOWS
 #      define KONPU_PLATFORM_LIBC     1
 #   else
 #      define KONPU_PLATFORM_LIBC     0
