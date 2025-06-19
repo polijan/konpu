@@ -472,7 +472,116 @@ static_assert(sizeof(uint_least64_t) == 8);
 #endif
 
 
-// Konpu does NOT include <stdlib.h> but provides the `abs` function.
+//------------------------------------------------------------------------------
+// <ctype.h> header
+//
+// We don't have have an explicit "locale" in Konpu C, but we can make our own
+// implementation of the function in <ctype.h>, based on our implicit charset.
+//------------------------------------------------------------------------------
+
+#undef  isalnum
+// Return non-zero iff the given character is alphanumeric
+#define isalnum(c)    c_isalnum_(c)
+   static inline int  c_isalnum_(int c)
+   { return (c >= 'a' && c <= 'z') ||
+            (c >= 'A' && c <= 'Z') ||
+            (c >= '0' && c <= '9') ; }
+
+#undef  isalpha
+// Return non-zero iff the given character is alphabetic
+#define isalpha(c)    c_isalpha_(c)
+   static inline int  c_isalpha_(int c)
+   { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
+
+#undef  islower
+// Return non-zero iff the given character is a lowercase character
+#define islower(c)    c_islower_(c)
+   static inline int  c_islower_(int c)
+   { return (c >= 'a' && c <= 'z'); }
+
+#undef  isupper
+// Return non-zero iff the given character is an uppercase character
+#define isupper(c)    c_isupper_(c)
+   static inline int  c_isupper_(int c)
+   { return (c >= 'A' && c <= 'Z'); }
+
+#undef  isdigit
+// Return non-zero iff the given character is a digit (0-9)
+#define isdigit(c)    c_isdigit_(c)
+   static inline int  c_isdigit_(int c)
+   { return (c >= '0' && c <= '9'); }
+
+#undef  isxdigit
+// Return non-zero iff the given character is an hexadecimal character
+#define isxdigit(c)   c_isxdigit_(c)
+   static inline int  c_isxdigit_(int c)
+   { return (c >= '0' && c <= '9') ||
+            (c >= 'a' && c <= 'f') ||
+            (c >= 'A' && c <= 'F') ; }
+
+#undef  iscntrl
+// Return non-zero iff the given character is a control character
+#define iscntrl(c)    c_iscntrl_(c)
+   static inline int  c_iscntrl_(int c)
+   { return (c < 32) || (c == 127); /* TODO */ }
+
+#undef  isgraph
+// Return non-zero iff the given character has a graphical representation
+#define isgraph(c)    c_isgraph_(c)
+   static inline int  c_isgraph_(int c)
+   { return (c > 32) && (c != 127); /* TODO */ }
+
+#undef  isspace
+// Return non-zero iff the given character is a space character
+#define isspace(c)    c_isspace_(c)
+   static inline int  c_isspace_(int c)
+   { return (c == ' ') || (c == '\n'); /* TODO: \f \r \t \v ... */ }
+
+#undef  isblank
+// Return non-zero iff the given character is a blank character
+// (note: this does NOT look at a glyph)
+#define isblank(c)    c_isblank_(c)
+   static inline int  c_isblank_(int c)
+   { return (c == ' '); /* TODO: \t */ }
+
+#undef  isprint
+// Return non-zero iff the given character is a printing character
+#define isprint(c)    c_isprint_(c)
+   static inline int  c_isprint_(int c)
+   { return !c_iscntrl_(c); /* TODO: currently same as: (c >=32) && (c!=127) */}
+
+#undef  ispunct
+// Return non-zero iff the given character is a punctuation character
+// TODO: for now same as ASCII punctuation: !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~
+#define ispunct(c)    c_ispunct_(c)
+   static inline int  c_ispunct_(int c)
+   { return (c >= '!' && c <= '/') ||
+            (c >= ':' && c <= '@') ||
+            (c >= '[' && c <= '`') ||
+            (c >= '}' && c < 127); }
+
+#undef  tolower
+// Converts the given character to lowercase
+#define tolower(c)    TODO_FIXME_c_tolower_(c)
+   static inline int  c_tolower_(int c)
+   { return (c >= 'A' && c <= 'Z')? c + 32 : c; }
+
+#undef  toupper
+// Converts the given character to Uppercase
+#define toupper(c)    TODO_FIXME_c_toupper_(c)
+   static inline int  c_toupper_(int c)
+   { return (c >= 'a' && c <= 'z')? c - 32 : c; }
+
+//------------------------------------------------------------------------------
+// <stdlib.h>
+//
+// Konpu does NOT include <stdlib.h> but provides it own implementation for a
+// few functions from it:
+// `abs`, ...
+//------------------------------------------------------------------------------
+
+#undef  abs
+// Return the absolute value of an int
 // Trying to take the absolute value of the most negative integer is not defined
 #define abs(x)  c_abs_(x)
 #   if defined(__GNUC__)
@@ -482,27 +591,44 @@ static_assert(sizeof(uint_least64_t) == 8);
       { return (n > 0 ? n : -n); }
 #   endif
 
-
-// Konpu does NOT include <stdio.h>, but provides some facilities from it.
+//------------------------------------------------------------------------------
+// <stdio.h>
+//
+// Konpu does NOT include <stdio.h> but provides it own implementation for a
+// few functions from it:
+// `putchar`, `puts`, `printf` ...
+//
 // (They might be a bit different in that they never fail (don't return "EOF"),
-//  and printf's format may be very slightly different (extra, etc.))
-int c_putchar_(int c);
-int c_puts_(const char* s);
-int c_printf_(const char* restrict format, ...);
-// Use konpu's function even if <stdio.h> was included:
-#define putchar(c)       c_putchar_(c)
+// and printf's format may be very slightly different (extra, etc.))
+//------------------------------------------------------------------------------
+
+#undef  putchar
+// Write the character c on screen.
+#define putchar(c)  c_putchar_(c)
+   int c_putchar_(int c);
+
+#undef puts
+// Write string s and a trailing newline on screen.
 #define puts(cstring)    c_puts_(cstring)
+   int c_puts_(const char* s);
+
+#undef printf
+// Write on screen according to the given format string and parameters.
 #define printf(...)      c__printf_(__VA_ARGS__)
+   int c_printf_(const char* restrict format, ...);
 #  define c__printf_(format, ...) \
       c_printf_(format UTIL_VA_OPT_COMMA(__VA_ARGS__) __VA_ARGS__)
 
-
-// Functions from <string.h>, we at least would need memcpy/memset.
+//------------------------------------------------------------------------------
+// <string.h> (some functions)
+// At least would need memcpy/memset.
+//------------------------------------------------------------------------------
 #if __STDC_VERSION__ >= 202311L
 // In C23, <string.h> became partially freestanding.
 // https://cppreference.com/w/c/language/conformance.html
 // Within the Konpu implementation, mark string functions not required by a
 // freestanding implementation as banned, so we don't use them.
+// (or maybe later, we could implement [some of] them)
 #  include <string.h>
 #  ifndef KONPU_H_
 #     undef  strdup
