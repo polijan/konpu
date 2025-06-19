@@ -2,7 +2,7 @@
 #include "ram.h"
 #include "rom.h"
 #include "var.h"
-#include "platform_include.h"
+#include "platform_.h"
 #if KONPU_PLATFORM_LIBC
 #   include <stdlib.h>
 #   include <time.h>  // C's <time.h>

@@ -1,5 +1,5 @@
-#ifndef  KONPU_APP_H
-#define  KONPU_APP_H
+#ifndef  KONPU_APP_H_
+#define  KONPU_APP_H_
 #include "c.h"
 
 //------------------------------------------------------------------------------
@@ -40,4 +40,4 @@ AppList()
 */
 
 
-#endif //KONPU_APP_H
+#endif //include guard

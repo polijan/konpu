@@ -2,8 +2,11 @@
 // This file should only be included internally by Konpu's project .c files,
 // as we do not wish to expose platforms functions in the Konpu API.
 
-#ifndef  KONPU_PLATFORM_INCLUDE_H
-#define  KONPU_PLATFORM_INCLUDE_H
+#ifndef KONPU_PLATFORM__H_
+#define KONPU_PLATFORM__H_
+#ifdef  KONPU_H_
+#   error "This must not be included from konpu.h"
+#endif
 #include "platform.h"
 
 //------------------------------------------------------------------------------
@@ -161,4 +164,4 @@
 #endif
 
 
-#endif //KONPU_PLATFORM_INCLUDE_H
+#endif //include guard

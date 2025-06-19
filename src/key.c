@@ -1,6 +1,6 @@
 #include "key.h"
 
-#include "platform_include.h"
+#include "platform_.h"
 #if KONPU_PLATFORM_SDL_ANY
 void KeyUpdate(void)
 {

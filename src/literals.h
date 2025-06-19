@@ -1,8 +1,8 @@
 // Helpers for writing C string literals using sitelen pona.
 // TODO CHANGE THOSE TO SITELEN PONA CHARACTERS
 
-#ifndef KONPU_LITERALS_H
-#define KONPU_LITERALS_H
+#ifndef KONPU_LITERALS_H_
+#define KONPU_LITERALS_H_
 
 // nimi 128-247 ("classic 120 pu")
 #define A                "a "
@@ -160,4 +160,4 @@
 
 
 
-#endif
+#endif //include guard

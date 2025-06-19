@@ -1,7 +1,7 @@
 #include "time.h"
 
 // TimeSleep()
-#include "platform_include.h"
+#include "platform_.h"
 #if   KONPU_PLATFORM_SDL1 || KONPU_PLATFORM_SDL2 || KONPU_PLATFORM_SDL3
    void TimeSleep(int ms) { if (ms > 0) SDL_Delay(ms); }
 #elif KONPU_PLATFORM_WINDOWS

@@ -1,7 +1,7 @@
 #include "platform.h"
 
 #if KONPU_PLATFORM_SDL2
-#   include "platform_include.h"
+#   include "platform_.h"
 #   include "video.h"
 #   include "init.h"
 #   include "util.h"

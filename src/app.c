@@ -1,6 +1,6 @@
 #include "app.h"
 
-#include "platform_include.h"
+#include "platform_.h"
 #if KONPU_PLATFORM_SDL2
    // SDL3 uses SDL_SharedObject*, but SDL2 uses void*
    typedef void SDL_SharedObject;

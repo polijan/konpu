@@ -4,7 +4,7 @@
 #include "memory.h"
 #include "app.h"
 
-#include "platform_include.h"
+#include "platform_.h"
 #include <stdio.h>
 #include <stdlib.h>
 

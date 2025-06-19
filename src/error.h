@@ -1,5 +1,5 @@
-#ifndef  KONPU_ERROR_H
-#define  KONPU_ERROR_H
+#ifndef  KONPU_ERROR_H_
+#define  KONPU_ERROR_H_
 #include "c.h"
 
 typedef int Error;
@@ -41,4 +41,4 @@ typedef enum ErrorBuiltin {
    KONPU_ERROR_BUILTIN_COUNT_
 } ErrorBuiltin;
 
-#endif //KONPU_ERROR_H
+#endif //include guard

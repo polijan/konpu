@@ -1,5 +1,5 @@
-#ifndef KONPU_INIT_H
-#define KONPU_INIT_H
+#ifndef KONPU_INIT_H_
+#define KONPU_INIT_H_
 
 //------------------------------------------------------------------------------
 // Initialization and Deinitialization of Konpu's systems
@@ -47,4 +47,4 @@ void    HeapInit(void);
 #define HeapDrop()
 
 
-#endif //KONPU_INIT_H
+#endif //include guard
