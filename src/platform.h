@@ -1,5 +1,5 @@
-#ifndef  KONPU_PLATFORM_H
-#define  KONPU_PLATFORM_H
+#ifndef  KONPU_PLATFORM_H_
+#define  KONPU_PLATFORM_H_
 #include "config.h"
 
 //------------------------------------------------------------------------------
@@ -178,4 +178,4 @@
 #endif
 
 
-#endif //KONPU_PLATFORM_H
+#endif //KONPU_PLATFORM_H_

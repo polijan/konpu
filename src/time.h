@@ -1,5 +1,5 @@
-#ifndef  KONPU_TIME_H
-#define  KONPU_TIME_H
+#ifndef  KONPU_TIME_H_
+#define  KONPU_TIME_H_
 #include "c.h"
 
 // Try to do nothing for the specified number of milliseconds.
@@ -13,4 +13,4 @@ void TimeSleep(int milliseconds);
 // or a negative number if that information is unavailable.
 int64_t TimeTicks(void);
 
-#endif //KONPU_TIME_H
+#endif //include guard

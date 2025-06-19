@@ -1,7 +1,7 @@
-#ifndef  KONPU_RANDOM_H
-#define  KONPU_RANDOM_H
+#ifndef  KONPU_RANDOM_H_
+#define  KONPU_RANDOM_H_
 #include "c.h"
 
 uint64_t Random(void);
 
-#endif //KONPU_RANDOM_H
+#endif //include guard

@@ -1,7 +1,7 @@
 // defines vars and related types or operations
 
-#ifndef  KONPU_VAR_H
-#define  KONPU_VAR_H
+#ifndef  KONPU_VAR_H_
+#define  KONPU_VAR_H_
 #include "c.h"
 
 enum TypeBuiltin {
@@ -219,4 +219,4 @@ void VarPrintTTY(var v, Type t);
 #define VarDrop(var, type)
 
 
-#endif //KONPU_VAR_H
+#endif //include guard

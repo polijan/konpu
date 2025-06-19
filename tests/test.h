@@ -38,8 +38,8 @@
 // (if TEST_TRACE isn't defined, the macro expands to nothing)
 
 
-#ifndef  KONPU_TEST_H
-#define  KONPU_TEST_H
+#ifndef  KONPU_TEST_H_
+#define  KONPU_TEST_H_
 
 #define TestAssert(message, test)                             \
         do {                                                  \
@@ -102,4 +102,4 @@ int main(int argc, char* argv[])
 #include <string.h>    // string handling + memory functions
 #include <inttypes.h>  // format conversion of integer types
 
-#endif //KONPU_TEST_H
+#endif //include guard

@@ -1,4 +1,7 @@
 #include "var.h"
+
+// we shouldn't use <stdio.h>...
+#undef printf
 #include <stdio.h>
 #include <inttypes.h>
 

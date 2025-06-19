@@ -3,8 +3,8 @@
 // The heap is not used.
 
 
-#ifndef  KONPU_OPTIONS_H
-#define  KONPU_OPTIONS_H
+#ifndef  KONPU_OPTIONS_H_
+#define  KONPU_OPTIONS_H_
 #include <stddef.h>
 
 // This is extracted from the excellent STC library, by Tyge Løvset
@@ -113,4 +113,4 @@ Fixed major bugs with optional arguments (both long and short).
 Added arg->optstr output field, more consistent API.
 */
 
-#endif //KONPU_OPTIONS_H
+#endif //include guard

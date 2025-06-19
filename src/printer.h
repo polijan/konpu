@@ -2,8 +2,8 @@
 // The Printer port (often just referred to as printer) is a fast interface
 // through which ilo Konpu can send data out (to a printer or other device).
 //------------------------------------------------------------------------------
-#ifndef  KONPU_PRINTER_H
-#define  KONPU_PRINTER_H
+#ifndef  KONPU_PRINTER_H_
+#define  KONPU_PRINTER_H_
 #include "c.h"
 
 
@@ -147,4 +147,4 @@ int Printer(const char *restrict format, ...);
 #endif
 
 
-#endif //KONPU_PRINTER_H
+#endif //include guard
