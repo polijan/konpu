@@ -37,6 +37,10 @@
 #   error "Konpu requires a compiler which conforms to C11 (or later) standard."
 #endif
 
+// Utility to help ban the usage of a function (eg. make a compile error if we
+// try to use it)
+#define C_BANNED(func)   KONPU_SHOULD_NOT_USE_THE_FUNCTION_##func##_
+
 // Config and platform includes
 #include "config.h"
 #include "platform.h"
@@ -439,7 +443,7 @@ static_assert(sizeof(uint_least64_t) == 8);
 // The following macro constants are also available:
 // __STDC_ENDIAN_BIG__, __STDC_ENDIAN_LITTLE__, __STDC_ENDIAN_NATIVE__
 //
-#if __STDC_VERSION__ > 201710L
+#if __STDC_VERSION__ >= 202311L
 #   include <stdbit.h>
 #else
     // TODO: define stdc_bit_ceil, stdc_bit_floor, stdc_bit_width,
@@ -493,11 +497,31 @@ int c_printf_(const char* restrict format, ...);
       c_printf_(format UTIL_VA_OPT_COMMA(__VA_ARGS__) __VA_ARGS__)
 
 
-// Memory functions from <string.h>. Making sure we have those:
-extern void *memset(void *dst, int ch, size_t count);
-extern void *memcpy(void *restrict dst, const void *restrict src, size_t count);
-// maybe memmove too?
-// extern void *memmove(void *dst, const void *src, size_t count);
+// Functions from <string.h>, we at least would need memcpy/memset.
+#if __STDC_VERSION__ >= 202311L
+// In C23, <string.h> became partially freestanding.
+// https://cppreference.com/w/c/language/conformance.html
+// Within the Konpu implementation, mark string functions not required by a
+// freestanding implementation as banned, so we don't use them.
+#  include <string.h>
+#  ifndef KONPU_H_
+#     undef  strdup
+#     define strdup(string)             C_BANNED(strdup)
+#     undef  strndup
+#     define strndup(string, size)      C_BANNED(strndup)
+#     undef  strxfrm
+#     define strxfrm(dest, src, n)      C_BANNED(strxfrm)
+#     undef  strtok
+#     define strtok(string, str_delim)  C_BANNED(strtok)
+#     undef  strerror
+#     define strerror(errnum)           C_BANNED(errnum)
+#  endif
+#else
+   extern void *memset(void *dst, int ch, size_t count);
+   extern void *memcpy(void *restrict dst, const void *restrict src, size_t count);
+   // maybe memmove too?
+   // extern void *memmove(void *dst, const void *src, size_t count);
+#endif
 
 /*
 // memset, memcpy (as in <string.h>)

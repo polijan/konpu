@@ -88,7 +88,7 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
             w = VIDEO_WIDTH_GLYPH8;
             h = VIDEO_HEIGHT_GLYPH8;
             attr_offset = (w * h) << PIXELS_2x4;
-            px = GlyphPixelAt(
+            px = GlyphGetPixel(
                VIDEO_GLYPH8[(x >> GLYPH8_WIDTH_LOG2) + w * (y >> GLYPH8_HEIGHT_LOG2)],
                x & (GLYPH8_WIDTH - 1), y & (GLYPH8_HEIGHT - 1) );
             break;
@@ -96,7 +96,7 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
             w = VIDEO_WIDTH_GLYPH16;
             h = VIDEO_HEIGHT_GLYPH16;
             attr_offset = (w * h) << PIXELS_4x4;
-            px = GlyphPixelAt(
+            px = GlyphGetPixel(
                VIDEO_GLYPH16[(x >> GLYPH16_WIDTH_LOG2) + w * (y >> GLYPH16_HEIGHT_LOG2)],
                x & (GLYPH16_WIDTH - 1), y & (GLYPH16_HEIGHT - 1) );
             break;
@@ -104,7 +104,7 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
             w = VIDEO_WIDTH_GLYPH32;
             h = VIDEO_HEIGHT_GLYPH32;
             attr_offset = (w * h) << PIXELS_4x8;
-            px = GlyphPixelAt(
+            px = GlyphGetPixel(
                VIDEO_GLYPH32[(x >> GLYPH32_WIDTH_LOG2) + w * (y >> GLYPH32_HEIGHT_LOG2)],
                x & (GLYPH32_WIDTH - 1), y & (GLYPH32_HEIGHT - 1) );
             break;
@@ -112,7 +112,7 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
             w = VIDEO_WIDTH_GLYPH64;
             h = VIDEO_HEIGHT_GLYPH64;
             attr_offset = (w * h) << PIXELS_8x8;
-            px = GlyphPixelAt(
+            px = GlyphGetPixel(
                VIDEO_GLYPH64[(x >> GLYPH64_WIDTH_LOG2) + w * (y >> GLYPH64_HEIGHT_LOG2)],
                x & (GLYPH64_WIDTH - 1), y & (GLYPH64_HEIGHT - 1) );
             break;
@@ -120,7 +120,7 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
             w = VIDEO_WIDTH_GLYPH128;
             h = VIDEO_HEIGHT_GLYPH128;
             attr_offset = (w * h) << PIXELS_8x16;
-            px = GlyphPixelAt(
+            px = GlyphGetPixel(
                VIDEO_GLYPH128[(x >> GLYPH128_WIDTH_LOG2) + w * (y >> GLYPH128_HEIGHT_LOG2)],
                x & (GLYPH128_WIDTH - 1), y & (GLYPH128_HEIGHT - 1) );
             break;
@@ -128,7 +128,7 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
             w = VIDEO_WIDTH_GLYPH256;
             h = VIDEO_HEIGHT_GLYPH256;
             attr_offset = (w * h) << PIXELS_16x16;
-            px = GlyphPixelAt(
+            px = GlyphGetPixel(
                VIDEO_GLYPH256[(x >> GLYPH256_WIDTH_LOG2) + w * (y >> GLYPH256_HEIGHT_LOG2)],
                x & (GLYPH256_WIDTH - 1), y & (GLYPH256_HEIGHT - 1) );
             break;
@@ -232,42 +232,42 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
             case PIXELS_2x4:
                w = VIDEO_WIDTH_GLYPH8;
                for (int plane = 0; plane < low_nibble; plane++)
-                  px |= GlyphPixelAt(
+                  px |= GlyphGetPixel(
                      VIDEO_GLYPH8[(x >> GLYPH8_WIDTH_LOG2) + w * (y >> GLYPH8_HEIGHT_LOG2)],
                      x & (GLYPH8_WIDTH - 1), y & (GLYPH8_HEIGHT - 1) ) << plane;
                return px;
             case PIXELS_4x4:
                w = VIDEO_WIDTH_GLYPH16;
                for (int plane = 0; plane < low_nibble; plane++)
-                  px |= GlyphPixelAt(
+                  px |= GlyphGetPixel(
                      VIDEO_GLYPH16[(x >> GLYPH16_WIDTH_LOG2) + w * (y >> GLYPH16_HEIGHT_LOG2)],
                      x & (GLYPH16_WIDTH - 1), y & (GLYPH16_HEIGHT - 1) ) << plane;
                return px;
             case PIXELS_4x8:
                w = VIDEO_WIDTH_GLYPH32;
                for (int plane = 0; plane < low_nibble; plane++)
-                  px |= GlyphPixelAt(
+                  px |= GlyphGetPixel(
                      VIDEO_GLYPH32[(x >> GLYPH32_WIDTH_LOG2) + w * (y >> GLYPH32_HEIGHT_LOG2)],
                      x & (GLYPH32_WIDTH - 1), y & (GLYPH32_HEIGHT - 1) ) << plane;
                return px;
             case PIXELS_8x8:
                w = VIDEO_WIDTH_GLYPH64;
                for (int plane = 0; plane < low_nibble; plane++)
-                  px |= GlyphPixelAt(
+                  px |= GlyphGetPixel(
                      VIDEO_GLYPH64[(x >> GLYPH64_WIDTH_LOG2) + w * (y >> GLYPH64_HEIGHT_LOG2)],
                      x & (GLYPH64_WIDTH - 1), y & (GLYPH64_HEIGHT - 1) ) << plane;
                return px;
             case PIXELS_8x16:
                w = VIDEO_WIDTH_GLYPH128;
                for (int plane = 0; plane < low_nibble; plane++)
-                  px |= GlyphPixelAt(
+                  px |= GlyphGetPixel(
                      VIDEO_GLYPH128[(x >> GLYPH128_WIDTH_LOG2) + w * (y >> GLYPH128_HEIGHT_LOG2)],
                      x & (GLYPH128_WIDTH - 1), y & (GLYPH128_HEIGHT - 1) ) << plane;
                return px;
             case PIXELS_16x16:
                w = VIDEO_WIDTH_GLYPH256;
                for (int plane = 0; plane < low_nibble; plane++)
-                  px |= GlyphPixelAt(
+                  px |= GlyphGetPixel(
                      VIDEO_GLYPH256[(x >> GLYPH256_WIDTH_LOG2) + w * (y >> GLYPH256_HEIGHT_LOG2)],
                      x & (GLYPH256_WIDTH - 1), y & (GLYPH256_HEIGHT - 1) ) << plane;
                return px;
@@ -280,11 +280,6 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
 // Internal only - Use or PixelSetPixel [or PixelSet_] instead.
 static C_HINT_ALWAYS_INLINE void PixelSet_internal_(int x, int y, int color)
 {
-   (void)x;
-   (void)y;
-   (void)color; /* TODO*/
-
-
    assert(x >= 0 && x < VIDEO_WIDTH);
    assert(y >= 0 && y < VIDEO_HEIGHT);
 
@@ -293,7 +288,86 @@ static C_HINT_ALWAYS_INLINE void PixelSet_internal_(int x, int y, int color)
    //---------------------------------------------------------------------------
    enum VideoElementDimension dimension = VideoModeDimension();
    if (VideoModeHasAttributes()) {
-      return; //TODO
+      /* TODO
+      uint_fast32_t w; // video width  measured in Glyphs (= VIDEO_WIDHT_GLYPH)
+      uint_fast32_t h; // video height measured in Glyphs (= VIDEO_HEIGHT_GLYPH)
+      int_fast32_t  attr_offset; // offset in the video buffer to the start of attributes
+
+      int w_log2 = AttributeWidthLog2();
+      x >>= w_log2;
+      y >>= AttributeHeightLog2();
+      uint8_t *attr = VIDEO_BUFFER + attr_offset
+         + ((x + y * (VIDEO_WIDTH >> w_log2)) << AttributeHasTwoBytes());
+
+
+      // Step 1: Set bit pixel(x,y)
+      switch (dimension) {
+         case PIXELS_2x4:
+            w = VIDEO_WIDTH_GLYPH8;
+            h = VIDEO_HEIGHT_GLYPH8;
+            attr_offset = (w * h) << PIXELS_2x4;
+            GlyphSetPixel(
+               VIDEO_GLYPH8[(x >> GLYPH8_WIDTH_LOG2) + w * (y >> GLYPH8_HEIGHT_LOG2)],
+               x & (GLYPH8_WIDTH - 1), y & (GLYPH8_HEIGHT - 1), 1);
+            break;
+         case PIXELS_4x4:
+            w = VIDEO_WIDTH_GLYPH16;
+            h = VIDEO_HEIGHT_GLYPH16;
+            attr_offset = (w * h) << PIXELS_4x4;
+            px = GlyphPixelAt(
+               VIDEO_GLYPH16[(x >> GLYPH16_WIDTH_LOG2) + w * (y >> GLYPH16_HEIGHT_LOG2)],
+               x & (GLYPH16_WIDTH - 1), y & (GLYPH16_HEIGHT - 1) );
+            break;
+         case PIXELS_4x8:
+            w = VIDEO_WIDTH_GLYPH32;
+            h = VIDEO_HEIGHT_GLYPH32;
+            attr_offset = (w * h) << PIXELS_4x8;
+            px = GlyphPixelAt(
+               VIDEO_GLYPH32[(x >> GLYPH32_WIDTH_LOG2) + w * (y >> GLYPH32_HEIGHT_LOG2)],
+               x & (GLYPH32_WIDTH - 1), y & (GLYPH32_HEIGHT - 1) );
+            break;
+         case PIXELS_8x8:
+            w = VIDEO_WIDTH_GLYPH64;
+            h = VIDEO_HEIGHT_GLYPH64;
+            attr_offset = (w * h) << PIXELS_8x8;
+            px = GlyphPixelAt(
+               VIDEO_GLYPH64[(x >> GLYPH64_WIDTH_LOG2) + w * (y >> GLYPH64_HEIGHT_LOG2)],
+               x & (GLYPH64_WIDTH - 1), y & (GLYPH64_HEIGHT - 1) );
+            break;
+         case PIXELS_8x16:
+            w = VIDEO_WIDTH_GLYPH128;
+            h = VIDEO_HEIGHT_GLYPH128;
+            attr_offset = (w * h) << PIXELS_8x16;
+            px = GlyphPixelAt(
+               VIDEO_GLYPH128[(x >> GLYPH128_WIDTH_LOG2) + w * (y >> GLYPH128_HEIGHT_LOG2)],
+               x & (GLYPH128_WIDTH - 1), y & (GLYPH128_HEIGHT - 1) );
+            break;
+         case PIXELS_16x16:
+            w = VIDEO_WIDTH_GLYPH256;
+            h = VIDEO_HEIGHT_GLYPH256;
+            attr_offset = (w * h) << PIXELS_16x16;
+            px = GlyphPixelAt(
+               VIDEO_GLYPH256[(x >> GLYPH256_WIDTH_LOG2) + w * (y >> GLYPH256_HEIGHT_LOG2)],
+               x & (GLYPH256_WIDTH - 1), y & (GLYPH256_HEIGHT - 1) );
+            break;
+         case PIXELS:
+            w = VIDEO_WIDTH >> 3;
+            h = VIDEO_HEIGHT;
+            attr_offset = w * h;
+            BITS_SET_BIT(VIDEO_BUFFER[(x >> 3) + y * w], x & 7, 1);
+            break;
+         default:
+            unreachable();
+      }
+
+      // Step 2: Get the attribute under the pixel(x,y) and set its foreground
+      int w_log2 = AttributeWidthLog2();
+      x >>= w_log2;
+      y >>= AttributeHeightLog2();
+      uint8_t *attr = VIDEO_BUFFER + attr_offset
+         + ((x + y * (VIDEO_WIDTH >> w_log2)) << AttributeHasTwoBytes());
+      AttributeSetForeground(attr, color);
+   */
    }
 
    //---------------------------------------------------------------------------

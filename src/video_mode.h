@@ -357,23 +357,37 @@ static inline int ColorDepth()
 {
    // Attribute modes
    if (VideoModeHasAttributes())
-      return (AttributeColorType() == ATTRIBUTE_COLORS_16)? 4 : 8; // 16 or 256
+      return 4 << (AttributeColorType() != ATTRIBUTE_COLORS_16);
+      //     ^--- 16 colors attributes => color depth is 4
+      //          otherwise            => color depth is 8
 
    // Non-Attributes modes
    int n = VideoModeLowNibble();
    return (n <= 8)? n : 1 << (n - 8);
-   // ^ This is because:
-   //
-   // Low   | Chunk and Number of Colors  | How that's expressed in terms of
-   // Nibble|                             | the Low Nibble n.
-   // ------|-----------------------------|----------------------------------
-   //   1-8 | planar mode give 2^n color  --> = 1 << n
-   //     9 | quarter chunk ->   4 colors --> = 1 << (1<<1) = 1 << (1 << n-8)
-   //    10 | nibble chunk  ->  16 colors --> = 1 << (1<<2) = 1 << (1 << n-8)
-   //    11 | byte          -> 256 colors --> = 1 << (1<<3) = 1 << (1 << n-8)
-   // }
+      //  ^--- This is because:
+      //
+      // Low   | Chunk and Number of Colors  | How that's expressed in terms of
+      // Nibble|                             | the Low Nibble n.
+      // ------|-----------------------------|----------------------------------
+      //   1-8 | planar mode give 2^n color  --> = 1 << n
+      //     9 | quarter chunk ->   4 colors --> = 1 << (1<<1) = 1 << (1 << n-8)
+      //    10 | nibble chunk  ->  16 colors --> = 1 << (1<<2) = 1 << (1 << n-8)
+      //    11 | byte          -> 256 colors --> = 1 << (1<<3) = 1 << (1 << n-8)
+      // }
 }
 
+// Given a value, return it normalized between 0 and the current color count.
+#define ColorNormalize(color)   ((color) & ((1 << ColorDepth()) - 1))
+/* static inline unsigned ColorNormalize(int color)
+   { return color & ((1 << ColorDepth()) - 1); }
+*/
+   // We want to return: color % current number of color.
+   // As the number of color is a power of 2 (i.e. it's 1 << ColorDepth()),
+   // we can optimize the modulo as: color & (current number of color - 1)
+   //
+   // In fact, the & technique makes the color normalization correct for
+   // negative numbers too (on two's complement systems, which Konpu [and C23]
+   // assumes)
 
 // This will define VIDEO_WIDTH and VIDEO_WEIGHT when not "FORCED" and in the
 // case where the OPTIMIZE_VIDEO_MODE option is on.

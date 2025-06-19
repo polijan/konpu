@@ -1,6 +1,4 @@
 #include "konpu.h"
-int AppInit(void); // TODO: add this in the generated konpu.h ???
-
 
 static const uint64_t pattern[] = {
    GLYPH64_PATTERN_DITHER_BAYER_DITHER00, GLYPH64_PATTERN_DITHER_BAYER_DITHER01,

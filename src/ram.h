@@ -33,8 +33,8 @@ uint8_t RAM[RAM_SIZE];
 #define RAM_COLOR_DEFAULT_BG        RAM_AFTER_(RAM_COLOR_DEFAULT_FG)
 #define RAM_COLOR_PALETTE           RAM_AFTER_(RAM_COLOR_DEFAULT_BG)
 #define RAM_KEY_MOD                 RAM_AFTER_(RAM_COLOR_PALETTE)
-#define RAM_KEY_STATE               RAM_AFTER_(RAM_KEY_MOD)
-#define RAM_KEY_PREVIOUS            RAM_AFTER_(RAM_KEY_STATE)
+#define RAM_KEY_CURRENT_STATE       RAM_AFTER_(RAM_KEY_MOD)
+#define RAM_KEY_PREVIOUS_STATE      RAM_AFTER_(RAM_KEY_CURRENT_STATE)
 #define RAM_STACK_VAR               69632  // TODO:address at 68k for now...
 #define RAM_STACK_SIZE              RAM_AFTER_(RAM_STACK_VAR)
 #define RAM_STACK_TYPE              RAM_AFTER_(RAM_STACK_SIZE)
@@ -48,9 +48,9 @@ uint8_t RAM[RAM_SIZE];
 #define RAM_COLOR_DEFAULT_FG_SZ_    1
 #define RAM_COLOR_DEFAULT_BG_SZ_    1
 #define RAM_COLOR_PALETTE_SZ_       128
-#define RAM_KEY_MOD_SZ_             5 // <--- TODO/UGLY/FIX.... I pad so that RAM_KEY_STATE is aligned for uint64s
-#define RAM_KEY_STATE_SZ_           32 // 256 key states stored as bits
-#define RAM_KEY_PREVIOUS_SZ_        RAM_KEY_STATE_SZ_
+#define RAM_KEY_MOD_SZ_             5 // <--- TODO/UGLY/FIX.... I pad so that RAM_KEY_STATE is aligned.
+#define RAM_KEY_CURRENT_STATE_SZ_   (256/*key states*/ / 8 /*stored as bits*/)
+#define RAM_KEY_PREVIOUS_STATE_SZ_  RAM_KEY_CURRENT_STATE_SZ_
 #define RAM_STACK_VAR_SZ_           (STACK_CAPACITY * sizeof(uint64_t /*var*/))
 #define RAM_STACK_SIZE_SZ_          sizeof(int16_t)
 #define RAM_STACK_TYPE_SZ_          (STACK_CAPACITY * sizeof(uint16_t /*Type*/))

@@ -3,7 +3,6 @@
 // #define KONPU_OPTION_OPTIMIZE_VIDEO_MODE 221
 
 #include "konpu.h"
-int AppInit(void); // TODO: add this in the generated konpu.h ???
 
 int AppInit(void)
 {

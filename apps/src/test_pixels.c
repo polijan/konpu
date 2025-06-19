@@ -1,5 +1,4 @@
 #include "konpu.h"
-int AppInit(void); // TODO: add this in the generated konpu.h ???
 
 int AppInit(void)
 {

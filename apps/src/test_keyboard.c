@@ -1,8 +1,5 @@
 // #define KONPU_OPTION_OPTIMIZE_VIDEO_MODE
 #include "konpu.h"
-int AppInit(void); // TODO: add this in the generated konpu.h ???
-
-
 
 
 #define K_LEFT   GLYPH32(0EEEEEE0)
@@ -32,9 +29,9 @@ int AppInit(void)
 
    while (1) {
       for (int key = 0; key < KEY_COUNT; key++) {
-         if (!KeyIsTriggered(key)) continue;
+         if (!KEY_IS_DOWN(key)) continue;
          switch (key) {
-            case 41: goto MOVE;
+            case KEY_SCANCODE_ESCAPE: goto MOVE;
             default: Printer("Key %d is pressed\n", key);
          }
       }
@@ -50,13 +47,13 @@ MOVE:
    int y = VIDEO_HEIGHT_GLYPH / 2;
    while (1) {
       for (int key = 0; key < KEY_COUNT; key++) {
-         if (KeyIsUp(key)) continue;
+         if (KEY_IS_UP(key)) continue;
          switch (key) {
-            case 41: return 0;
-            case 79: if (x < VIDEO_WIDTH_GLYPH - 1)   x++;  break;
-            case 80: if (x > 0)                       x--;  break;
-            case 81: if (y < VIDEO_HEIGHT_GLYPH - 1)  y++;  break;
-            case 82: if (y > 0)                       y--;  break;
+            case KEY_SCANCODE_ESCAPE: return 0;
+            case KEY_SCANCODE_RIGHT : if (x < VIDEO_WIDTH_GLYPH-1)  x++; break;
+            case KEY_SCANCODE_LEFT  : if (x > 0)                    x--; break;
+            case KEY_SCANCODE_DOWN  : if (y < VIDEO_HEIGHT_GLYPH-1) y++; break;
+            case KEY_SCANCODE_UP    : if (y > 0)                    y--; break;
          }
       }
       *VideoGlyph32(x,y) = GLYPH32_PATTERN_FULL;

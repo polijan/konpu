@@ -11,28 +11,24 @@ void KeyUpdate(void)
    // open a config menu, etc. (maybe the menu key?)
    SDL_PumpEvents();
 
-   // Calculate new state
-   static_assert(KEY_COUNT == 256);
+   // Copy current key state to previsou key state
+   memcpy(KEY_PREVIOUS_STATE, KEY_CURRENT_STATE, RAM_KEY_CURRENT_STATE_SZ_);
+
+   // Calculate new state from SDL keyboard state
    static_assert(KEY_COUNT <= SDL_NUM_SCANCODES);
 #if KONPU_PLATFORM_SDL1
    const uint8_t *state = SDL_GetKeyState(NULL);
 #else
    const uint8_t *state = SDL_GetKeyboardState(NULL);
 #endif
-   uint64_t c0 = 0, c1 = 0, c2 = 0, c3 = 0;
-   for (int k = 0; k < 63; k++) {
-      uint64_t bit = UINT64_C(1) << k;
-      if (state[k])        c0 |= bit;
-      if (state[k + 64])   c1 |= bit;
-      if (state[k + 128])  c2 |= bit;
-      if (state[k + 192])  c3 |= bit;
+   for (unsigned i = 0; i < RAM_KEY_CURRENT_STATE_SZ_; i++) {
+      KEY_CURRENT_STATE[i] =
+         ((state[0] != 0) << 0) | ((state[1] != 0) << 1) |
+         ((state[2] != 0) << 2) | ((state[3] != 0) << 3) |
+         ((state[4] != 0) << 4) | ((state[5] != 0) << 5) |
+         ((state[6] != 0) << 6) | ((state[7] != 0) << 7) ;
+      state += 8;
    }
-   // Update previous state and new state in memory
-   memcpy(KEY_PREVIOUS, KEY_STATE, RAM_KEY_STATE_SZ_);
-   KEY_STATE[0] = c0;
-   KEY_STATE[1] = c1;
-   KEY_STATE[2] = c2;
-   KEY_STATE[3] = c3;
 }
 #else
 #  error "KeyUpdate() is only implemented with a SDL backend for now."

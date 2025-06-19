@@ -3,7 +3,6 @@
 // Run it as: konpu --novideo --stdout --app <this application>
 //------------------------------------------------------------------------------
 #include "konpu.h"
-int AppInit(void); // TODO: add this in the generated konpu.h ???
 
 static const char *attr_color_type_str[] = {"16", "FG256", "BG256", "256"};
 static const char *dimension_str[] = {"2x4","4x4","4x8","8x8","8x16","16x16"};

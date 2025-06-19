@@ -1,21 +1,30 @@
 #include "c.h"
 
+
+#include "draw.h"
 int c_putchar_(int c) {
-   // TODO
-   (void)c;
+   // TODO. For now, let's put a Temporary dummy implementation where we accept
+   // printable ASCII character and display it with ASCII6 font in the top left
+   // corner with color 1.
+   if (c < 32 || c > 126) return 0;
+   Glyph32 g = *((const uint32_t*)(ROM + ROM_FONT_ASCII6) + c - 32);
+   DrawGlyph(g ,0,0, 1);
    return c;
 }
 
 int c_puts_(const char* s) {
-   // TODO
-   (void)s;
+   // TODO. For now, let's put a temporary dummy/naive implementation where we
+   // loop to c_putchar for each character of the string
+   assert(s);
+   for (; *s != '\0'; s++)
+      c_putchar_(*s);
    return 0;
 }
 
 int c_printf_(const char* restrict format, ...) {
-   // TODO
-   (void)format;
-   return 0;
+   // TODO. For now, only puts(the format string).
+   assert(format);
+   return c_puts_(format);
 }
 
 

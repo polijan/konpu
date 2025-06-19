@@ -1,6 +1,4 @@
 #include "konpu.h"
-int AppInit(void); // TODO: add this in the generated konpu.h ???
-
 
 static void kule(int n, int nx, int ny, uint8_t* palette)
 {
@@ -44,11 +42,11 @@ int AppInit(void)
       VideoRender();
       TimeSleep(30);
       KeyUpdate();
-      if (KeyIsTriggered(41)) {
+      if (KEY_IS_DOWN(KEY_SCANCODE_ESCAPE)) {
          return 0;
-      } else if (KeyIsTriggered(79)) {
+      } else if (KEY_IS_DOWN(KEY_SCANCODE_RIGHT)) {
          if (color_log2 < 7) color_log2++;
-      } else if (KeyIsTriggered(80)) {
+      } else if (KEY_IS_DOWN(KEY_SCANCODE_LEFT)) {
          if (color_log2 > 1) color_log2--;
       } else {
          continue;

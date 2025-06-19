@@ -1,5 +1,4 @@
 #include "konpu.h"
-int AppInit(void); // TODO: add this in the generated konpu.h ???
 
 
 // Linear interpolation (aka "lerp") utility function
@@ -34,11 +33,9 @@ int AppInit(void)
    while (true) {
       gradient(Random() & 0xFFFFFF, Random() & 0xFFFFFF);
       VideoRender();
-
       for (int i = 0; i < 90; i++) {
          KeyUpdate();
-         for (int key = 0; key < KEY_COUNT; key++)
-            if (KeyIsDown(key)) return 0;
+         if (KEY_IS_ANY_DOWN()) return 0;
          TimeSleep(10);
       }
    }

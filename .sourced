@@ -15,7 +15,9 @@ printf ' \033[30;48;5;13m%s\033[m\n' "                             |_|          
 printf ' ilo nanpa o pona - simple computing is back\n\n'
 
 KONPU_HOME=$PWD
+KONPU_URL=https://github.com/polijan/konpu
 PATH=$KONPU_HOME/bin:$(ls -d "$KONPU_HOME"/tools/*/bin | tr '\n' ':')$PATH
 
 export KONPU_HOME
+export KONPU_URL
 export PATH

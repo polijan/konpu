@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Usage: $0
-# print a single header file for ilo Konpu
+# Print the single header file for ilo Konpu
 
 
 die() { printf '%s\n' "$*... " >&2; exit 5; }
@@ -18,15 +18,27 @@ include() {
 }
 
 cd src || exit
-printf '// Single header file for ilo Konpu.\n\n'
-printf '#ifndef  KONPU_H_\n'
-printf '#define  KONPU_H_\n'
+
+# Start of the file
+cat << EOF
+// Single header file for ilo Konpu.
+// See: $KONPU_URL
+//
+
+#ifndef  KONPU_H_
+#define  KONPU_H_
+
+// "Entry point" function that must be implemented to create a Konpu app
+int AppInit(void);
+
+EOF
 
 # API Includes
 include  config.h platform.h c.h \
          bits.h util.h time.h random.h options.h \
          var.h rom.h video_mode.h ram.h key.h \
          video_mode_auto.h glyph.h color.h attribute.h video.h pixel.h tile.h \
+         draw.h \
          error.h heap.h stack.h \
          \
          printer.h
@@ -39,5 +51,10 @@ include  glyph_constants/glyph_patterns_blocks.h    \
          glyph_constants/glyph_tokipona_halfwidth.h \
          glyph_constants/glyph_tukitiki.h
 
+# End of the file
 hr
-printf '\n#endif //KONPU_H_\n'
+cat << EOF
+
+#endif //KONPU_H_
+
+EOF

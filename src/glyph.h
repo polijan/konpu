@@ -43,11 +43,9 @@ typedef void      Glyph;
 // int GlyphMargin<Left|Right|Top|Bottom>(g)
 //
 // // Access to Pixels
-// int   GlyphPixelAt(glyph, x,y)
+// int   GlyphGetPixel(glyph, x,y)
+// glyph GlyphSetPixel(glyph, x,y, bit)
 // bool? GlyphPixelIsSet(glyph, x,y)
-// glyph GlyphPixelSet(glyph, x,y, [value=1])
-//       '---> or: glyph GlyphPixelSet(glyph, x,y)
-//                 glyph GlyphPixelSetValue(glyph, x,y, value)
 // glyph GlyphPixelUnset(glyph, x,y)
 // glyph GlyphPixelToggle(glyph, x,y)
 //
@@ -268,167 +266,196 @@ typedef void      Glyph;
 
 //------------------------------------------------------------------------------
 // Access to Pixels
-// GlyphPixelAt(glyph, x,y)
+// GlyphGetPixel(glyph, x,y)
 // GlyphPixelIsSet(glyph, x,y)
 // GlyphPixelSet(glyph, x,y, [value=1])
 // GlyphPixelUnset(glyph, x,y)
 //------------------------------------------------------------------------------
 
-// Pixel index
+// Index of the bit representing the pixel (x,y) in a glyph
+#define GLYPH_INDEX(x,y)     ((x) + ((y) << GLYPH_WIDTH_LOG2))
 #define GLYPH8_INDEX(x,y)    ((x) + ((y) << GLYPH8_WIDTH_LOG2))
 #define GLYPH16_INDEX(x,y)   ((x) + ((y) << GLYPH16_WIDTH_LOG2))
 #define GLYPH32_INDEX(x,y)   ((x) + ((y) << GLYPH32_WIDTH_LOG2))
 #define GLYPH64_INDEX(x,y)   ((x) + ((y) << GLYPH64_WIDTH_LOG2))
 #define GLYPH128_INDEX(x,y)  ((x) + ((y) << GLYPH128_WIDTH_LOG2))
 #define GLYPH256_INDEX(x,y)  ((x) + ((y) << GLYPH256_WIDTH_LOG2))
-// #define GLYPH_INDEX(glyph, x,y)   ((x) + ((y) << GlyphWidthLog2(glyph)))
 
-#if 0
 // TODO: should I also do const void* ???
 // Return the value (0 or 1) of the pixel (x,y) of the given glyph
-#define GlyphPixelAt(glyph, x,y)           \
-        _Generic((glyph)                 , \
-           uint8_t:  GlyphPixelAt_8_     , \
-           uint16_t: GlyphPixelAt_16_    , \
-           uint32_t: GlyphPixelAt_32_    , \
-           uint64_t: GlyphPixelAt_64_    , \
-           Glyph128: GlyphPixelAt_128_   , \
-           Glyph256: GlyphPixelAt_256_   , \
-           void*   : GlyphPixelAt_dynamic_ \
-        )((glyph), (x), (y))
-        static inline uint8_t  GlyphPixelAt_8_(uint8_t g, int x, int y)
-        { assert(x >= 0 && x < GLYPH8_WIDTH);
-          assert(y >= 0 && y < GLYPH8_HEIGHT);
-          return (g >> GLYPH8_INDEX(x,y)) & 1U;
-        }
-        static inline uint16_t GlyphPixelAt_16_(uint16_t g, int x, int y)
-        { assert(x >= 0 && x < GLYPH16_WIDTH);
-          assert(y >= 0 && y < GLYPH16_HEIGHT);
-          return (g >> GLYPH16_INDEX(x,y)) & 1U;
-        }
-        static inline uint32_t GlyphPixelAt_32_(uint32_t g, int x, int y)
-        { assert(x >= 0 && x < GLYPH32_WIDTH);
-          assert(y >= 0 && y < GLYPH32_HEIGHT);
-          return (g >> GLYPH32_INDEX(x,y)) & 1U;
-        }
-        static inline uint64_t GlyphPixelAt_64_(uint64_t g, int x, int y)
-        { assert(x >= 0 && x < GLYPH64_WIDTH);
-          assert(y >= 0 && y < GLYPH64_HEIGHT);
-          return (g >> GLYPH64_INDEX(x,y)) & 1U;
-        }
-        static inline uint64_t GlyphPixelAt_128_(Glyph128 g, int x, int y)
-        { assert(x >= 0 && x < GLYPH128_WIDTH);
-          assert(y >= 0 && y < GLYPH128_HEIGHT);
-          if (y < 8)
-             return GlyphPixelAt_64_(g.top, x, y);
-          else
-             return GlyphPixelAt_64_(g.bottom, x, y - 8);
-        }
-        static inline uint64_t GlyphPixelAt_256_(Glyph256 g, int x, int y)
-        { assert(x >= 0 && x < GLYPH256_WIDTH);
-          assert(y >= 0 && y < GLYPH256_HEIGHT);
-
-/*
-          if (x < 8)  return (y < 8) ?
-                             GlyphPixelAt_64_(g.top_right,    x - 8, y)    :
-                             GlyphPixelAt_64_(g.bottom_right, x - 8, y - 8);
-          else        return (y < 8) ?
-                             GlyphPixelAt_64_(g.top_right   , x - 8, y)    :
-                             GlyphPixelAt_64_(g.bottom_right, x - 8, y - 8);
-*/
-
-
-          if (x < 8) {
-             if (y < 8)
-                return GlyphPixelAt_64_(g.top_left, x, y);
-             else
-                return GlyphPixelAt_64_(g.bottom_left, x, y - 8);
-          } else {
-            if (y < 8)
-                return GlyphPixelAt_64_(g.top_right, x - 8, y);
-             else
-                return GlyphPixelAt_64_(g.bottom_right, x - 8, y - 8);
-          }
-        }
-        // TODO: should it be const void* ???
-        static inline uint64_t GlyphPixelAt_dynamic_(const void *g, int x, int y)
-        {
-           switch (VideoModeDimension()) {
-               case PIXELS_2x4  : return GlyphPixelAt(*(uint8_t *)g, x, y);
-               case PIXELS_4x4  : return GlyphPixelAt(*(uint16_t*)g, x, y);
-               case PIXELS_4x8  : return GlyphPixelAt(*(uint32_t*)g, x, y);
-               case PIXELS_8x8  : return GlyphPixelAt(*(uint64_t*)g, x, y);
-               case PIXELS_8x16 : return GlyphPixelAt(*(Glyph128*)g, x, y);
-               case PIXELS_16x16: return GlyphPixelAt(*(Glyph256*)g, x, y);
-               default: unreachable();
-           }
-        }
-#endif
-// TODO: should I also do const void* ???
-// Return the value (0 or 1) of the pixel (x,y) of the given glyph
-#define GlyphPixelAt(glyph, x,y)           \
-   _Generic((glyph)                 , \
-      uint8_t:  GlyphPixelAt_8_     , \
-      uint16_t: GlyphPixelAt_16_    , \
-      uint32_t: GlyphPixelAt_32_    , \
-      uint64_t: GlyphPixelAt_64_    , \
-      Glyph128: GlyphPixelAt_128_   , \
-      Glyph256: GlyphPixelAt_256_   , \
-      default : GlyphPixelAt_dynamic_ \
+#define GlyphGetPixel(glyph, x,y)      \
+   _Generic((glyph)                  , \
+      uint8_t:  GlyphGetPixel_8_     , \
+      uint16_t: GlyphGetPixel_16_    , \
+      uint32_t: GlyphGetPixel_32_    , \
+      uint64_t: GlyphGetPixel_64_    , \
+      Glyph128: GlyphGetPixel_128_   , \
+      Glyph256: GlyphGetPixel_256_   , \
+      default : GlyphGetPixel_dynamic_ \
    )((glyph), (x), (y))
-   static inline uint8_t  GlyphPixelAt_8_(uint8_t g, int x, int y)
+   static inline unsigned GlyphGetPixel_8_(uint8_t g, int x, int y)
    {  assert(x >= 0 && x < GLYPH8_WIDTH);
       assert(y >= 0 && y < GLYPH8_HEIGHT);
-      return (g >> GLYPH8_INDEX(x,y)) & 1U;
+      //return (g >> GLYPH8_INDEX(x,y)) & 1U;
+      return BITS_GET_BIT(g, GLYPH8_INDEX(x,y));
    }
-   static inline uint16_t GlyphPixelAt_16_(uint16_t g, int x, int y)
+   static inline unsigned GlyphGetPixel_16_(uint16_t g, int x, int y)
    {  assert(x >= 0 && x < GLYPH16_WIDTH);
       assert(y >= 0 && y < GLYPH16_HEIGHT);
-      return (g >> GLYPH16_INDEX(x,y)) & 1U;
+      //return (g >> GLYPH16_INDEX(x,y)) & 1U;
+      return BITS_GET_BIT(g, GLYPH16_INDEX(x,y));
    }
-   static inline uint32_t GlyphPixelAt_32_(uint32_t g, int x, int y)
+   static inline uint32_t GlyphGetPixel_32_(uint32_t g, int x, int y)
    {  assert(x >= 0 && x < GLYPH32_WIDTH);
       assert(y >= 0 && y < GLYPH32_HEIGHT);
-      return (g >> GLYPH32_INDEX(x,y)) & 1U;
+      //return (g >> GLYPH32_INDEX(x,y)) & 1U;
+      return BITS_GET_BIT(g, GLYPH32_INDEX(x,y));
    }
-   static inline uint64_t GlyphPixelAt_64_(uint64_t g, int x, int y)
+   static inline uint64_t GlyphGetPixel_64_(uint64_t g, int x, int y)
    {  assert(x >= 0 && x < GLYPH64_WIDTH);
       assert(y >= 0 && y < GLYPH64_HEIGHT);
-      return (g >> GLYPH64_INDEX(x,y)) & 1U;
+      //return (g >> GLYPH64_INDEX(x,y)) & 1U;
+      return BITS_GET_BIT(g, GLYPH64_INDEX(x,y));
    }
-   static inline uint64_t GlyphPixelAt_128_(Glyph128 g, int x, int y)
+   static inline uint64_t GlyphGetPixel_128_(Glyph128 g, int x, int y)
    {  assert(x >= 0 && x < GLYPH128_WIDTH);
       assert(y >= 0 && y < GLYPH128_HEIGHT);
       if (y < 8)
-         return GlyphPixelAt_64_(g.top, x, y);
+         return GlyphGetPixel_64_(g.top, x, y);
       else
-         return GlyphPixelAt_64_(g.bottom, x, y - 8);
+         return GlyphGetPixel_64_(g.bottom, x, y - 8);
    }
-   static inline uint64_t GlyphPixelAt_256_(Glyph256 g, int x, int y)
+   static inline uint64_t GlyphGetPixel_256_(Glyph256 g, int x, int y)
    {  assert(x >= 0 && x < GLYPH256_WIDTH);
       assert(y >= 0 && y < GLYPH256_HEIGHT);
       if (x < 8) {
          if (y < 8)
-            return GlyphPixelAt_64_(g.top_left, x, y);
+            return GlyphGetPixel_64_(g.top_left, x, y);
          else
-            return GlyphPixelAt_64_(g.bottom_left, x, y - 8);
+            return GlyphGetPixel_64_(g.bottom_left, x, y - 8);
       } else {
          if (y < 8)
-            return GlyphPixelAt_64_(g.top_right, x - 8, y);
+            return GlyphGetPixel_64_(g.top_right, x - 8, y);
          else
-            return GlyphPixelAt_64_(g.bottom_right, x - 8, y - 8);
+            return GlyphGetPixel_64_(g.bottom_right, x - 8, y - 8);
       }
    }
-   static inline uint64_t GlyphPixelAt_dynamic_(const void *g, int x, int y)
+   static inline uint64_t GlyphGetPixel_dynamic_(const void *g, int x, int y)
    {
       assert(g != NULL);
       switch (VideoModeDimension()) {
-         case PIXELS_2x4  : return GlyphPixelAt(*(const uint8_t *)g, x, y);
-         case PIXELS_4x4  : return GlyphPixelAt(*(const uint16_t*)g, x, y);
-         case PIXELS_4x8  : return GlyphPixelAt(*(const uint32_t*)g, x, y);
-         case PIXELS_8x8  : return GlyphPixelAt(*(const uint64_t*)g, x, y);
-         case PIXELS_8x16 : return GlyphPixelAt(*(const Glyph128*)g, x, y);
-         case PIXELS_16x16: return GlyphPixelAt(*(const Glyph256*)g, x, y);
+         case PIXELS_2x4  : return GlyphGetPixel(*(const uint8_t *)g, x, y);
+         case PIXELS_4x4  : return GlyphGetPixel(*(const uint16_t*)g, x, y);
+         case PIXELS_4x8  : return GlyphGetPixel(*(const uint32_t*)g, x, y);
+         case PIXELS_8x8  : return GlyphGetPixel(*(const uint64_t*)g, x, y);
+         case PIXELS_8x16 : return GlyphGetPixel(*(const Glyph128*)g, x, y);
+         case PIXELS_16x16: return GlyphGetPixel(*(const Glyph256*)g, x, y);
+         default: unreachable();
+      }
+   }
+
+
+// Return the glyph with the pixel (x,y) set to bit value (0 or 1)
+#define GlyphSetPixel(glyph, x,y, bit) \
+   _Generic((glyph)                  , \
+      uint8_t:  GlyphSetPixel_8_     , \
+      uint16_t: GlyphSetPixel_16_    , \
+      uint32_t: GlyphSetPixel_32_    , \
+      uint64_t: GlyphSetPixel_64_    , \
+      Glyph128: GlyphSetPixel_128_   , \
+      Glyph256: GlyphSetPixel_256_   , \
+      default : GlyphSetPixel_dynamic_ \
+   )((glyph), (x), (y), (bit))
+   static inline C_ATTRIBUTE_NODISCARD
+   uint8_t  GlyphSetPixel_8_(uint8_t g, int x, int y, int bit)
+   {  assert(x >= 0 && x < GLYPH8_WIDTH);
+      assert(y >= 0 && y < GLYPH8_HEIGHT);
+      assert(bit == 0 || bit == 1);
+      return BITS_SET_BIT(g, GLYPH8_INDEX(x,y), bit);
+   }
+   static inline C_ATTRIBUTE_NODISCARD
+   uint16_t  GlyphSetPixel_16_(uint16_t g, int x, int y, int bit)
+   {  assert(x >= 0 && x < GLYPH16_WIDTH);
+      assert(y >= 0 && y < GLYPH16_HEIGHT);
+      assert(bit == 0 || bit == 1);
+      return BITS_SET_BIT(g, GLYPH16_INDEX(x,y), bit);
+   }
+   static inline C_ATTRIBUTE_NODISCARD
+   uint32_t  GlyphSetPixel_32_(uint32_t g, int x, int y, int bit)
+   {  assert(x >= 0 && x < GLYPH32_WIDTH);
+      assert(y >= 0 && y < GLYPH32_HEIGHT);
+      assert(bit == 0 || bit == 1);
+      return BITS_SET_BIT(g, GLYPH32_INDEX(x,y), bit);
+   }
+   static inline C_ATTRIBUTE_NODISCARD
+   uint64_t  GlyphSetPixel_64_(uint64_t g, int x, int y, int bit)
+   {  assert(x >= 0 && x < GLYPH64_WIDTH);
+      assert(y >= 0 && y < GLYPH64_HEIGHT);
+      assert(bit == 0 || bit == 1);
+      return BITS_SET_BIT(g, GLYPH64_INDEX(x,y), bit);
+   }
+   static inline C_ATTRIBUTE_NODISCARD
+   Glyph128  GlyphSetPixel_128_(Glyph128 g, int x, int y, int bit)
+   {  assert(x >= 0 && x < GLYPH128_WIDTH);
+      assert(y >= 0 && y < GLYPH128_HEIGHT);
+      if (y < 8)
+         return (Glyph128) {
+            .top    = GlyphSetPixel_64_(g.top, x, y, bit),
+            .bottom = g.bottom
+         };
+      else
+         return (Glyph128) {
+            .top    = g.top,
+            .bottom = GlyphSetPixel_64_(g.bottom, x, y - 8, bit)
+         };
+   }
+   static inline C_ATTRIBUTE_NODISCARD
+   Glyph256  GlyphSetPixel_256_(Glyph256 g, int x, int y, int bit)
+   {  assert(x >= 0 && x < GLYPH256_WIDTH);
+      assert(y >= 0 && y < GLYPH256_HEIGHT);
+      if (x < 8) {
+         if (y < 8)
+            return (Glyph256) {
+               .top_left     = GlyphSetPixel_64_(g.top_left, x, y, bit),
+               .top_right    = g.top_right,
+               .bottom_left  = g.bottom_left,
+               .bottom_right = g.bottom_right,
+            };
+         else
+            return (Glyph256) {
+               .top_left     = g.top_left,
+               .top_right    = g.top_right,
+               .bottom_left  = GlyphSetPixel_64_(g.bottom_left, x, y - 8, bit),
+               .bottom_right = g.bottom_right,
+            };
+      } else {
+         if (y < 8)
+            return (Glyph256) {
+               .top_left     = g.top_left,
+               .top_right    = GlyphSetPixel_64_(g.top_right, x - 8, y, bit),
+               .bottom_left  = g.bottom_left,
+               .bottom_right = g.bottom_right,
+            };
+         else
+            return (Glyph256) {
+               .top_left     = g.top_left,
+               .top_right    = g.top_right,
+               .bottom_left  = g.bottom_left,
+               .bottom_right = GlyphSetPixel_64_(g.bottom_right, x - 8, y - 8, bit),
+            };
+      }
+   }
+   static inline // Note that return value is VOID.
+   void GlyphSetPixel_dynamic_(void *g, int x, int y, int bit)
+   {
+      assert(g != NULL);
+      switch (VideoModeDimension()) {
+         case PIXELS_2x4  : *(uint8_t *)g = GlyphSetPixel(*(uint8_t *)g, x, y, bit);  break;
+         case PIXELS_4x4  : *(uint16_t*)g = GlyphSetPixel(*(uint16_t*)g, x, y, bit);  break;
+         case PIXELS_4x8  : *(uint32_t*)g = GlyphSetPixel(*(uint32_t*)g, x, y, bit);  break;
+         case PIXELS_8x8  : *(uint64_t*)g = GlyphSetPixel(*(uint64_t*)g, x, y, bit);  break;
+         case PIXELS_8x16 : *(Glyph128*)g = GlyphSetPixel(*(Glyph128*)g, x, y, bit);  break;
+         case PIXELS_16x16: *(Glyph256*)g = GlyphSetPixel(*(Glyph256*)g, x, y, bit);  break;
          default: unreachable();
       }
    }
@@ -1585,7 +1612,7 @@ static inline Glyph128  Glyph256FromPixel(int x, int y)
 }
 
 /// @brief return the value (0 or 1) of pixel (x,y) in the given quadrant
-#define GlyphPixelAt(glyph, x,y)
+#define GlyphGetPixel(glyph, x,y)
 
 
 /// @brief return the value (0 or 1) of pixel (x,y) in the given quadrant
@@ -1593,7 +1620,7 @@ static inline Glyph128  Glyph256FromPixel(int x, int y)
 /// @brief return the value (0 or 1) of pixel (x,y) in the given half
 #define HalfPixelAt(half, x,y)          uint_bitAt((half), GLYPH32_INDEX((x), (y)))
 /// @brief return the value (0 or 1) of pixel (x,y) in the given glyph
-#define GlyphPixelAt(glyph, x,y)        uint_bitAt((glyph), GLYPH64_INDEX((x), (y)))
+#define GlyphGetPixel(glyph, x,y)        uint_bitAt((glyph), GLYPH64_INDEX((x), (y)))
 
 
 /* just some compile-time basic tests */
@@ -1601,8 +1628,8 @@ static_assert(QuadrantPixelAt(quadrant_fromPixel(2,3), 2,3) == 1);
 static_assert(QuadrantPixelAt(quadrant_fromPixel(0,1), 2,3) == 0);
 static_assert(HalfPixelAt(half_fromPixel(2,6), 2,6) == 1);
 static_assert(HalfPixelAt(half_fromPixel(1,2), 3,6) == 0);
-static_assert(GlyphPixelAt(glyph_fromPixel(6,7), 6,7) == 1);
-static_assert(GlyphPixelAt(glyph_fromPixel(2,3), 4,5) == 0);
+static_assert(GlyphGetPixel(glyph_fromPixel(6,7), 6,7) == 1);
+static_assert(GlyphGetPixel(glyph_fromPixel(2,3), 4,5) == 0);
 #endif
 
 
