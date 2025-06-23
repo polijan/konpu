@@ -1,4 +1,3 @@
-
 // FIXME: Seeting up the VIDEO_MODE doesn't work. Find Out why.
 // #define KONPU_OPTION_OPTIMIZE_VIDEO_MODE 221
 
@@ -6,13 +5,28 @@
 
 int AppInit(void)
 {
+   // 1.5 second of "tv static" effect...
+   COLOR_BORDER = 0;
+   VideoMode(VIDEO_MODE_GLYPH(Glyph64));
+   for (int i = 0; i < 120; i++) {
+      for (int n = 0; n < VIDEO_COUNT_GLYPH64; n++) {
+         VIDEO_GLYPH64[n] = UtilRandom64();
+      }
+      VideoRender();
+   }
+
+
    Glyph64  soweli    = 0x001515204054403E;
    Glyph128 soweli128 = GlyphUpscale(soweli);
    Glyph256 soweli256 = GlyphUpscale(soweli128);
    Glyph256 sstoki    = { 0xC131496A320418E0, 0x1F20404040201807,
                           0x00F00C028241C141, 0x00030C1013242724 };
 
+
 VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_8x8_FG256));
+// VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_2x4_16)); <-- crash
+
+
  //VideoMode(VIDEO_MODE_GLYPH(Glyph128));
 //VideoMode(217);
 //VideoMode(223); // weird modes with 24x15 glyph256
@@ -34,14 +48,6 @@ VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_8x8_FG256));
       AttributeWidthLog2(), AttributeHeightLog2(), AttributeHasTwoBytes());
    Printer("End       : %d\n", VIDEO_SIZE);
 
-   // 1.5 second of "tv static" effect...
-   COLOR_BORDER = 0;
-   for (int i = 0; i < 90; i++) {
-      for (int n = 0; n < VideoAttributeOffset(); n++) {
-         VIDEO_BUFFER[n] = Random() % 256;
-      }
-      VideoRender();
-   }
 
    VideoGlyphSetAll(soweli);
    for (int n = VideoAttributeOffset(); n < VIDEO_SIZE; n++) {

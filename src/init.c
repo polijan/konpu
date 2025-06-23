@@ -1,18 +1,16 @@
+#include "platform_.h"
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "init.h"
 #include "options.h"
 #include "printer.h"
 #include "memory.h"
 #include "app.h"
 
-#include "platform_.h"
-#include <stdio.h>
-#include <stdlib.h>
-
-
 #define DEFAULT_ZOOM  3
 #define DEFAULT_APP  "apps/lib/test.so"
    // "apps/lib/lsmodes.so"
-
 
 // Print the program's usage.
 // if the bool is true, write in English, otherwise in Toki Pona.
@@ -149,7 +147,8 @@ cli_error:
       if (return_code != 0) goto clean;
    }
    KeyInit();
-   RandomInitAsRandom((uint64_t)argc + flag + ((app!=NULL)? strlen(app) : 0));
+   RandomInit();
+//   RandomInitAsRandom((uint64_t)argc + flag + ((app!=NULL)? strlen(app) : 0));
 
    // Loading "App"
    DEBUG("Loading App: %s\n", app);

@@ -31,7 +31,7 @@ int AppInit(void)
    VideoMode(123);
 
    while (true) {
-      gradient(Random() & 0xFFFFFF, Random() & 0xFFFFFF);
+      gradient(UtilRandom32() & 0xFFFFFF, UtilRandom32() & 0xFFFFFF);
       VideoRender();
       for (int i = 0; i < 90; i++) {
          KeyUpdate();

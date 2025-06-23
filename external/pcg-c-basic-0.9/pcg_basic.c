@@ -1,16 +1,6 @@
-#include <stdint.h>
-/* The first part of this file is the PCG random number generator
- * (https://www.pcg-random.org/), Minimal C Implementation, 0.9.
- *
- * It's mostly as-is, just with all functions marked as static
- * The second part adapats the random number generator to Konpu's
- * random interface
- */
-
-
-
- /*
+/*
  * PCG Random Number Generation for C.
+ *
  * Copyright 2014 Melissa O'Neill <oneill@pcg-random.org>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,33 +18,27 @@
  * For additional information about the PCG random number generation scheme,
  * including its license and other licensing options, visit
  *
- *     http://www.pcg-random.org
+ *       http://www.pcg-random.org
  */
 
-struct pcg_state_setseq_64 {    // Internals are *Private*.
-   uint64_t state;             // RNG state.  All values are possible.
-   uint64_t inc;               // Controls which RNG sequence (stream) is
-                               // selected. Must *always* be odd.
-};
-typedef struct pcg_state_setseq_64 pcg32_random_t;
+/*
+ * This code is derived from the full C implementation, which is in turn
+ * derived from the canonical C++ PCG implementation. The C++ version
+ * has many additional features and is preferable if you can use C++ in
+ * your project.
+ */
 
-// If you *must* statically initialize it, here's one.
-
-#define PCG32_INITIALIZER   { 0x853c49e6748fea9bULL, 0xda3e39cb94b95bdbULL }
-
+#include "pcg_basic.h"
 
 // state for global RNGs
 
 static pcg32_random_t pcg32_global = PCG32_INITIALIZER;
-
-static uint32_t pcg32_random_r(pcg32_random_t* rng);
 
 // pcg32_srandom(initstate, initseq)
 // pcg32_srandom_r(rng, initstate, initseq):
 //     Seed the rng.  Specified in two parts, state initializer and a
 //     sequence selection constant (a.k.a. stream id)
 
-static
 void pcg32_srandom_r(pcg32_random_t* rng, uint64_t initstate, uint64_t initseq)
 {
     rng->state = 0U;
@@ -64,7 +48,6 @@ void pcg32_srandom_r(pcg32_random_t* rng, uint64_t initstate, uint64_t initseq)
     pcg32_random_r(rng);
 }
 
-static
 void pcg32_srandom(uint64_t seed, uint64_t seq)
 {
     pcg32_srandom_r(&pcg32_global, seed, seq);
@@ -74,7 +57,6 @@ void pcg32_srandom(uint64_t seed, uint64_t seq)
 // pcg32_random_r(rng)
 //     Generate a uniformly distributed 32-bit random number
 
-static
 uint32_t pcg32_random_r(pcg32_random_t* rng)
 {
     uint64_t oldstate = rng->state;
@@ -84,7 +66,6 @@ uint32_t pcg32_random_r(pcg32_random_t* rng)
     return (xorshifted >> rot) | (xorshifted << ((-rot) & 31));
 }
 
-static
 uint32_t pcg32_random()
 {
     return pcg32_random_r(&pcg32_global);
@@ -95,7 +76,6 @@ uint32_t pcg32_random()
 // pcg32_boundedrand_r(rng, bound):
 //     Generate a uniformly distributed number, r, where 0 <= r < bound
 
-static
 uint32_t pcg32_boundedrand_r(pcg32_random_t* rng, uint32_t bound)
 {
     // To avoid bias, we need to make the range of the RNG a multiple of
@@ -118,7 +98,7 @@ uint32_t pcg32_boundedrand_r(pcg32_random_t* rng, uint32_t bound)
     // should usually terminate quickly; on average (assuming all bounds are
     // equally likely), 82.25% of the time, we can expect it to require just
     // one iteration.  In the worst case, someone passes a bound of 2^31 + 1
-    // (i.e., 2147483649), which invalidates almost 50% of the range.  In
+    // (i.e., 2147483649), which invalidates almost 50% of the range.  In 
     // practice, bounds are typically small and only a tiny amount of the range
     // is eliminated.
     for (;;) {
@@ -128,69 +108,9 @@ uint32_t pcg32_boundedrand_r(pcg32_random_t* rng, uint32_t bound)
     }
 }
 
-static
+
 uint32_t pcg32_boundedrand(uint32_t bound)
 {
     return pcg32_boundedrand_r(&pcg32_global, bound);
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Adapt PCG to Konpu
-////////////////////////////////////////////////////////////////////////////////
-#include "random.h"
-
-uint32_t UtilRandom32_0_(void)                        { return pcg32_random(); }
-uint32_t UtilRandom32_1_(uint32_t bound)    { return pcg32_boundedrand(bound); }
-void UtilInitRandom_1_(uint64_t seed)               { pcg32_srandom(seed, 0);  }
-void UtilInitRandom_2_(uint64_t seed, uint64_t seq) { pcg32_srandom(seed, seq);}
-
-// void UtilInitRandom_0_(void);
-#include "platform_.h"
-#if KONPU_PLATFORM_LIBC
-#   include <time.h>  // C's <time.h>
-#endif
-#include "time.h"  // Konpu's "time.h"
-#include "ram.h"
-#include "rom.h"
-#include "var.h"
-void UtilInitRandom_0_(void)
-{
-   // Random Compile-time constant
-   uint64_t seed =
-      // Some pointer values that may vary in Konpu
-         (uint64_t)(uintptr_t)ROM + (uint64_t)(uintptr_t)RAM
-      // Some constants that comes from our config/build
-      +  (uint64_t)__STDC_VERSION__
-      +  KONPU_VERSION_PATCH +
-      +  (KONPU_PLATFORM_SDL1 + KONPU_PLATFORM_SDL2 + KONPU_PLATFORM_SDL3) * 4
-      +  KONPU_PLATFORM_POSIX * 9 + KONPU_PLATFORM_WINDOWS * 11;
-#ifdef NDEBUG
-   seed += 7;
-#endif
-#ifdef __GNUC__
-   seed += 32;
-#endif
-#ifdef __clang__
-   seed += 64;
-#endif
-#ifdef _MSC_VER
-   seed += 128;
-#endif
-#ifdef SDL_PATCHLEVEL
-   seed += SDL_PATCHLEVEL;
-#endif
-#ifdef __GNUC_MINOR__
-   seed += __GNUC_MINOR__;
-#endif
-
-   // Runtime Time-based value
-#if KONPU_PLATFORM_LIBC
-   seed += (uint64_t)time(NULL);
-#endif
-   seed += TimeTicks();
-
-   // Initialize from a hash value...
-   pcg32_srandom( VarHash((var){.uint64 = seed}), 0);
-}
