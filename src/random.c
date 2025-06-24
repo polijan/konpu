@@ -162,7 +162,7 @@ void UtilInitRandom_0_(void)
 #if KONPU_PLATFORM_LIBC
    seed += (uint64_t)time(NULL);
 #endif
-   seed += TimeTicks();
+   seed += UtilTime();
 
    UtilInitRandom_1_(seed);
 }

@@ -37,11 +37,11 @@ int AppInit(void)
       }
       VideoRender();
       KeyUpdate();
-      TimeSleep(30);
+      UtilSleep(30);
    }
 
 MOVE:
-   TimeSleep(500);
+   UtilSleep(500);
    KeyUpdate(); // wait for reset
    int x = VIDEO_WIDTH_GLYPH  / 2;
    int y = VIDEO_HEIGHT_GLYPH / 2;
@@ -59,7 +59,7 @@ MOVE:
       *VideoGlyph32(x,y) = GLYPH32_PATTERN_FULL;
       VideoRender();
       KeyUpdate();
-      TimeSleep(30);
+      UtilSleep(30);
    }
    return 0;
 }

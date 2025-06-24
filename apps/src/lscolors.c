@@ -40,7 +40,7 @@ int AppInit(void)
          default: kule(256, 16, 16, NULL); break;
       }
       VideoRender();
-      TimeSleep(30);
+      UtilSleep(30);
       KeyUpdate();
       if (KEY_IS_DOWN(KEY_SCANCODE_ESCAPE)) {
          return 0;

@@ -12,7 +12,7 @@ static void SHOW(int mode, const char *msg)
    Printer("%3d x %3d - %2d bytes per 8x8px - %s\n",
       VIDEO_WIDTH, VIDEO_HEIGHT, sz, msg);
    VideoRender();
-   TimeSleep(2800);
+   UtilSleep(2800);
 }
 
 int AppInit(void)

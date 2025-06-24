@@ -17,6 +17,6 @@ int AppInit(void)
       VideoRender();
    }
 
-   TimeSleep(2000);
+   UtilSleep(2000);
    return 0;
 }

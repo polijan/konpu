@@ -36,7 +36,7 @@ int AppInit(void)
       for (int i = 0; i < 90; i++) {
          KeyUpdate();
          if (KEY_IS_ANY_DOWN()) return 0;
-         TimeSleep(10);
+         UtilSleep(10);
       }
    }
 }
