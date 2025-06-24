@@ -3,7 +3,7 @@
 // Definition of Konpu's RAM memory
 alignas(max_align_t)
 #if defined(__GNUC__)
-    __attribute__((__may_alias__))
+   __attribute__((__may_alias__))
 #endif
 uint8_t RAM[RAM_SIZE];
 
@@ -24,6 +24,7 @@ RAM_STATIC_ASSERT(RAM_COLOR_PALETTE, uint8_t);
 RAM_STATIC_ASSERT(RAM_KEY_MOD, uint8_t);
 RAM_STATIC_ASSERT(RAM_KEY_CURRENT_STATE,  uint64_t);
 RAM_STATIC_ASSERT(RAM_KEY_PREVIOUS_STATE, uint64_t);
+RAM_STATIC_ASSERT(RAM_RNG_STATE, uint64_t /*pcg32_random_t*/);
 RAM_STATIC_ASSERT(RAM_STACK_VAR, uint64_t /*var*/);
 RAM_STATIC_ASSERT(RAM_STACK_SIZE, int16_t );
 RAM_STATIC_ASSERT(RAM_STACK_TYPE, uint16_t /*Type*/);

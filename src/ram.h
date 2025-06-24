@@ -35,6 +35,7 @@ uint8_t RAM[RAM_SIZE];
 #define RAM_KEY_MOD                 RAM_AFTER_(RAM_COLOR_PALETTE)
 #define RAM_KEY_CURRENT_STATE       RAM_AFTER_(RAM_KEY_MOD)
 #define RAM_KEY_PREVIOUS_STATE      RAM_AFTER_(RAM_KEY_CURRENT_STATE)
+#define RAM_RNG_STATE               RAM_AFTER_(RAM_KEY_PREVIOUS_STATE)
 #define RAM_STACK_VAR               69632  // TODO:address at 68k for now...
 #define RAM_STACK_SIZE              RAM_AFTER_(RAM_STACK_VAR)
 #define RAM_STACK_TYPE              RAM_AFTER_(RAM_STACK_SIZE)
@@ -51,6 +52,7 @@ uint8_t RAM[RAM_SIZE];
 #define RAM_KEY_MOD_SZ_             5 // <--- TODO/UGLY/FIX.... I pad so that RAM_KEY_STATE is aligned.
 #define RAM_KEY_CURRENT_STATE_SZ_   (256/*key states*/ / 8 /*stored as bits*/)
 #define RAM_KEY_PREVIOUS_STATE_SZ_  RAM_KEY_CURRENT_STATE_SZ_
+#define RAM_RNG_STATE_SZ_           (2*sizeof(uint64_t)) //sizeof pcg32_random_t
 #define RAM_STACK_VAR_SZ_           (STACK_CAPACITY * sizeof(uint64_t /*var*/))
 #define RAM_STACK_SIZE_SZ_          sizeof(int16_t)
 #define RAM_STACK_TYPE_SZ_          (STACK_CAPACITY * sizeof(uint16_t /*Type*/))
