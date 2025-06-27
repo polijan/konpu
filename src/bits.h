@@ -118,9 +118,10 @@
 
 #define BITS_SET_BIT(uint, index, bit) \
    _Generic((uint)                   , \
+      uint8_t : BITS_SET_BIT_u_      , \
+      uint16_t: BITS_SET_BIT_u_      , \
       uint32_t: BITS_SET_BIT_u32_    , \
-      uint64_t: BITS_SET_BIT_u64_    , \
-      default : BITS_SET_BIT_u_        \
+      uint64_t: BITS_SET_BIT_u64_      \
    )((uint), (index), (bit))
    static inline unsigned BITS_SET_BIT_u_(unsigned x, unsigned n, unsigned bit)
    { return (x & ~(1u << n)) | (bit << n); }
@@ -131,9 +132,10 @@
 
 #define BITS_SET_QUARTER(uint, index, quarter) \
    _Generic((uint)                           , \
+      uint8_t : BITS_SET_QUARTER_u_          , \
+      uint16_t: BITS_SET_QUARTER_u_          , \
       uint32_t: BITS_SET_QUARTER_u32_        , \
-      uint64_t: BITS_SET_QUARTER_u64_        , \
-      default : BITS_SET_QUARTER_u_           \
+      uint64_t: BITS_SET_QUARTER_u64_          \
    )((uint), (index), (quarter))
    static inline unsigned BITS_SET_QUARTER_u_(unsigned x, unsigned n, unsigned quarter)
    { n <<= 1; return (x & ~(0x3u << n)) | (quarter << n); }
@@ -144,9 +146,10 @@
 
 #define BITS_SET_NIBBLE(uint, index, nibble) \
    _Generic((uint)                         , \
+      uint8_t : BITS_SET_NIBBLE_u_         , \
+      uint16_t: BITS_SET_NIBBLE_u_         , \
       uint32_t: BITS_SET_NIBBLE_u32_       , \
-      uint64_t: BITS_SET_NIBBLE_u64_       , \
-      default : BITS_SET_NIBBLE_u_           \
+      uint64_t: BITS_SET_NIBBLE_u64_         \
    )((uint), (index), (nibble))
    static inline unsigned BITS_SET_NIBBLE_u_(unsigned x, unsigned n, unsigned nibble)
    { n <<= 2; return (x & ~(0xFu << n)) | (nibble << n); }
@@ -222,14 +225,14 @@
       uint16_t: __builtin_bswap16((uint))  , \
       uint32_t: __builtin_bswap32((uint))  , \
       uint64_t: __builtin_bswap64((uint))  )
+      // see: https://gcc.gnu.org/onlinedocs/gcc/Byte-Swapping-Builtins.html
 #else
 #  define BITS_SWAP_BYTE(uint)               \
    _Generic((uint)                         , \
       uint8_t:                      (uint) , \
       uint16_t: BITS_SWAP_BYTE_u16_((uint)), \
       uint32_t: BITS_SWAP_BYTE_u32_((uint)), \
-      uint64_t: BITS_SWAP_BYTE_u64_((uint))  \
-   )(uint)
+      uint64_t: BITS_SWAP_BYTE_u64_((uint))  )
    static inline uint16_t BITS_SWAP_BYTE_u16_(uint16_t x)
    { return x << 8 | x >> 8; }
    static inline uint32_t BITS_SWAP_BYTE_u32_(uint32_t x)
@@ -249,7 +252,11 @@
 //------------------------------------------------------------------------------
 
 // return true if x has a single bit set to 1
-#define BITS_HAS_A_SINGLE_ONE(x)                ((x) && !((x) & ((x) - 1)))
+#if __STDC_VERSION__ < 202311L
+#  define BITS_HAS_A_SINGLE_ONE(x)              ((x) && !((x) & ((x) - 1)))
+#else
+#  define BITS_HAS_A_SINGLE_ONE(x)              stdc_has_single_bit((x))
+#endif
 
 // return true if x is zero or has single bit set to 1
 #define BITS_HAS_AT_MOST_A_SINGLE_ONE(x)        (!((x) & ((x) - 1)))
@@ -273,6 +280,436 @@
 // return x with all bits to right of the right-most 1-bit also set to 1
 // (ex: 0100[1]000 => 0100[1111])
 #define BITS_RIGHT_PROPAGATE_RIGHTMOST_ONE(x)   ((x) | ((x) - 1))
+
+
+//------------------------------------------------------------------------------
+// CLZ_ / CTZ_ / Popcount ... possibly very FAST (using builtins in GCC/CLANG)
+//
+// CLZ_/CTZ_ *MUST* only be used when INPUT IS NOT 0 (that requirement from
+// the GCC builtins). For a safe function, handling zero too, use the <stdbit.h>
+// macros: stdc_leading_zeros() / std_trailling_zeros()  [see: next section]
+//
+// GCC builtins, see:
+// bits      : https://gcc.gnu.org/onlinedocs/gcc/Bit-Operation-Builtins.html
+// byte swaps: https://gcc.gnu.org/onlinedocs/gcc/Byte-Swapping-Builtins.html
+//------------------------------------------------------------------------------
+
+// (shortcut / #undef'ed at the end of this section)
+#define BITS_  static inline int C_ATTRIBUTE_UNSEQUENCED
+
+// CTZ (= Count TRAILING Zeros) is functionally like stdc_trailing_zeros ...
+// but is UNDEFINED when n is 0
+#ifdef __GNUC__
+#  define BitsCTZ_(n)                         \
+      _Generic((n)                          , \
+         unsigned char     : __builtin_ctz  , \
+         unsigned short    : __builtin_ctz  , \
+         unsigned int      : __builtin_ctz  , \
+         unsigned long     : __builtin_ctzl , \
+         unsigned long long: __builtin_ctzll  \
+      )((n))
+   // also define width-precise functions_:
+   BITS_ BitsCTZ_8_( uint8_t  n) { return BitsCTZ_(n); }
+   BITS_ BitsCTZ_16_(uint16_t n) { return BitsCTZ_(n); }
+   BITS_ BitsCTZ_32_(uint32_t n) { return BitsCTZ_(n); }
+   BITS_ BitsCTZ_64_(uint64_t n) { return BitsCTZ_(n); }
+
+#elif __STDC_VERSION__ >= 202311L
+#  define BitsCTZ_(n)      stdc_trailing_zeros((n))
+
+#else // Pure C fallback: Binary Search Style (at most 6 operations)
+#  define BitsCTZ_(n)             \
+      _Generic((n)              , \
+         uint8_t : BitsCTZ_8_   , \
+         uint16_t: BitsCTZ_16_  , \
+         uint32_t: BitsCTZ_32_  , \
+         uint64_t: BitsCTZ_64_    \
+      )((n))
+      BITS_ BitsCTZ_8_(uint8_t n) {
+         int count = 0;
+         if ((n & 0x0F) == 0) { count += 4; n >>= 4; }
+         if ((n & 0x03) == 0) { count += 2; n >>= 2; }
+         if ((n & 0x01) == 0) { count += 1; }
+         return count;
+      }
+      BITS_ BitsCTZ_16_(uint16_t n) {
+         int count = 0;
+         if ((n & 0x00FF) == 0) { count += 8; n >>= 8; }
+         if ((n & 0x000F) == 0) { count += 4; n >>= 4; }
+         if ((n & 0x0003) == 0) { count += 2; n >>= 2; }
+         if ((n & 0x0001) == 0) { count += 1; }
+         return count;
+      }
+      BITS_ BitsCTZ_32_(uint32_t n) {
+         int count = 0;
+         if ((n & 0x0000FFFF) == 0) { count += 16; n >>= 16; }
+         if ((n & 0x000000FF) == 0) { count +=  8; n >>=  8; }
+         if ((n & 0x0000000F) == 0) { count +=  4; n >>=  4; }
+         if ((n & 0x00000003) == 0) { count +=  2; n >>=  2; }
+         if ((n & 0x00000001) == 0) { count +=  1; }
+         return count;
+      }
+      BITS_ BitsCTZ_64_(uint64_t n) {
+         int count = 0;
+         if ((n & 0x00000000FFFFFFFFULL) == 0) { count += 32; n >>= 32; }
+         if ((n & 0x000000000000FFFFULL) == 0) { count += 16; n >>= 16; }
+         if ((n & 0x00000000000000FFULL) == 0) { count +=  8; n >>=  8; }
+         if ((n & 0x000000000000000FULL) == 0) { count +=  4; n >>=  4; }
+         if ((n & 0x0000000000000003ULL) == 0) { count +=  2; n >>=  2; }
+         if ((n & 0x0000000000000001ULL) == 0) { count +=  1; }
+         return count;
+      }
+#endif
+
+
+// CLZ (= Count LEADING zeros) is functionally like stdc_leading_zeros ...
+// but is UNDEFINED when n is 0
+#ifdef __GNUC__
+#  define BitsCLZ_(n)                                                          \
+      _Generic((n)                                                           , \
+         /* builtin_clz is for int, char/short may have less leading 0s */     \
+         unsigned char : (__builtin_clz((n)) - (UINT_WIDTH - UCHAR_WIDTH))   , \
+         unsigned short: (__builtin_clz((n)) - (UINT_WIDTH - USHRT_WIDTH))   , \
+         unsigned int      : __builtin_clz((n))                              , \
+         unsigned long     : __builtin_clzl((n))                             , \
+         unsigned long long: __builtin_clzll((n))                              \
+      )
+   // also define width-precise functions_:
+   BITS_ BitsCLZ_8_( uint8_t  n) { return BitsCLZ_(n); }
+   BITS_ BitsCLZ_16_(uint16_t n) { return BitsCLZ_(n); }
+   BITS_ BitsCLZ_32_(uint32_t n) { return BitsCLZ_(n); }
+   BITS_ BitsCLZ_64_(uint64_t n) { return BitsCLZ_(n); }
+
+#elif __STDC_VERSION__ >= 202311L
+#  define BitsCLZ_(n)      stdc_leading_zeros((n))
+
+#else // Pure C fallback: Binary Search Style (at most 6 operations)
+#  define BitsCLZ_(n)           \
+      _Generic((n)            , \
+         uint8_t : BitsCLZ_8_ , \
+         uint16_t: BitsCLZ_16_, \
+         uint32_t: BitsCLZ_32_, \
+         uint64_t: BitsCLZ_64_  \
+      )((n))
+      BITS_ BitsCLZ_8_(uint8_t n) {
+         int count = 0;
+         if ((n & 0xF0) == 0) { count += 4; n <<= 4; }
+         if ((n & 0xC0) == 0) { count += 2; n <<= 2; }
+         if ((n & 0x80) == 0) { count += 1; }
+         return count;
+      }
+      BITS_ BitsCLZ_16_(uint16_t n) {
+         int count = 0;
+         if ((n & 0xFF00) == 0) { count += 8; n <<= 8; }
+         if ((n & 0xF000) == 0) { count += 4; n <<= 4; }
+         if ((n & 0xC000) == 0) { count += 2; n <<= 2; }
+         if ((n & 0x8000) == 0) { count += 1; }
+         return count;
+      }
+      BITS_ BitsCLZ_32_(uint32_t n) {
+         int count = 0;
+         if ((n & 0xFFFF0000) == 0) { count += 16; n <<= 16; }
+         if ((n & 0xFF000000) == 0) { count +=  8; n <<=  8; }
+         if ((n & 0xF0000000) == 0) { count +=  4; n <<=  4; }
+         if ((n & 0xC0000000) == 0) { count +=  2; n <<=  2; }
+         if ((n & 0x80000000) == 0) { count +=  1; }
+         return count;
+      }
+      BITS_ BitsCLZ_64_(uint64_t n) {
+         int count = 0;
+         if ((n & 0xFFFFFFFF00000000ULL) == 0) { count += 32; n <<= 32; }
+         if ((n & 0xFFFF000000000000ULL) == 0) { count += 16; n <<= 16; }
+         if ((n & 0xFF00000000000000ULL) == 0) { count +=  8; n <<=  8; }
+         if ((n & 0xF000000000000000ULL) == 0) { count +=  4; n <<=  4; }
+         if ((n & 0xC000000000000000ULL) == 0) { count +=  2; n <<=  2; }
+         if ((n & 0x8000000000000000ULL) == 0) { count +=  1; }
+         return count;
+      }
+#endif
+
+// Popcount is functionally like stdc_count_ones
+#ifdef __GNUC__
+#  define BitsPopcount(n)                           \
+      _Generic((n)                                , \
+         unsigned char     : __builtin_popcount   , \
+         unsigned short    : __builtin_popcount   , \
+         unsigned int      : __builtin_popcount   , \
+         unsigned long     : __builtin_popcountl  , \
+         unsigned long long: __builtin_popcountll   \
+      )((n))
+   // also define those as they will be used in <stdbit> implementation
+   BITS_ BitsPopcount_8_(uint8_t n)    { return BitsPopcount(n); }
+   BITS_ BitsPopcount_16_(uint16_t n)  { return BitsPopcount(n); }
+   BITS_ BitsPopcount_32_(uint32_t n)  { return BitsPopcount(n); }
+   BITS_ BitsPopcount_64_(uint64_t n)  { return BitsPopcount(n); }
+
+#elif __STDC_VERSION__ >= 202311L
+#  define BitsPopcount(n)  stdc_count_ones((n))
+
+#else // Pure C fallback if we don't have GCC builtins
+#  define BitsPopcount(n)             \
+      _Generic((n)                  , \
+         uint8_t : BitsPopcount_8_  , \
+         uint16_t: BitsPopcount_16_ , \
+         uint32_t: BitsPopcount_32_ , \
+         uint64_t: BitsPopcount_64_   \
+      ((n)) // implemenation based on Hacker's Delight (by Henry S. Warren)
+      BITS_ BitsPopcount_8_(uint8_t n) {
+         n = n - ((n >> 1) & 0x55);
+         n = (n & 0x33) + ((n >> 2) & 0x33);
+         n = (n + (n >> 4)) & 0x0F;
+         return n;
+      }
+      BITS_ BitsPopcount_16_(uint16_t n) {
+         n = n - ((n >> 1) & 0x5555);
+         n = (n & 0x3333) + ((n >> 2) & 0x3333);
+         n = (n + (n >> 4)) & 0x0F0F;
+         n = n + (n >> 8);
+         return n & 0x1F;
+      }
+      BITS_ BitsPopcount_32_(uint32_t n) {
+         n = n - ((n >> 1) & 0x55555555);
+         n = (n & 0x33333333) + ((n >> 2) & 0x33333333);
+         n = (n + (n >> 4)) & 0x0F0F0F0F;
+         n = n + (n >> 8);
+         n = n + (n >> 16);
+         return n & 0x3F;
+      }
+      BITS_ BitsPopcount_64_(uint64_t n) {
+         n = n - ((n >> 1) & 0x5555555555555555ULL);
+         n = (n & 0x3333333333333333ULL) + ((n >> 2) & 0x3333333333333333ULL);
+         n = (n + (n >> 4)) & 0x0F0F0F0F0F0F0F0FULL;
+         n = n + (n >> 8);
+         n = n + (n >> 16);
+         n = n + (n >> 32);
+         return n & 0x7F;
+      }
+#endif //ifdef __GNUC__
+
+#undef BITS_
+
+//------------------------------------------------------------------------------
+// <stdbit.h> - working with bytes and bits
+//
+// Konpu C garantuees the following from C23 (even for C11/C17):
+//
+// - Endianness of scalar types: __STDC_ENDIAN_LITTLE__, __STDC_ENDIAN_BIG__,
+//   and __STDC_ENDIAN_NATIVE__ which *might* be one of the above
+//
+// - Type generic macros: stdc_leading_zeros, stdc_leading_ones,
+//   stdc_trailing_zeros, stdc_trailing_ones, stdc_first_leading_zero,
+//   stdc_first_leading_one, stdc_first_trailing_zero, stdc_first_trailing_one,
+//   stdc_count_zeros, stdc_count_ones, stdc_has_single_bit, stdc_bit_width,
+//   stdc_bit_floor, stdc_bit_ceil
+//
+// One should use the type generic macros only and NOT the stdc_*_u[c|s|i|l|ll].
+// Konpu only garantuees that macros work on parameters of type
+// uint<8|16|32|64>_t.
+//
+// see: https://en.cppreference.com/w/c/header/stdbit.html
+//------------------------------------------------------------------------------
+
+// stdc_*(n) macros:
+//
+// leading_zeros        count the number of consecutive ​0​ bits, starting from the most significant bit
+// leading_ones         count the number of consecutive 1 bits, starting from the most significant bit
+// trailing_zeros       count the number of consecutive ​0​ bits, starting from the least significant bit
+// trailing_ones        count the number of consecutive 1 bits, starting from the least significant bit
+// first_leading_zero   find the first position of ​0​ bit, starting from the most significant bit
+// first_leading_one    find the first position of 1 bit, starting from the most significant bit
+// first_trailing_zero  find the first position of ​0​ bit, starting from the least significant bit
+// first_trailing_one   find the first position of 1 bit, starting from the least significant bit
+// count_zeros          count the number of ​0​ bits
+// count_ones           count the number of 1 bits
+// has_single_bit       check if a number is an integral power of 2
+// bit_width            find the smallest number of bits needed to represent the given value
+// bit_floor            find the largest integral power of 2 not greater than the given value
+// bit_ceil             find the smallest integral power of 2 not less than the given value
+
+
+#if __STDC_VERSION__ >= 202311L
+// Include the header as it's fully freestanding.
+#  include <stdbit.h>
+#else
+
+#  ifdef __GNUC__
+#     define    __STDC_ENDIAN_BIG__          __ORDER_BIG_ENDIAN__
+#     define    __STDC_ENDIAN_LITTLE__       __ORDER_LITTLE_ENDIAN__
+#     define    __STDC_ENDIAN_NATIVE__       __BYTE_ORDER__
+#  else
+#     define    __STDC_ENDIAN_BIG__          4321
+#     define    __STDC_ENDIAN_LITTLE__       1234
+#     ifdef KONPU_ENDIAN_
+#        define __STDC_ENDIAN_NATIVE__       KONPU_ENDIAN_
+         // TODO: "KONPU_ENDIAN_" is supposed to be defined from the Makefile
+         //       when compiling Konpu. But when generating konpu.h, this
+         //       needs to be done differently (maybe substitued)....
+#     else
+#        define __STDC_ENDIAN_NATIVE__       0  // unknown
+#     endif
+#  endif
+
+   // shortcut / will be #undef'ed at the end of the section
+#  define BITS_  static inline unsigned int C_ATTRIBUTE_UNSEQUENCED
+
+#  define stdc_leading_zeros(n)                   \
+      _Generic((n)                              , \
+         uint8_t : Bits_stdc_leading_zeros_8_   , \
+         uint16_t: Bits_stdc_leading_zeros_16_  , \
+         uint32_t: Bits_stdc_leading_zeros_32_  , \
+         uint64_t: Bits_stdc_leading_zeros_64_    \
+      )((n))
+      BITS_ Bits_stdc_leading_zeros_8_(uint8_t n)    { return n ? BitsCLZ_8_(n)  : UINT8_WIDTH; }
+      BITS_ Bits_stdc_leading_zeros_16_(uint16_t n)  { return n ? BitsCLZ_16_(n) : UINT16_WIDTH; }
+      BITS_ Bits_stdc_leading_zeros_32_(uint32_t n)  { return n ? BitsCLZ_32_(n) : UINT32_WIDTH; }
+      BITS_ Bits_stdc_leading_zeros_64_(uint64_t n)  { return n ? BitsCLZ_64_(n) : UINT64_WIDTH; }
+
+#  define stdc_trailing_zeros(n)                  \
+      _Generic((n)                              , \
+         uint8_t : Bits_stdc_trailing_zeros_8_  , \
+         uint16_t: Bits_stdc_trailing_zeros_16_ , \
+         uint32_t: Bits_stdc_trailing_zeros_32_ , \
+         uint64_t: Bits_stdc_trailing_zeros_64_   \
+      )((n))
+      BITS_ Bits_stdc_trailing_zeros_8_(uint8_t n)    { return n ? BitsCTZ_8_(n)  : UINT8_WIDTH; }
+      BITS_ Bits_stdc_trailing_zeros_16_(uint16_t n)  { return n ? BitsCTZ_16_(n) : UINT16_WIDTH; }
+      BITS_ Bits_stdc_trailing_zeros_32_(uint32_t n)  { return n ? BitsCTZ_32_(n) : UINT32_WIDTH; }
+      BITS_ Bits_stdc_trailing_zeros_64_(uint64_t n)  { return n ? BitsCTZ_64_(n) : UINT64_WIDTH; }
+
+#  define stdc_leading_ones(n)                    \
+      _Generic((n)                              , \
+         uint8_t : Bits_stdc_leading_zeros_8_   , \
+         uint16_t: Bits_stdc_leading_zeros_16_  , \
+         uint32_t: Bits_stdc_leading_zeros_32_  , \
+         uint64_t: Bits_stdc_leading_zeros_64_    \
+      )(~(n))
+
+#  define stdc_trailing_ones(n)                   \
+      _Generic((n)                              , \
+         uint8_t : Bits_stdc_trailing_zeros_8_  , \
+         uint16_t: Bits_stdc_trailing_zeros_16_ , \
+         uint32_t: Bits_stdc_trailing_zeros_32_ , \
+         uint64_t: Bits_stdc_trailing_zeros_64_   \
+      )(~(n))
+
+#  define stdc_first_leading_zero(n)                  \
+      _Generic((n)                                  , \
+         uint8_t : Bits_stdc_first_leading_zero_8_  , \
+         uint16_t: Bits_stdc_first_leading_zero_16_ , \
+         uint32_t: Bits_stdc_first_leading_zero_32_ , \
+         uint64_t: Bits_stdc_first_leading_zero_64_   \
+      )((n))
+      BITS_ Bits_stdc_first_leading_zero_8_(uint8_t n)    { return (n == UINT8_MAX)  ? 0 : 1 + stdc_leading_ones(n); }
+      BITS_ Bits_stdc_first_leading_zero_16_(uint16_t n)  { return (n == UINT16_MAX) ? 0 : 1 + stdc_leading_ones(n); }
+      BITS_ Bits_stdc_first_leading_zero_32_(uint32_t n)  { return (n == UINT32_MAX) ? 0 : 1 + stdc_leading_ones(n); }
+      BITS_ Bits_stdc_first_leading_zero_64_(uint64_t n)  { return (n == UINT64_MAX) ? 0 : 1 + stdc_leading_ones(n); }
+
+#  define stdc_first_leading_one(n)                   \
+      _Generic((n)                                  , \
+         uint8_t : Bits_stdc_first_leading_one_8_   , \
+         uint16_t: Bits_stdc_first_leading_one_16_  , \
+         uint32_t: Bits_stdc_first_leading_one_32_  , \
+         uint64_t: Bits_stdc_first_leading_one_64_    \
+      )((n))
+      BITS_ Bits_stdc_first_leading_one_8_(uint8_t n)    { return n ?  0 : 1 + stdc_leading_zeros(n); }
+      BITS_ Bits_stdc_first_leading_one_16_(uint16_t n)  { return n ?  0 : 1 + stdc_leading_zeros(n); }
+      BITS_ Bits_stdc_first_leading_one_32_(uint32_t n)  { return n ?  0 : 1 + stdc_leading_zeros(n); }
+      BITS_ Bits_stdc_first_leading_one_64_(uint64_t n)  { return n ?  0 : 1 + stdc_leading_zeros(n); }
+
+#  define stdc_first_trailing_one(n)                  \
+      _Generic((n)                                  , \
+         uint8_t : Bits_stdc_first_trailing_one_8_  , \
+         uint16_t: Bits_stdc_first_trailing_one_16_ , \
+         uint32_t: Bits_stdc_first_trailing_one_32_ , \
+         uint64_t: Bits_stdc_first_trailing_one_64_   \
+      )((n))
+      BITS_ Bits_stdc_first_trailing_one_8_(uint8_t  n)   { return n ? BitsCTZ_(n) : 0; }
+      BITS_ Bits_stdc_first_trailing_one_16_(uint16_t n)  { return n ? BitsCTZ_(n) : 0; }
+      BITS_ Bits_stdc_first_trailing_one_32_(uint32_t n)  { return n ? BitsCTZ_(n) : 0; }
+      BITS_ Bits_stdc_first_trailing_one_64_(uint64_t n)  { return n ? BitsCTZ_(n) : 0; }
+
+#  define stdc_first_trailing_zero(n)                 \
+      _Generic((n)                                  , \
+         uint8_t : Bits_stdc_first_trailing_one_8_  , \
+         uint16_t: Bits_stdc_first_trailing_one_16_ , \
+         uint32_t: Bits_stdc_first_trailing_one_32_ , \
+         uint64_t: Bits_stdc_first_trailing_one_64_   \
+      )((~n))
+
+#  define stdc_count_ones(n)    ((unsigned)BitsPopcount((n)))
+
+#  define stdc_count_zeros(n)   ((usigned))( \
+      _Generic((n)                         , \
+         uint8_t : BitsPopcount_8_         , \
+         uint16_t: BitsPopcount_16_        , \
+         uint32_t: BitsPopcount_32_        , \
+         uint64_t: BitsPopcount_64_          \
+      )(~(n)) )
+
+#  define stdc_bit_width(n)                  \
+      _Generic((n)                         , \
+         uint8_t : Bits_stdc_bit_width_8_  , \
+         uint16_t: Bits_stdc_bit_width_16_ , \
+         uint32_t: Bits_stdc_bit_width_32_ , \
+         uint64_t: Bits_stdc_bit_width_64_   \
+      )((n))
+      BITS_ Bits_stdc_bit_width_8_(uint8_t  n)   { return UINT8_WIDTH  - stdc_leading_zeros(n); }
+      BITS_ Bits_stdc_bit_width_16_(uint16_t n)  { return UINT16_WIDTH - stdc_leading_zeros(n); }
+      BITS_ Bits_stdc_bit_width_32_(uint32_t n)  { return UINT32_WIDTH - stdc_leading_zeros(n); }
+      BITS_ Bits_stdc_bit_width_64_(uint64_t n)  { return UINT64_WIDTH - stdc_leading_zeros(n); }
+
+// Contrarily to above, the following don't return unsigned int.
+#  undef  BITS_
+#  define BITS_(T) static inline T C_ATTRIBUTE_UNSEQUENCED
+
+#  define stdc_has_single_bit(n)                       \
+      _Generic((n)                                   , \
+         unsigned char     : stdc_has_single_bit_uc  , \
+         unsigned short    : stdc_has_single_bit_us  , \
+         unsigned int      : stdc_has_single_bit_ui  , \
+         unsigned long     : stdc_has_single_bit_ul  , \
+         unsigned long long: stdc_has_single_bit_ull   \
+      )((n))
+      BITS_(bool) stdc_has_single_bit_uc(unsigned char n)        { return BITS_HAS_A_SINGLE_ONE(n); }
+      BITS_(bool) stdc_has_single_bit_us(unsigned short n)       { return BITS_HAS_A_SINGLE_ONE(n); }
+      BITS_(bool) stdc_has_single_bit_ui(unsigned int n)         { return BITS_HAS_A_SINGLE_ONE(n); }
+      BITS_(bool) stdc_has_single_bit_ul(unsigned long n)        { return BITS_HAS_A_SINGLE_ONE(n); }
+      BITS_(bool) stdc_has_single_bit_ull(unsigned long long n)  { return BITS_HAS_A_SINGLE_ONE(n); }
+
+#  define stdc_bit_floor(n)                  \
+      _Generic((n)                         , \
+         uint8_t : Bits_stdc_bit_floor_8_  , \
+         uint16_t: Bits_stdc_bit_floor_16_ , \
+         uint32_t: Bits_stdc_bit_floor_32_ , \
+         uint64_t: Bits_stdc_bit_floor_64_   \
+      )((n))
+      BITS_(uint8_t) Bits_stdc_bit_floor_8_(uint8_t n)
+      { return n ? UINT8_C(1)  << (UINT8_WIDTH  - BitsCLZ_8_(n)  - 1)  : 0; }
+      BITS_(uint16_t) Bits_stdc_bit_floor_16_(uint16_t n)
+      { return n ? UINT16_C(1) << (UINT16_WIDTH - BitsCLZ_16_(n) - 1)  : 0; }
+      BITS_(uint32_t) Bits_stdc_bit_floor_32_(uint32_t n)
+      { return n ? UINT32_C(1) << (UINT32_WIDTH - BitsCLZ_32_(n) - 1)  : 0; }
+      BITS_(uint64_t) Bits_stdc_bit_floor_64_(uint64_t n)
+      { return n ? UINT64_C(1) << (UINT64_WIDTH - BitsCLZ_64_(n) - 1)  : 0; }
+
+#  define stdc_bit_ceil(n)                  \
+      _Generic((n)                        , \
+         uint8_t : Bits_stdc_bit_ceil_8_  , \
+         uint16_t: Bits_stdc_bit_ceil_16_ , \
+         uint32_t: Bits_stdc_bit_ceil_32_ , \
+         uint64_t: Bits_stdc_bit_ceil_64_   \
+      )((n))
+      BITS_(uint8_t) Bits_stdc_bit_ceil_8_(uint8_t n)
+      { return n ? UINT8_C(1)  << (UINT8_WIDTH  - BitsCLZ_8_(n - 1))  : 1; }
+      BITS_(uint16_t) Bits_stdc_bit_ceil_16_(uint16_t n)
+      { return n ? UINT16_C(1) << (UINT16_WIDTH - BitsCLZ_16_(n - 1)) : 1; }
+      BITS_(uint32_t) Bits_stdc_bit_ceil_32_(uint32_t n)
+      { return n ? UINT32_C(1) << (UINT32_WIDTH - BitsCLZ_32_(n - 1)) : 1; }
+      BITS_(uint64_t) Bits_stdc_bit_ceil_64_(uint64_t n)
+      { return n ? UINT64_C(1) << (UINT64_WIDTH - BitsCLZ_64_(n - 1)) : 1; }
+
+#endif //__STDC_VERSION__
+#undef BITS_
 
 
 #endif //include guard
