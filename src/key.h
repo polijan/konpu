@@ -163,7 +163,7 @@ enum KeyScanCode {
    KEY_SCANCODE_INTERNATIONAL4 = 138,
    KEY_SCANCODE_INTERNATIONAL5 = 139,
 
-   // Those are the modifier keys
+   // Those are the modifier keys:
    KEY_SCANCODE_LCTRL          = 224,
    KEY_SCANCODE_LSHIFT         = 225,
    KEY_SCANCODE_LALT           = 226, // (Left) Alt, Option
@@ -174,17 +174,39 @@ enum KeyScanCode {
    KEY_SCANCODE_RGUI           = 231, // (Right) Windows, Command (Apple), Meta
 };
 
+enum KeyModBit {
+   KEY_MOD_LCTRL   =   1u,
+   KEY_MOD_LSHIFT  =   2u,
+   KEY_MOD_LALT    =   4u,
+   KEY_MOD_LGUI    =   8u,
+   KEY_MOD_RCTRL   =  16u,
+   KEY_MOD_RSHIFT  =  32u,
+   KEY_MOD_RALT    =  64u,
+   KEY_MOD_RGUI    = 128u,
+};
+#define KEY_MOD_NONE  0
+#define KEY_MOD_SHIFT (KEY_MOD_LSHIFT | KEY_MOD_RSHIFT)
+#define KEY_MOD_CTRL  (KEY_MOD_LCTRL  | KEY_MOD_RCTRL)
+#define KEY_MOD_ALT   (KEY_MOD_LALT   | KEY_MOD_RALT)
+#define KEY_MOD_GUI   (KEY_MOD_LGUI   | KEY_MOD_RGUI)
 
-// The keyboard state in Konpu's RAM: array of four uint64_t totalling 256 bits,
-// each representing the state (1=key pressed, 0=key not pressed) of a USB HID
-// keyboard scan code.
-#define KEY_CURRENT_STATE    (RAM + RAM_KEY_CURRENT_STATE)
+
+// The keyboard state in Konpu's RAM: 256 bits, each representing the state
+// (1=key pressed, 0=key not pressed) of a USB HID keyboard scan code.
+#define KEY_CURRENT_STATE     (RAM + RAM_KEY_CURRENT_STATE)
 
 // A copy of the previous keyboard state prior to the last Update().
-#define KEY_PREVIOUS_STATE   (RAM + RAM_KEY_PREVIOUS_STATE)
+#define KEY_PREVIOUS_STATE    (RAM + RAM_KEY_PREVIOUS_STATE)
 
 // Number of keys which we track on the keyboard
-#define KEY_COUNT            256
+#define KEY_COUNT             256
+
+// A uint8_t 'array of bits' lvalue containing state of the modifier keys
+#define KEY_MOD              \
+   (RAM[RAM_KEY_CURRENT_STATE + KEY_SCANCODE_LCTRL / CHAR_BIT])
+   static_assert(KEY_SCANCODE_LCTRL % CHAR_BIT == 0);
+
+
 
 // Non-zero iff any key was pressed during the last Update()
 static inline BITS_MAX64_T KEY_IS_ANY_DOWN(void) {
