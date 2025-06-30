@@ -611,10 +611,10 @@
          uint32_t: Bits_stdc_first_leading_one_32_  , \
          uint64_t: Bits_stdc_first_leading_one_64_    \
       )((n))
-      BITS_ Bits_stdc_first_leading_one_8_(uint8_t n)    { return n ?  0 : 1 + stdc_leading_zeros(n); }
-      BITS_ Bits_stdc_first_leading_one_16_(uint16_t n)  { return n ?  0 : 1 + stdc_leading_zeros(n); }
-      BITS_ Bits_stdc_first_leading_one_32_(uint32_t n)  { return n ?  0 : 1 + stdc_leading_zeros(n); }
-      BITS_ Bits_stdc_first_leading_one_64_(uint64_t n)  { return n ?  0 : 1 + stdc_leading_zeros(n); }
+      BITS_ Bits_stdc_first_leading_one_8_(uint8_t n)    { return n ?  1 + stdc_leading_zeros(n) : 0; }
+      BITS_ Bits_stdc_first_leading_one_16_(uint16_t n)  { return n ?  1 + stdc_leading_zeros(n) : 0; }
+      BITS_ Bits_stdc_first_leading_one_32_(uint32_t n)  { return n ?  1 + stdc_leading_zeros(n) : 0; }
+      BITS_ Bits_stdc_first_leading_one_64_(uint64_t n)  { return n ?  1 + stdc_leading_zeros(n) : 0; }
 
 #  define stdc_first_trailing_one(n)                  \
       _Generic((n)                                  , \
