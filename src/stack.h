@@ -42,6 +42,14 @@ int     StackPush(var v, Type type);
 #define StackPushPointer(p)   StackPush((var){.pointer = (p)}, TYPE_POINTER)
 #define StackPushError(e)     StackPush((var){.error   = (e)}, TYPE_ERROR)
 #define StackPushType(t)      StackPush((var){.type    = (t)}, TYPE_TYPE)
+#define StackPushGlyph(g)   \
+   _Generic((g)           , \
+      uint8_t : StackPushGlyph8  , \
+      uint16_t: StackPushGlyph16 , \
+      uint32_t: StackPushGlyph32 , \
+      uint64_t: StackPushGlyph64   \
+      /* TODO: Glyph128, Glyph256: */ \
+   )((g))
 #define StackPushGlyph8(g)    StackPush((var){.glyph8  = (g)}, TYPE_GLYPH8)
 #define StackPushGlyph16(g)   StackPush((var){.glyph16 = (g)}, TYPE_GLYPH16)
 #define StackPushGlyph32(g)   StackPush((var){.glyph32 = (g)}, TYPE_GLYPH32)
