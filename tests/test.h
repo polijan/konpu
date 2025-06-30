@@ -100,6 +100,5 @@ int main(int argc, char* argv[])
 #include <konpu.h>
 #include <errno.h>     // macros reporting error conditions
 #include <string.h>    // string handling + memory functions
-#include <inttypes.h>  // format conversion of integer types
 
 #endif //include guard

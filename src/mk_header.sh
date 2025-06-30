@@ -31,15 +31,22 @@ cat << EOF
 // "Entry point" function that must be implemented to create a Konpu app
 int AppInit(void);
 
+// Konpu's External Dependencies
+#if (__STDC_VERSION__ < 202311L) && !defined(__GNUC__)
 EOF
+hr
+cat  "$KONPU_HOME"/external/jtckdint-1.0/jtckdint.h
+hr
+echo "#endif // End of Konpu's External Dependencies'"
+
 
 # API Includes
-include  config.h platform.h c.h \
-         bits.h util.h time.h random.h options.h \
-         var.h rom.h video_mode.h ram.h key.h \
-         video_mode_auto.h glyph.h color.h attribute.h video.h pixel.h tile.h \
-         draw.h \
-         error.h heap.h stack.h \
+include  config.h platform.h c.h                                               \
+         bits.h util.h character.h time.h random.h options.h                   \
+         var.h rom.h video_mode.h ram.h key.h                                  \
+         video_mode_auto.h glyph.h color.h attribute.h video.h pixel.h tile.h  \
+         draw.h                                                                \
+         error.h heap.h stack.h                                                \
          \
          printer.h
 

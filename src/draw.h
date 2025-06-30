@@ -34,10 +34,9 @@ static inline void DrawLine(int x0, int y0, int x1, int y1, int color)
 {
    // Draw the line using the classic Brensenham's algorithm.
    // See: https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm#All_cases
-
-   int dx  = abs(x1 - x0);
+   int dx  = c_abs_(x1 - x0);
    int sx  = (x0 < x1) ? 1 : -1;
-   int dy  = abs(y1 - y0);
+   int dy  = c_abs_(y1 - y0);
    int sy  = (y0 < y1) ? 1 : -1;
    int err = (dx>dy ? dx : -dy)/2;
    int e2;
@@ -56,8 +55,8 @@ static inline void DrawLine(int x0, int y0, int x1, int y1, int color)
 #define DRAW_LINE_FOR(VARNAME_X,VARNAME_Y, x0, y0, x1, y1)   \
    for(int VARNAME_X = (x0), VARNAME_Y = (y0),               \
          x1_ = (x1), y1_ = (y1),                             \
-         dx_ = abs(x1_ - VARNAME_X),                         \
-         dy_ = abs(y1_ - VARNAME_Y),                         \
+         dx_ = c_abs_(x1_ - VARNAME_X),                      \
+         dy_ = c_abs_(y1_ - VARNAME_Y),                      \
          sx_ = (VARNAME_X < x1_) ? 1 : -1,                   \
          sy_ = (VARNAME_Y < y1_) ? 1 : -1,                   \
          err_ = (dx_ > dy_ ? dx_ : -dy_) / 2,                \

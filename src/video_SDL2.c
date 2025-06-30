@@ -137,7 +137,7 @@ DEBUG("%dx%d -> zoom=%d\n", display.w, display.h, zoom); //TODO:REMOVE
    // Give the window an icon
    // For now, just fill the icon with random stuff (TODO:remove)
    // Actually in the future, maybe we want it from a Glyph or a Tile.
-   for (int i = 0; i < UTIL_ARRAY_SIZE(ICON); i++) { ICON[i] = i % 256; }
+   for (int i = 0; i < C_COUNTOF(ICON); i++) { ICON[i] = i % 256; }
    SDL_Surface *icon = SDL_CreateRGBSurfaceWithFormatFrom(ICON,
       ICON_WIDTH, ICON_HEIGHT,
       ICON_BYTES_PER_PIXEL * CHAR_BIT,   // bpp

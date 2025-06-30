@@ -11,7 +11,7 @@ static const uint64_t pattern[] = {
    GLYPH64_PATTERN_DITHER_BAYER_DITHER14, GLYPH64_PATTERN_DITHER_BAYER_DITHER15,
    GLYPH64_PATTERN_DITHER_BAYER_DITHER16,
 };
-#define NPATTERNS  UTIL_ARRAY_SIZE(pattern)
+#define PATTERN_COUNT  C_COUNTOF(pattern)
 
 //#define SOWELI     GLYPH64(001515204054403E)
 #define TOKI    \
@@ -29,8 +29,6 @@ static const uint64_t pattern[] = {
 
 static int Show(int number_of_planes)
 {
-
-
    // Set Video Mode and Clear Screen
    //VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph64, ATTRIBUTE_2x4_16));
    //VideoMode(VIDEO_MODE_GLYPH(Glyph64));
@@ -57,7 +55,7 @@ static int Show(int number_of_planes)
       //GLYPH64_PATTERN_ARCHITECTURE_ARBOR;
    }
 
-   //*VideoGlyph64(2,2) = SOWELI; VideoRender(); TimeSleep(4000); //Just to show
+   //*VideoGlyph64(2,2) = SOWELI; VideoRender(); UtilSleep(4000); //Just to show
 
    // Set some Pattern as initial glyphs and show it
 //   VideoGlyphSetAll(GLYPH64_PATTERN_WAVES_ZIGZAG_BOLD_SHADED);
@@ -66,27 +64,27 @@ static int Show(int number_of_planes)
 
 
    // Cycle through patterns
-   for (int i = 0; i < 5 * NPATTERNS; i++) {
+   for (int i = 0; i < 5 * PATTERN_COUNT; i++) {
       // Select a Glyph (go forth and back through the patterns)
-      int n = i % (2 * NPATTERNS);
-      Glyph64 g = pattern[(n < NPATTERNS)? n : (2 * NPATTERNS - n - 1)];
+      int n = i % (2 * PATTERN_COUNT);
+      int idx = (n < PATTERN_COUNT)? n : (2 * PATTERN_COUNT - n - 1);
+      Glyph64 g = pattern[idx];
 
       // Write the glyph pattern and some "soweli" glyphs
       for (int j = 0; j < VIDEO_COUNT_GLYPH64; j++) {
          VIDEO_GLYPH64[j] = (j % 7)? g : (g ^ SOWELI);
       }
       VideoRender();
-      TimeSleep(100);
+      UtilSleep(100);
    }
 
-   TimeSleep(1000);
+   UtilSleep(1000);
    return 0;
 }
 
 int AppInit(void) {
-//   for (int plane = 1; plane < 7 ; plane ++) Show(plane);
-//   Show(8);
+   for (int plane = 1; plane <= 8 ; plane ++)
+      Show(plane);
 
-   Show(8);
    return 0;
 }

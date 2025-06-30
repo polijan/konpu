@@ -59,10 +59,16 @@
 //------------------------------------------------------------------------------
 #if KONPU_PLATFORM_LIBC
 #   include <errno.h>     // macros reporting error conditions
-#   include <stdio.h>     // input/output
-#   include <inttypes.h>  // format conversion of integer types
 #   include <string.h>    // string handling + memory functions
-#   include <stdlib.h>    // general utilities and allocation functions
+#endif
+
+/*
+#   include <stdio.h>     // input/output
+
+
+#   ifdef KONPU_PLATFORM_LIBC_WANT_STDLIB_
+#      include <stdlib.h> // general utilities and allocation functions
+#   endif
 #elif __STDC_VERSION__ >= 202311L
 //  <string.h> is a *partially* freestanding header since C23.
 //  In freestanding mode, the following functions are NOT required:
@@ -103,7 +109,7 @@
 #define free_sized(ptr, sz)  KONPU_PLATFORM_free_sized_should_not_be_used_
 #define free_aligned_sized(ptr, a, sz) \
    KONPU_PLATFORM_free_aligned_sized_should_not_be_used_
-
+*/
 
 //------------------------------------------------------------------------------
 // Includes for SDL platform

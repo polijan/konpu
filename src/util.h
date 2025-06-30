@@ -23,10 +23,6 @@ static inline void UtilClampCoordinate(int *n, int dimension) {
 // A comma. (Occasionally useful to pass a comma as a macro parameter)
 #define UTIL_COMMA ,
 
-// Return the (signed) number of elements within an array type.
-// Note / Warning: Only works for arrays which have NOT decayed to a pointer.
-#define UTIL_ARRAY_SIZE(array)      (C_SIZEOF(array) / C_SIZEOF(0[array]))
-
 // Return the (signed) length of a C string literal.
 #define UTIL_STRING_LITERAL_LENGTH(literal_string) \
    (C_SIZEOF(literal_string) - 1)
