@@ -505,6 +505,10 @@
 #  define LLONG_WIDTH        ULLONG_WIDTH
    // (note: C23 also has BOOL_WIDTH [and a few more])
 #endif
+// bit-precise integers (may work starting from C23)
+#ifndef   BITINT_MAXWIDTH     // Test BITINT_MAXWIDTH >= n to know if the type
+#  define BITINT_MAXWIDTH  0  // _BitInt(n) can be used.
+#endif
 
 //------------------------------------------------------------------------------
 // <stdint.h> - Fixed-width integer types
