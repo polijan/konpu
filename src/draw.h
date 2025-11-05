@@ -50,8 +50,8 @@ static inline void DrawLine(int x0, int y0, int x1, int y1, int color)
    }
 }
 
-// Expands to a C for loop traversing every pixel in the line between the points
-// (x0,y0) and (x1,y1). So you can set your own action into the loop body.
+// Expands to a C `for` loop traversing every pixel in the line between the two
+// points (x0,y0) and (x1,y1). Allows to set your own action into the loop body.
 #define DRAW_LINE_FOR(VARNAME_X,VARNAME_Y, x0, y0, x1, y1)   \
    for(int VARNAME_X = (x0), VARNAME_Y = (y0),               \
          x1_ = (x1), y1_ = (y1),                             \
@@ -110,6 +110,15 @@ static inline void DrawCircle(int x0, int y0, int radius, int color)
    }
 }
 
+// Draw a filled circle of the given center (x0,y0), radius, and color
+static inline void DrawCircleFilled(int x0, int y0, int radius, uint8_t color)
+{
+   // This goes over some more pixels than the circle but is very simple.
+   int_fast32_t r2 = radius * radius;
+   for (int_fast32_t y = -radius; y <= radius; y++)
+      for (int_fast32_t x = -radius+1; x <= radius; x++)
+         if (x*x + y*y <= r2)  PixelSet(x + x0, y + y0, color);
+}
 
 // void DrawGlyph(Glyph<N> g, int x, int y, int color);
 // Draw a Glyph starting at pixel (x,y) with the given color.
