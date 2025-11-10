@@ -938,6 +938,12 @@ static inline c_imaxdiv_t_ c_imaxdiv_(intmax_t num, intmax_t den)  { return (c_i
 #  define free(ptr)           c_free_(ptr)
 #endif
 
+// Macro constants
+#ifdef KONPU_H_
+#  define EXIT_SUCCESS  0
+#  define EXIT_FAILURE  1
+#endif
+
 // Random numbers functions:
 // Konpu provides an implementation of `int rand(void)` and
 // `void srand(unsigned int seed)` in random.h
