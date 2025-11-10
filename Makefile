@@ -72,18 +72,18 @@ LDFLAGS = -rdynamic -ldl -lm $(shell sdl2-config --libs) $(LDFLAGS_EXTRA)
 MAKEFLAGS += -rR
 
 .PHONY: all      konpu tests apps tools                                     \
-        clean    clean-konpu clean-apps clean-tools                         \
-        cleanall cleanall-konpu cleanall-tests cleanall-apps cleanall-tools \
+        clean    clean_konpu clean_apps clean_tools                         \
+        cleanall cleanall_konpu cleanall_tests cleanall_apps cleanall_tools \
         test cppcheck print-%                                               \
 
 all: konpu tests apps
 
-clean: clean-konpu clean-tests clean-apps
+clean: clean_konpu clean_tests clean_apps
 
-cleanall: cleanall-konpu cleanall-tests cleanall-apps
+cleanall: cleanall_konpu cleanall_tests cleanall_apps
 
 
-#clean: clean-konpu clean-apps
+#clean: clean_konpu clean_apps
 #	rm -f obj/* tests/bin/*
 #
 #cleanall: clean
@@ -97,10 +97,10 @@ cleanall: cleanall-konpu cleanall-tests cleanall-apps
 tools:
 	@dev-make-tools
 
-clean-tools:
+clean_tools:
 	@dev-make-tools clean
 
-cleanall-tools:
+cleanall_tools:
 	@dev-make-tools cleanall
 
 
@@ -163,9 +163,9 @@ TESTS_BINS = $(patsubst tests/%.c, tests/bin/%, $(TESTS_SRCS))
 
 tests: $(TESTS_BINS)
 
-clean-tests:
+clean_tests:
 
-cleanall-tests: clean-tests
+cleanall_tests: clean_tests
 	rm -f tests/bin/*
 
 tests/bin/%: tests/%.c lib/libkonpu.a include/konpu.h tests/test.h
@@ -181,9 +181,9 @@ APPS_LIBS = $(patsubst apps/src/%.c, apps/lib/%.so, $(APPS_SRCS))
 
 apps: $(APPS_LIBS)
 
-clean-apps:
+clean_apps:
 
-cleanall-apps: clean-apps
+cleanall_apps: clean_apps
 	rm -f apps/lib/*
 
 apps/lib/%.so: apps/src/%.c include/konpu.h
