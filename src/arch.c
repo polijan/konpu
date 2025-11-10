@@ -1,9 +1,16 @@
-#include "rom.h"
+#include "arch.h"
 
 //------------------------------------------------------------------------------
-// Include things we need to stuff into the ROM
+// RAM
 //------------------------------------------------------------------------------
-#include "video_mode.h"
+alignas(max_align_t) struct RAM_ Ram;
+
+//------------------------------------------------------------------------------
+// ROM
+//------------------------------------------------------------------------------
+
+// Checks for assertion about ROM
+static_assert(alignof(struct ROM_) == alignof(char));
 
 // Constants glyph definition (but prevent inclusion of glyph.h)
 #define KONPU_GLYPH_H_
@@ -14,44 +21,115 @@
 #include "glyph_constants/glyph_ascii.h"
 #include "glyph_constants/glyph_tokipona.h"
 
-//------------------------------------------------------------------------------
-// Static checks on the ROM addresses to verify their aligments if they
-// may hold something else than just raw bytes.
-//------------------------------------------------------------------------------
+struct ROM_ Rom = {
+   .version = {
+      KONPU_VERSION_MAJOR,
+      KONPU_VERSION_MINOR,
+      (KONPU_VERSION_PATCH & 0xFF), (KONPU_VERSION_PATCH >> 8),
+   },
+   .url = "https://github.com/polijan/konpu",
 
-// static_assert(ROM_FONT % alignof(uint64_t) == 0);
+   // Static Strings...
+   // Error Messages strings
+/*
+   ALE,LI,PONA, 0
+   PAKALA,A,'.',MI,SONA,ALA,E,TAN, ' ','(','U','n','k','n','o','w','n',' ','E','r','r','o','r',')','\0',
 
 
-//------------------------------------------------------------------------------
-// Definition of Konpu's ROM and its content
-//------------------------------------------------------------------------------
-alignas(max_align_t)
-#if defined(__GNUC__)
-    __attribute__((__may_alias__))
-#endif
-const uint8_t ROM[ROM_SIZE] = {
+ ' ','(','N','o',' ','E','r','r','o','r',')','\0',
+   PAKALA,A, MI,SONA,ALA,E,TAN, ' ','(','U','n','k','n','o','w','n',' ','E','r','r','o','r',')','\0',
+*/
 
-   //---------------------------------------------------------------------------
-   // ROM Section: Version
-   //---------------------------------------------------------------------------
-   KONPU_VERSION_MAJOR, // Major
-   KONPU_VERSION_MINOR, // Minor
-   // Patch (encoded as 16-bit LITTLE endian):
-   (KONPU_VERSION_PATCH & 0xFF), (KONPU_VERSION_PATCH >> 8),
+   // Transform Glyphs into a (little endian) series of bytes to add in the ROM
+#  define ADD_GLYPH8(g)   g
+#  define ADD_GLYPH16(g)  (g & 0xFFu), ((g>>8) & 0xFFu)
+#  define ADD_GLYPH32(g)  ADD_GLYPH16(g), ((g>>16) & 0xFFu), ((g>>24) & 0xFFu)
+#  define ADD_GLYPH64(g)  ADD_GLYPH32(g), ((g>>32) & 0xFFu), ((g>>40) & 0xFFu),\
+                                          ((g>>48) & 0xFFu), ((g>>56) & 0xFFu)
 
-   //---------------------------------------------------------------------------
-   // ROM Section: Resolution
-   //
-   // This gives the possible Framebuffer Resolutions (size in 8x8 cells)
-   // (framebuffer "factor" --> see: tools/resfinder)
-   //---------------------------------------------------------------------------
-#if VIDEO_FACTOR_ == 7
-   // 20160 bytes (~19.7Kb) -- also allow 7 bitplanes
+   // List of ascii characters (X macro)
+#  define ASCII_CHARACTERS(X)                                                  \
+      X(SPACE), X(EXCLAMATION_MARK), X(DOUBLE_QUOTE), X(HASHTAG),              \
+      X(DOLLAR_SIGN), X(PERCENT_SIGN), X(AMPERSAND), X(SINGLE_QUOTE),          \
+      X(LEFT_PARENTHESIS), X(RIGHT_PARENTHESIS), X(ASTERISK), X(PLUS_SIGN),    \
+      X(COMMA), X(MINUS_SIGN), X(DOT), X(SLASH),                               \
+      X(0), X(1), X(2), X(3), X(4), X(5), X(6), X(7), X(8), X(9),              \
+      X(COLON), X(SEMICOLON), X(LESS_THAN_SIGN), X(EQUAL_SIGN),                \
+      X(GREATER_THAN_SIGN), X(QUESTION_MARK), X(AT_SIGN),                      \
+      X(A), X(B), X(C), X(D), X(E), X(F), X(G), X(H), X(I), X(J), X(K), X(L),  \
+      X(M), X(N), X(O), X(P), X(Q), X(R), X(S), X(T), X(U), X(V), X(W), X(X),  \
+      X(Y), X(Z),                                                              \
+      X(LEFT_SQUARE_BACKET), X(BACKSLASH), X(RIGHT_SQUARE_BRACKET), X(CARET),  \
+      X(UNDERSCORE), X(BACKQUOTE),                                             \
+      X(a), X(b), X(c), X(d), X(e), X(f), X(g), X(h), X(i), X(j), X(k), X(l),  \
+      X(m), X(n), X(o), X(p), X(q), X(r), X(s), X(t), X(u), X(v), X(w), X(x),  \
+      X(y), X(z),                                                              \
+      X(LEFT_CURLY_BACKET), X(VERTICAL_BAR), X(RIGHT_CURLY_BRACKET), X(TILDE),
 
+      // List of Sitelen Pona characters (X macro)
+      // (pu 120's ale-wile + kin/namako/oko)
+#  define SITELENPONA_CHARACTERS(X)                                            \
+      X(A), X(AKESI), X(ALA), X(ALASA), X(ALE), X(ANPA), X(ANTE), X(ANU),      \
+      X(AWEN), X(E), X(EN), X(ESUN), X(IJO), X(IKE), X(ILO), X(INSA), X(JAKI), \
+      X(JAN), X(JELO), X(JO), X(KALA), X(KALAMA), X(KAMA), X(KASI), X(KEN),    \
+      X(KEPEKEN), X(KILI), X(KIWEN), X(KO), X(KON), X(KULE), X(KULUPU),        \
+      X(KUTE), X(LA), X(LAPE), X(LASO), X(LAWA), X(LEN), X(LETE), X(LI),       \
+      X(LILI), X(LINJA), X(LIPU), X(LOJE), X(LON), X(LUKA), X(LUKIN), X(LUPA), \
+      X(MA), X(MAMA), X(MANI), X(MELI), X(MI), X(MIJE), X(MOKU), X(MOLI),      \
+      X(MONSI), X(MU), X(MUN), X(MUSI), X(MUTE), X(NANPA), X(NASA), X(NASIN),  \
+      X(NENA), X(NI), X(NIMI), X(NOKA), X(O), X(OLIN), X(ONA), X(OPEN),        \
+      X(PAKALA), X(PALI), X(PALISA), X(PAN), X(PANA), X(PI), X(PILIN),         \
+      X(PIMEJA), X(PINI), X(PIPI), X(POKA), X(POKI), X(PONA), X(PU), X(SAMA),  \
+      X(SELI), X(SELO), X(SEME), X(SEWI), X(SIJELO), X(SIKE), X(SIN), X(SINA), \
+      X(SINPIN), X(SITELEN), X(SONA), X(SOWELI), X(SULI), X(SUNO), X(SUPA),    \
+      X(SUWI), X(TAN), X(TASO), X(TAWA), X(TELO), X(TENPO), X(TOKI), X(TOMO),  \
+      X(TU), X(UNPA), X(UTA), X(UTALA), X(WALO), X(WAN), X(WASO), X(WAWA),     \
+      X(WEKA), X(WILE),                                                        \
+      X(KIN), X(NAMAKO), X(OKO),
+
+   .font.ascii4 = {
+#     define X(g)   ADD_GLYPH16(UTIL_CAT(GLYPH16_ASCII4_, g))
+      ASCII_CHARACTERS(X)
+#     undef X
+   },
+   .font.ascii5 = {
+#     define X(g)   ADD_GLYPH32(UTIL_CAT(GLYPH32_ASCII5_, g))
+      ASCII_CHARACTERS(X)
+#     undef X
+   },
+   .font.ascii6 = {
+#     define X(g)   ADD_GLYPH32(UTIL_CAT(GLYPH32_ASCII6_, g))
+      ASCII_CHARACTERS(X)
+#     undef X
+   },
+   .font.ascii7 = {
+#     define X(g)   ADD_GLYPH32(UTIL_CAT(GLYPH32_ASCII7_, g))
+      ASCII_CHARACTERS(X)
+#     undef X
+   },
+   .font.tokipona5 = {
+#     define X(g)  ADD_GLYPH64(UTIL_CAT(GLYPH64_TOKIPONA5_, g))
+      SITELENPONA_CHARACTERS(X)
+#     undef X
+   },
+   .font.tokipona6 = {
+#     define X(g)  ADD_GLYPH64(UTIL_CAT(GLYPH64_TOKIPONA6_, g))
+      SITELENPONA_CHARACTERS(X)
+#     undef X
+   },
+   .font.tokipona7 = {
+#     define X(g)  ADD_GLYPH64(UTIL_CAT(GLYPH64_TOKIPONA7_, g))
+      SITELENPONA_CHARACTERS(X)
+#     undef X
+   },
+
+   .resolution_8x8 = { // depends on the VIDEO_FACTOR (see: tools/resfinder)
    //------..---------.--------.-----.-----------------------------------------
    // WxH  // Pixels  | Aspect |Bytes| Type of modes (bitplanes, number of)
-   //      // Resltn. | Ratio  |8x8 / attribute bytes per 8x8px, packed pixels)
+   //      // Res.    | Ratio  |8x8 / attribute bytes per 8x8px, packed pixels)
    //------//---------|--------|---/-------------------------------------------
+   #if VIDEO_FACTOR_ == 7
+   // 20160 bytes (~19.7Kb) -- also allow 7 bitplanes
    60, 42, // 480x336 |1.42857 | 8| 1 bitplane, i.e. "monochrome" modes
    56, 40, // 448x320 |1.4     | 9| attributes: 1 byte  per 8x8
    56, 36, // 448x288 |1.55555 |10| attributes: 2 bytes per 8x8
@@ -67,7 +145,7 @@ const uint8_t ROM[ROM_SIZE] = {
 #elif VIDEO_FACTOR_ == 6
    // 17280 bytes (~16.9Kb)
    // this factor lends itself well to favor wide ratio (1.6 - 1.875)
-   // exception the default for 256 color mode, but even then it could be
+   // except for 256-color pixel mode, but even then it could be
    // changed to 160x108 (AR: 1.48148) for pixel modes.
    60, 36, // 480x288 |1.66666 | 8|
    60, 32, // 480x256 |1.875   | 9|
@@ -146,13 +224,54 @@ const uint8_t ROM[ROM_SIZE] = {
    ??, ??, // ???x??? |?       |32|
    ??, ??, // ???x??? |?       |40|
    ??, ??, // ???x??? |?       |48|
-    0,  0, // > NOT AVAILABLE <|56|
+    0,  0, // > NOT AVAILABLE <|56| <-- (available iff VIDEO_FACTOR_ % 7 == 0)
    ??, ??, // ???x??? |?       |64|
 #endif
+   },
 
-   //---------------------------------------------------------------------------
-   // ROM Section: Color
-   //
+   // Default palettes
+   .default_palette2 = { 11, 254,
+      //darblue/lgith yellow: more extreme: 3, 254,
+      //2, 250,
+   },
+   .default_palette4 = { 32, 252, 145, 181,
+      // marine blue, light yellow, red, cyan    //8, 240, 187, 183,
+   },
+   .default_palette8 = {
+      20, 102, 179, 241, 175, 114, 164, 255,
+   },
+   .default_palette16 = {
+      // For now, using `kule-closest` tool, we choose colors close to the Tango
+      // color scheme sometimes used in terminals, i.e:
+      // #000000, #CC0000, #4E9A06, #C4A000, #3465A4, #75507B, #06989A, #D3D7CF,
+      // #555753, #EF2929, #8AE234, #FCE94F, #729FCF, #AD7FA8, #34E2E2, #EEEEEC,
+      0 , 102, 135, 198,  94,  90, 128, 248,
+      66, 145, 224, 252, 172, 161, 238, 255, //(<--- EEEEC also give 248, so get pure white)
+
+   /*
+       2, 199, 198, 226,  20, 107, 121, 227,
+      90, 162, 249, 251, 105, 143, 144, 245,
+   */
+   },
+   .default_palette32 = { // TODO: define a 32-color palette
+      30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  40,  41,  42,  43,  44,  45,
+      46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59,  60,  61,
+   },
+   .default_palette64 = { // TODO: define a 64-color palette
+       62,  63,  64,  65,  66,  67,  68,  69,  70,  71,  72,  73,  74,  75,  76,  77,
+       78,  79,  80,  81,  82,  83,  84,  85,  86,  87,  88,  89,  90,  91,  92,  93,
+       94,  95,  96,  97,  98,  99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
+      110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125,
+   },
+   // first two colors in the default 128-color palette
+   // TODO: after having defined all other color palettes, find two suitable
+   //       colors (preferably which have not been used in other palettes) to
+   //       act as those two colors:
+   .default_palette128_0_ = 126,
+   .default_palette128_1_ = 127,
+
+
+   .color_info = {
    // OkLab components multiplied by 510 and rounded to 8-bits
    // + space-partitioning k-d tree info on the palette in L,a,b space [note:
    // (median) color 127 means no child node] + 8-bits gamma sRGB components.
@@ -417,251 +536,35 @@ const uint8_t ROM[ROM_SIZE] = {
    /*  253  */       242,  -49,   71  ,     127, 127   ,   211, 254, 178,
    /*  254  */       245,  -16,   58  ,     127, 127   ,   251, 243, 200,
    /*  255  */       255,  -12,   30  ,     127, 127   ,   255, 255, 255,
-
-   //---------------------------------------------------------------------------
-   // ROM Section: Palette
-   //---------------------------------------------------------------------------
-   // Default 2-color palette:
-   11, 254,
-   //darblue/lgith yellow: more extreme: 3, 254,
-   //2, 250,
-   // Default 4-color palette:
-   32, 252, 145, 181,  // marine blue, light yellow, red, cyan    //8, 240, 187, 183,
-   // Default 8-color palette:
-   20, 102, 179, 241, 175, 114, 164, 255,
-   // Default 16-color palette:
-      2, 199, 198, 226,  20, 107, 121, 227,
-     90, 162, 249, 251, 105, 143, 144, 245,
-   // Default 32-color palette:
-    30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  40,  41,  42,  43,  44,  45,
-    46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59,  60,  61,
-   // Default 64-color palette:
-    62,  63,  64,  65,  66,  67,  68,  69,  70,  71,  72,  73,  74,  75,  76,  77,
-    78,  79,  80,  81,  82,  83,  84,  85,  86,  87,  88,  89,  90,  91,  92,  93,
-    94,  95,  96,  97,  98,  99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
-   110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125,
-   // Two last colors in 128-color palette
-   126, 127,
+   },
 
 
-   //---------------------------------------------------------------------------
-   // ROM Section: Font
-   //---------------------------------------------------------------------------
-   // Macro helpers to add Glyphs in LITTLE ENDIAN.
-#  define ADD_GLYPH8(X)   X
-#  define ADD_GLYPH16(X)  (X & 0xFFu), ((X>>8) & 0xFFu)
-#  define ADD_GLYPH32(X)  ADD_GLYPH16(X), ((X>>16) & 0xFFu), ((X>>24) & 0xFFu)
-#  define ADD_GLYPH64(X)  ADD_GLYPH32(X), ((X>>32) & 0xFFu), ((X>>40) & 0xFFu),\
-                                          ((X>>48) & 0xFFu), ((X>>56) & 0xFFu)
-
-   // ASCII4's printable ascii (characters 32-126)
-#  define ASCII4(g)  ADD_GLYPH16(UTIL_CAT(GLYPH16_ASCII4_, g))
-   ASCII4(SPACE), ASCII4(EXCLAMATION_MARK), ASCII4(DOUBLE_QUOTE),
-   ASCII4(HASHTAG), ASCII4(DOLLAR_SIGN), ASCII4(PERCENT_SIGN),
-   ASCII4(AMPERSAND), ASCII4(SINGLE_QUOTE), ASCII4(LEFT_PARENTHESIS),
-   ASCII4(RIGHT_PARENTHESIS), ASCII4(ASTERISK), ASCII4(PLUS_SIGN),
-   ASCII4(COMMA), ASCII4(MINUS_SIGN), ASCII4(DOT), ASCII4(SLASH),
-   ASCII4(0), ASCII4(1), ASCII4(2), ASCII4(3), ASCII4(4), ASCII4(5), ASCII4(6),
-   ASCII4(7), ASCII4(8), ASCII4(9),
-   ASCII4(COLON), ASCII4(SEMICOLON), ASCII4(LESS_THAN_SIGN), ASCII4(EQUAL_SIGN),
-   ASCII4(GREATER_THAN_SIGN), ASCII4(QUESTION_MARK), ASCII4(AT_SIGN),
-   ASCII4(A), ASCII4(B), ASCII4(C), ASCII4(D), ASCII4(E), ASCII4(F), ASCII4(G),
-   ASCII4(H), ASCII4(I), ASCII4(J), ASCII4(K), ASCII4(L), ASCII4(M), ASCII4(N),
-   ASCII4(O), ASCII4(P), ASCII4(Q), ASCII4(R), ASCII4(S), ASCII4(T), ASCII4(U),
-   ASCII4(V), ASCII4(W), ASCII4(X), ASCII4(Y), ASCII4(Z),
-   ASCII4(LEFT_SQUARE_BACKET), ASCII4(BACKSLASH), ASCII4(RIGHT_SQUARE_BRACKET),
-   ASCII4(CARET), ASCII4(UNDERSCORE), ASCII4(BACKQUOTE),
-   ASCII4(a), ASCII4(b), ASCII4(c), ASCII4(d), ASCII4(e), ASCII4(f), ASCII4(g),
-   ASCII4(h), ASCII4(i), ASCII4(j), ASCII4(k), ASCII4(l), ASCII4(m), ASCII4(n),
-   ASCII4(o), ASCII4(p), ASCII4(q), ASCII4(r), ASCII4(s), ASCII4(t), ASCII4(u),
-   ASCII4(v), ASCII4(w), ASCII4(x), ASCII4(y), ASCII4(z),
-   ASCII4(LEFT_CURLY_BACKET), ASCII4(VERTICAL_BAR), ASCII4(RIGHT_CURLY_BRACKET),
-   ASCII4(TILDE),
-
-   // ASCII5's printable ascii (characters 32-126)
-#  define ASCII5(g)  ADD_GLYPH32(UTIL_CAT(GLYPH32_ASCII5_, g))
-   ASCII5(SPACE), ASCII5(EXCLAMATION_MARK), ASCII5(DOUBLE_QUOTE),
-   ASCII5(HASHTAG), ASCII5(DOLLAR_SIGN), ASCII5(PERCENT_SIGN),
-   ASCII5(AMPERSAND), ASCII5(SINGLE_QUOTE), ASCII5(LEFT_PARENTHESIS),
-   ASCII5(RIGHT_PARENTHESIS), ASCII5(ASTERISK), ASCII5(PLUS_SIGN),
-   ASCII5(COMMA), ASCII5(MINUS_SIGN), ASCII5(DOT), ASCII5(SLASH),
-   ASCII5(0), ASCII5(1), ASCII5(2), ASCII5(3), ASCII5(4), ASCII5(5), ASCII5(6),
-   ASCII5(7), ASCII5(8), ASCII5(9),
-   ASCII5(COLON), ASCII5(SEMICOLON), ASCII5(LESS_THAN_SIGN), ASCII5(EQUAL_SIGN),
-   ASCII5(GREATER_THAN_SIGN), ASCII5(QUESTION_MARK), ASCII5(AT_SIGN),
-   ASCII5(A), ASCII5(B), ASCII5(C), ASCII5(D), ASCII5(E), ASCII5(F), ASCII5(G),
-   ASCII5(H), ASCII5(I), ASCII5(J), ASCII5(K), ASCII5(L), ASCII5(M), ASCII5(N),
-   ASCII5(O), ASCII5(P), ASCII5(Q), ASCII5(R), ASCII5(S), ASCII5(T), ASCII5(U),
-   ASCII5(V), ASCII5(W), ASCII5(X), ASCII5(Y), ASCII5(Z),
-   ASCII5(LEFT_SQUARE_BACKET), ASCII5(BACKSLASH), ASCII5(RIGHT_SQUARE_BRACKET),
-   ASCII5(CARET), ASCII5(UNDERSCORE), ASCII5(BACKQUOTE),
-   ASCII5(a), ASCII5(b), ASCII5(c), ASCII5(d), ASCII5(e), ASCII5(f), ASCII5(g),
-   ASCII5(h), ASCII5(i), ASCII5(j), ASCII5(k), ASCII5(l), ASCII5(m), ASCII5(n),
-   ASCII5(o), ASCII5(p), ASCII5(q), ASCII5(r), ASCII5(s), ASCII5(t), ASCII5(u),
-   ASCII5(v), ASCII5(w), ASCII5(x), ASCII5(y), ASCII5(z),
-   ASCII5(LEFT_CURLY_BACKET), ASCII5(VERTICAL_BAR), ASCII5(RIGHT_CURLY_BRACKET),
-   ASCII5(TILDE),
-
-   // ASCII6's printable ascii (characters 32-126)
-   #  define ASCII6(g)  ADD_GLYPH32(UTIL_CAT(GLYPH32_ASCII6_, g))
-   ASCII6(SPACE), ASCII6(EXCLAMATION_MARK), ASCII6(DOUBLE_QUOTE),
-   ASCII6(HASHTAG), ASCII6(DOLLAR_SIGN), ASCII6(PERCENT_SIGN),
-   ASCII6(AMPERSAND), ASCII6(SINGLE_QUOTE), ASCII6(LEFT_PARENTHESIS),
-   ASCII6(RIGHT_PARENTHESIS), ASCII6(ASTERISK), ASCII6(PLUS_SIGN),
-   ASCII6(COMMA), ASCII6(MINUS_SIGN), ASCII6(DOT), ASCII6(SLASH),
-   ASCII6(0), ASCII6(1), ASCII6(2), ASCII6(3), ASCII6(4), ASCII6(5), ASCII6(6),
-   ASCII6(7), ASCII6(8), ASCII6(9),
-   ASCII6(COLON), ASCII6(SEMICOLON), ASCII6(LESS_THAN_SIGN), ASCII6(EQUAL_SIGN),
-   ASCII6(GREATER_THAN_SIGN), ASCII6(QUESTION_MARK), ASCII6(AT_SIGN),
-   ASCII6(A), ASCII6(B), ASCII6(C), ASCII6(D), ASCII6(E), ASCII6(F), ASCII6(G),
-   ASCII6(H), ASCII6(I), ASCII6(J), ASCII6(K), ASCII6(L), ASCII6(M), ASCII6(N),
-   ASCII6(O), ASCII6(P), ASCII6(Q), ASCII6(R), ASCII6(S), ASCII6(T), ASCII6(U),
-   ASCII6(V), ASCII6(W), ASCII6(X), ASCII6(Y), ASCII6(Z),
-   ASCII6(LEFT_SQUARE_BACKET), ASCII6(BACKSLASH), ASCII6(RIGHT_SQUARE_BRACKET),
-   ASCII6(CARET), ASCII6(UNDERSCORE), ASCII6(BACKQUOTE),
-   ASCII6(a), ASCII6(b), ASCII6(c), ASCII6(d), ASCII6(e), ASCII6(f), ASCII6(g),
-   ASCII6(h), ASCII6(i), ASCII6(j), ASCII6(k), ASCII6(l), ASCII6(m), ASCII6(n),
-   ASCII6(o), ASCII6(p), ASCII6(q), ASCII6(r), ASCII6(s), ASCII6(t), ASCII6(u),
-   ASCII6(v), ASCII6(w), ASCII6(x), ASCII6(y), ASCII6(z),
-   ASCII6(LEFT_CURLY_BACKET), ASCII6(VERTICAL_BAR), ASCII6(RIGHT_CURLY_BRACKET),
-   ASCII6(TILDE),
-
-      // ASCII7's printable ascii (characters 32-126)
-#  define ASCII7(g)  ADD_GLYPH32(UTIL_CAT(GLYPH32_ASCII7_, g))
-   ASCII7(SPACE), ASCII7(EXCLAMATION_MARK), ASCII7(DOUBLE_QUOTE),
-   ASCII7(HASHTAG), ASCII7(DOLLAR_SIGN), ASCII7(PERCENT_SIGN),
-   ASCII7(AMPERSAND), ASCII7(SINGLE_QUOTE), ASCII7(LEFT_PARENTHESIS),
-   ASCII7(RIGHT_PARENTHESIS), ASCII7(ASTERISK), ASCII7(PLUS_SIGN),
-   ASCII7(COMMA), ASCII7(MINUS_SIGN), ASCII7(DOT), ASCII7(SLASH),
-   ASCII7(0), ASCII7(1), ASCII7(2), ASCII7(3), ASCII7(4), ASCII7(5), ASCII7(6),
-   ASCII7(7), ASCII7(8), ASCII7(9),
-   ASCII7(COLON), ASCII7(SEMICOLON), ASCII7(LESS_THAN_SIGN), ASCII7(EQUAL_SIGN),
-   ASCII7(GREATER_THAN_SIGN), ASCII7(QUESTION_MARK), ASCII7(AT_SIGN),
-   ASCII7(A), ASCII7(B), ASCII7(C), ASCII7(D), ASCII7(E), ASCII7(F), ASCII7(G),
-   ASCII7(H), ASCII7(I), ASCII7(J), ASCII7(K), ASCII7(L), ASCII7(M), ASCII7(N),
-   ASCII7(O), ASCII7(P), ASCII7(Q), ASCII7(R), ASCII7(S), ASCII7(T), ASCII7(U),
-   ASCII7(V), ASCII7(W), ASCII7(X), ASCII7(Y), ASCII7(Z),
-   ASCII7(LEFT_SQUARE_BACKET), ASCII7(BACKSLASH), ASCII7(RIGHT_SQUARE_BRACKET),
-   ASCII7(CARET), ASCII7(UNDERSCORE), ASCII7(BACKQUOTE),
-   ASCII7(a), ASCII7(b), ASCII7(c), ASCII7(d), ASCII7(e), ASCII7(f), ASCII7(g),
-   ASCII7(h), ASCII7(i), ASCII7(j), ASCII7(k), ASCII7(l), ASCII7(m), ASCII7(n),
-   ASCII7(o), ASCII7(p), ASCII7(q), ASCII7(r), ASCII7(s), ASCII7(t), ASCII7(u),
-   ASCII7(v), ASCII7(w), ASCII7(x), ASCII7(y), ASCII7(z),
-   ASCII7(LEFT_CURLY_BACKET), ASCII7(VERTICAL_BAR), ASCII7(RIGHT_CURLY_BRACKET),
-   ASCII7(TILDE),
-
-   // Sitelen Pona characters, height 5 (pu120:ale-wile, pu+3:kin/namako/oko)
-#  define SP5(g)   ADD_GLYPH64(UTIL_CAT(GLYPH64_TOKIPONA6_, g))
-   SP5(A), SP5(AKESI), SP5(ALA), SP5(ALASA), SP5(ALE), SP5(ANPA), SP5(ANTE),
-   SP5(ANU), SP5(AWEN), SP5(E), SP5(EN), SP5(ESUN), SP5(IJO), SP5(IKE),
-   SP5(ILO), SP5(INSA), SP5(JAKI), SP5(JAN), SP5(JELO), SP5(JO), SP5(KALA),
-   SP5(KALAMA), SP5(KAMA), SP5(KASI), SP5(KEN), SP5(KEPEKEN), SP5(KILI),
-   SP5(KIWEN), SP5(KO), SP5(KON), SP5(KULE), SP5(KULUPU), SP5(KUTE), SP5(LA),
-   SP5(LAPE), SP5(LASO), SP5(LAWA), SP5(LEN), SP5(LETE), SP5(LI), SP5(LILI),
-   SP5(LINJA), SP5(LIPU), SP5(LOJE), SP5(LON), SP5(LUKA), SP5(LUKIN), SP5(LUPA),
-   SP5(MA), SP5(MAMA), SP5(MANI), SP5(MELI), SP5(MI), SP5(MIJE), SP5(MOKU),
-   SP5(MOLI), SP5(MONSI), SP5(MU), SP5(MUN), SP5(MUSI), SP5(MUTE), SP5(NANPA),
-   SP5(NASA), SP5(NASIN), SP5(NENA), SP5(NI), SP5(NIMI), SP5(NOKA), SP5(O),
-   SP5(OLIN), SP5(ONA), SP5(OPEN), SP5(PAKALA), SP5(PALI), SP5(PALISA),
-   SP5(PAN), SP5(PANA), SP5(PI), SP5(PILIN), SP5(PIMEJA), SP5(PINI), SP5(PIPI),
-   SP5(POKA), SP5(POKI), SP5(PONA), SP5(PU), SP5(SAMA), SP5(SELI), SP5(SELO),
-   SP5(SEME), SP5(SEWI), SP5(SIJELO), SP5(SIKE), SP5(SIN), SP5(SINA),
-   SP5(SINPIN), SP5(SITELEN), SP5(SONA), SP5(SOWELI), SP5(SULI), SP5(SUNO),
-   SP5(SUPA), SP5(SUWI), SP5(TAN), SP5(TASO), SP5(TAWA), SP5(TELO), SP5(TENPO),
-   SP5(TOKI), SP5(TOMO), SP5(TU), SP5(UNPA), SP5(UTA), SP5(UTALA), SP5(WALO),
-   SP5(WAN), SP5(WASO), SP5(WAWA), SP5(WEKA), SP5(WILE), SP5(KIN), SP5(NAMAKO),
-   SP5(OKO),
-
-   // Sitelen Pona characters, height 6 (pu120:ale-wile, pu+3:kin/namako/oko)
-#  define SP6(g)   ADD_GLYPH64(UTIL_CAT(GLYPH64_TOKIPONA6_, g))
-   SP6(A), SP6(AKESI), SP6(ALA), SP6(ALASA), SP6(ALE), SP6(ANPA), SP6(ANTE),
-   SP6(ANU), SP6(AWEN), SP6(E), SP6(EN), SP6(ESUN), SP6(IJO), SP6(IKE),
-   SP6(ILO), SP6(INSA), SP6(JAKI), SP6(JAN), SP6(JELO), SP6(JO), SP6(KALA),
-   SP6(KALAMA), SP6(KAMA), SP6(KASI), SP6(KEN), SP6(KEPEKEN), SP6(KILI),
-   SP6(KIWEN), SP6(KO), SP6(KON), SP6(KULE), SP6(KULUPU), SP6(KUTE), SP6(LA),
-   SP6(LAPE), SP6(LASO), SP6(LAWA), SP6(LEN), SP6(LETE), SP6(LI), SP6(LILI),
-   SP6(LINJA), SP6(LIPU), SP6(LOJE), SP6(LON), SP6(LUKA), SP6(LUKIN), SP6(LUPA),
-   SP6(MA), SP6(MAMA), SP6(MANI), SP6(MELI), SP6(MI), SP6(MIJE), SP6(MOKU),
-   SP6(MOLI), SP6(MONSI), SP6(MU), SP6(MUN), SP6(MUSI), SP6(MUTE), SP6(NANPA),
-   SP6(NASA), SP6(NASIN), SP6(NENA), SP6(NI), SP6(NIMI), SP6(NOKA), SP6(O),
-   SP6(OLIN), SP6(ONA), SP6(OPEN), SP6(PAKALA), SP6(PALI), SP6(PALISA),
-   SP6(PAN), SP6(PANA), SP6(PI), SP6(PILIN), SP6(PIMEJA), SP6(PINI), SP6(PIPI),
-   SP6(POKA), SP6(POKI), SP6(PONA), SP6(PU), SP6(SAMA), SP6(SELI), SP6(SELO),
-   SP6(SEME), SP6(SEWI), SP6(SIJELO), SP6(SIKE), SP6(SIN), SP6(SINA),
-   SP6(SINPIN), SP6(SITELEN), SP6(SONA), SP6(SOWELI), SP6(SULI), SP6(SUNO),
-   SP6(SUPA), SP6(SUWI), SP6(TAN), SP6(TASO), SP6(TAWA), SP6(TELO), SP6(TENPO),
-   SP6(TOKI), SP6(TOMO), SP6(TU), SP6(UNPA), SP6(UTA), SP6(UTALA), SP6(WALO),
-   SP6(WAN), SP6(WASO), SP6(WAWA), SP6(WEKA), SP6(WILE), SP6(KIN), SP6(NAMAKO),
-   SP6(OKO),
-
-   // Sitelen Pona characters, height 7 (pu120:ale-wile, pu+3:kin/namako/oko)
-#  define SP7(g)   ADD_GLYPH64(UTIL_CAT(GLYPH64_TOKIPONA7_, g))
-   SP7(A), SP7(AKESI), SP7(ALA), SP7(ALASA), SP7(ALE), SP7(ANPA), SP7(ANTE),
-   SP7(ANU), SP7(AWEN), SP7(E), SP7(EN), SP7(ESUN), SP7(IJO), SP7(IKE),
-   SP7(ILO), SP7(INSA), SP7(JAKI), SP7(JAN), SP7(JELO), SP7(JO), SP7(KALA),
-   SP7(KALAMA), SP7(KAMA), SP7(KASI), SP7(KEN), SP7(KEPEKEN), SP7(KILI),
-   SP7(KIWEN), SP7(KO), SP7(KON), SP7(KULE), SP7(KULUPU), SP7(KUTE), SP7(LA),
-   SP7(LAPE), SP7(LASO), SP7(LAWA), SP7(LEN), SP7(LETE), SP7(LI), SP7(LILI),
-   SP7(LINJA), SP7(LIPU), SP7(LOJE), SP7(LON), SP7(LUKA), SP7(LUKIN), SP7(LUPA),
-   SP7(MA), SP7(MAMA), SP7(MANI), SP7(MELI), SP7(MI), SP7(MIJE), SP7(MOKU),
-   SP7(MOLI), SP7(MONSI), SP7(MU), SP7(MUN), SP7(MUSI), SP7(MUTE), SP7(NANPA),
-   SP7(NASA), SP7(NASIN), SP7(NENA), SP7(NI), SP7(NIMI), SP7(NOKA), SP7(O),
-   SP7(OLIN), SP7(ONA), SP7(OPEN), SP7(PAKALA), SP7(PALI), SP7(PALISA),
-   SP7(PAN), SP7(PANA), SP7(PI), SP7(PILIN), SP7(PIMEJA), SP7(PINI), SP7(PIPI),
-   SP7(POKA), SP7(POKI), SP7(PONA), SP7(PU), SP7(SAMA), SP7(SELI), SP7(SELO),
-   SP7(SEME), SP7(SEWI), SP7(SIJELO), SP7(SIKE), SP7(SIN), SP7(SINA),
-   SP7(SINPIN), SP7(SITELEN), SP7(SONA), SP7(SOWELI), SP7(SULI), SP7(SUNO),
-   SP7(SUPA), SP7(SUWI), SP7(TAN), SP7(TASO), SP7(TAWA), SP7(TELO), SP7(TENPO),
-   SP7(TOKI), SP7(TOMO), SP7(TU), SP7(UNPA), SP7(UTA), SP7(UTALA), SP7(WALO),
-   SP7(WAN), SP7(WASO), SP7(WAWA), SP7(WEKA), SP7(WILE), SP7(KIN), SP7(NAMAKO),
-   SP7(OKO),
-
-   //---------------------------------------------------------------------------
-   // ROM Section: Wav Header
-   //
-   // Wav format header, see: http://soundfile.sapp.org/doc/WaveFormat/
-   // numbers are in little endian in the wav file (it doesn't matter)
-   //---------------------------------------------------------------------------
-   // "RIFF" chunk description:
-    'R', 'I', 'F', 'F',  // ChunkID       -> "RIFF"
-   0xff,0xff,0xff,0xff,  // ChunkSize     -> (*)
-    'W', 'A', 'V', 'E',  // Format        -> "WAVE"
-   // "fmt" sub chunk:
-    'f', 'm', 't', ' ',  // SubChunk1     -> "fmt "
-   0x10,0x00,0x00,0x00,  // SubChunk1Size -> number of bytes to follow -> 16
-   0x01,0x00,            // AudioFormat   -> 1 for PCM
-   0x01,0x00,            // NumChannels   -> 1 (mono)
-   0x40,0x1f,0x00,0x00,  // SampleRate    -> 8000 Hz
-   0x40,0x1f,0x00,0x00,  // ByteRate      -> SampleRate * NumChannels *
-                         //                  BitsPerSample/8 -> 8000*1*8/8
-   0x01,0x00,            // BlockAlign    -> NumChannels * BitsPerSample/8 -> 1
-   0x08,0x00,            // BitsPerSample -> 8
-   // "data" sub chunk:
-    'd', 'a', 't', 'a',  // SubChunk2     -> "data"
-   0xff,0xff,0xff,0xff,  // SubChunk2Size -> (*) normally number of bytes in the
-                         //                      data
-   // (*) Simply put the max value instead of real length
-   //     Software dealing with WAV know this means the rest of the file.
 
 
-   //---------------------------------------------------------------------------
-   // ROM Section: ...
-   //---------------------------------------------------------------------------
-   // Static Strings...
-   // Error Messages strings
-/*
-   ALE,LI,PONA, 0
-   PAKALA,A,'.',MI,SONA,ALA,E,TAN, ' ','(','U','n','k','n','o','w','n',' ','E','r','r','o','r',')','\0',
 
+   .wav_header = {
+      // Wav format header, see: http://soundfile.sapp.org/doc/WaveFormat/
 
- ' ','(','N','o',' ','E','r','r','o','r',')','\0',
-   PAKALA,A, MI,SONA,ALA,E,TAN, ' ','(','U','n','k','n','o','w','n',' ','E','r','r','o','r',')','\0',
-*/
-
-   //---------------------------------------------------------------------------
-   // ROM Section: URL
-   //---------------------------------------------------------------------------
-   'h','t','t','p','s',':','/','/','g','i','t','h','u','b','.','c','o','m','/',
-   'p','o','l','i','j','a','n','/','k','o','n','p','u','\0',
+      // "RIFF" chunk description:
+       'R', 'I', 'F', 'F',  // ChunkID       -> "RIFF"
+      0xff,0xff,0xff,0xff,  // ChunkSize     -> (*)
+       'W', 'A', 'V', 'E',  // Format        -> "WAVE"
+      // "fmt" sub chunk:
+       'f', 'm', 't', ' ',  // SubChunk1     -> "fmt "
+      0x10,0x00,0x00,0x00,  // SubChunk1Size -> number of bytes to follow -> 16
+      0x01,0x00,            // AudioFormat   -> 1 for PCM
+      0x01,0x00,            // NumChannels   -> 1 (mono)
+      0x40,0x1f,0x00,0x00,  // SampleRate    -> 8000 Hz
+      0x40,0x1f,0x00,0x00,  // ByteRate      -> SampleRate * NumChannels *
+                            //                  BitsPerSample/8 -> 8000*1*8/8
+      0x01,0x00,            // BlockAlign    -> #Channels * BitsPerSample/8 -> 1
+      0x08,0x00,            // BitsPerSample -> 8
+      // "data" sub chunk:
+       'd', 'a', 't', 'a',  // SubChunk2     -> "data"
+      0xff,0xff,0xff,0xff,  // SubChunk2Size -> (*) normally #bytes in the data
+      //
+      // (*) Simply put the max value 0xffffff instead of a real length.
+      //     Software dealing with WAV know this means the rest of the file.
+   },
 
 };

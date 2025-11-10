@@ -6,7 +6,7 @@
 static inline float lerpf(float a, float b, float f)
 { return a + f * (b - a); }
 
-// In 256 colors pixel video mode (mode 123), paint a gradient (left-to-right)
+// In 256 colors pixel video mode (mode 123), paint a gradient (top-to-bottom)
 // between the two given RGB888 colors.
 static void gradient(uint32_t rgb_start, uint32_t rgb_end)
 {
@@ -20,7 +20,8 @@ static void gradient(uint32_t rgb_start, uint32_t rgb_end)
                                     .b = lerpf(lab1.b, lab2.b, t), };
       int color = ColorFromLABf(gradient);
       for (int x = 0; x < VIDEO_WIDTH; x++) {
-         PixelByteAt(x, y) = color;
+         Video.pixel[x + y * VIDEO_WIDTH] = color;
+         // works too: PixelByteAt(x, y) = color;
       }
    }
 }
@@ -29,12 +30,13 @@ static void gradient(uint32_t rgb_start, uint32_t rgb_end)
 int AppInit(void)
 {
    VideoMode(123);
+   Video.border = COLOR_CSS_BLACK;
 
    while (true) {
-      gradient(UtilRandom32() & 0xFFFFFF, UtilRandom32() & 0xFFFFFF);
+      gradient(UtilRandom32(0x1000000), UtilRandom32(0x1000000));
       VideoRender();
       for (int i = 0; i < 90; i++) {
-         KeyUpdate();
+         KeyboardUpdate();
          if (KEY_IS_ANY_DOWN()) return 0;
          UtilSleep(10);
       }

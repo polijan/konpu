@@ -1,8 +1,80 @@
 #ifndef  KONPU_COLOR_H_
 #define  KONPU_COLOR_H_
-#include "ram.h"
-#include "rom.h"
+#include "arch.h"
 #include "video_mode.h"
+
+
+//------------------------------------------------------------------------------
+// Palettes
+//
+// The overall palette can contains 128 entries (which are index to the 256
+// master colors). It allows distinct for 2,4,8,8,16,32,64 colors subpalettes
+// in distinct areas.
+//------------------------------------------------------------------------------
+
+// TODO: Maybe those should be called `VideoResetPalette<N>()`
+#define ColorResetPalette2()  memcpy(Video.palette2,  Rom.default_palette2,  2)
+#define ColorResetPalette4()  memcpy(Video.palette4,  Rom.default_palette4,  4)
+#define ColorResetPalette8()  memcpy(Video.palette8,  Rom.default_palette8,  8)
+#define ColorResetPalette16() memcpy(Video.palette16, Rom.default_palette16, 16)
+#define ColorResetPalette32() memcpy(Video.palette32, Rom.default_palette32, 32)
+#define ColorResetPalette64() memcpy(Video.palette64, Rom.default_palette64, 64)
+#define ColorResetPalette128() memcpy(Video.palette128, Rom.default_palette128, 128)
+#define ColorResetPalettes()  ColorResetPalette128()
+
+
+// Return the palette in-use or NULL (in 256 color modes)
+//
+// When using this function to lookup for a color index, make sure to account
+// for a possible NULL return value.
+// ```
+//    uint8_t color;
+//    // Lookup up for the corresponding Konpu 256-color
+//    uint8_t *palette = ColorPalette();
+//    uint8_t color256 = (palette)? palette[color] : color;
+// ```
+static inline uint8_t *ColorPalette(void)
+{
+   int color_depth = ColorDepth();
+   switch(color_depth) {
+      case 8:  return NULL;        // 256 colors
+#if (VIDEO_FACTOR_ % 7 != 0)
+      case 7:  return Video.palette128; // 128 color palette
+#endif
+      default: return Video.palettes + (1 << color_depth);
+               // ^-- For n=2,4,8,16,32,64 colors, palette starts at:
+               //     Video.palette + n
+   }
+}
+
+//------------------------------------------------------------------------------
+// Color Constants for INDEXED color indices
+// MAYBE DELETE as this file deals with "true" colors, not index
+//------------------------------------------------------------------------------
+
+#define COLOR16_TTY_BLACK          0
+#define COLOR16_TTY_RED            1
+#define COLOR16_TTY_GREEN          2
+#define COLOR16_TTY_YELLOW         3
+#define COLOR16_TTY_BLUE           4
+#define COLOR16_TTY_MAGENTA        5
+#define COLOR16_TTY_CYAN           6
+#define COLOR16_TTY_WHITE          7
+#define COLOR16_TTY_HIGH_BLACK     8
+#define COLOR16_TTY_HIGH_RED       9
+#define COLOR16_TTY_HIGH_GREEN    10
+#define COLOR16_TTY_HIGH_YELLOW   11
+#define COLOR16_TTY_HIGH_BLUE     12
+#define COLOR16_TTY_HIGH_MAGENTA  13
+#define COLOR16_TTY_HIGH_CYAN     14
+#define COLOR16_TTY_HIGH_WHITE    15
+
+
+
+
+//------------------------------------------------------------------------------
+// True Colors
+//------------------------------------------------------------------------------
 
 //#include <math.h>
 // trigonometric functions
@@ -15,6 +87,11 @@ extern float cbrtf(float x);
 extern float powf(float x, float y);
 // misc math.
 extern float roundf(float x);
+
+// TODO: replace and remove remove!
+#define COLOR_ROM(i)  (Rom.color_info[i])
+
+
 //------------------------------------------------------------------------------
 
 // In Konpu, a color is a number in 0..255.
@@ -36,62 +113,15 @@ extern float roundf(float x);
 
 
 //------------------------------------------------------------------------------
-// Palettes
-//
-// The overall palette can contains 128 entries (which are index to the 256
-// master colors). It allows distinct for 2,4,8,8,16,32,64 colors subpalettes
-// in distinct areas.
-//------------------------------------------------------------------------------
-#define COLOR_PALETTE128  (RAM + RAM_COLOR_PALETTE)
-#define COLOR_PALETTE2    COLOR_PALETTE128
-#define COLOR_PALETTE4    (COLOR_PALETTE2  + 2)
-#define COLOR_PALETTE8    (COLOR_PALETTE4  + 4)
-#define COLOR_PALETTE16   (COLOR_PALETTE8  + 8)
-#define COLOR_PALETTE32   (COLOR_PALETTE16 + 16)
-#define COLOR_PALETTE64   (COLOR_PALETTE32 + 32)
 
-#define COLOR_BORDER      RAM[RAM_COLOR_BORDER]
-#define COLOR_DEFAULT_FG  RAM[RAM_COLOR_DEFAULT_FG]
-#define COLOR_DEFAULT_BG  RAM[RAM_COLOR_DEFAULT_BG]
+// An OkLab color
+struct ColorLABf  { float L, a, b; };
 
+// An OkLab color, but components are integers and scaled by a factor of 510
+struct ColorLABi  { int   L, a, b; };
 
-// Return the palette in-use or NULL (in 256 color modes)
-//
-// When using this function to lookup for a color index, make sure to account
-// for a possible NULL return value.
-// ```
-//    uint8_t color;
-//    // Lookup up for the corresponding Konpu 256-color
-//    uint8_t *palette = ColorPalette();
-//    uint8_t color256 = (palette)? palette[color] : color;
-// ```
-static inline uint8_t *ColorPalette(void)
-{
-   int offset = ColorDepth();
-   switch(offset) {
-      case 8:  return NULL;        // 256 colors
-#if (VIDEO_FACTOR_ % 7 != 0)
-      case 7:  offset  = 0; break; // 128 color palette
-#endif
-      default: offset -= 2; break; // 2,4,8,16,32,64 color palettes
-   }
-   return RAM + RAM_COLOR_PALETTE + offset;
-}
-
-
-//------------------------------------------------------------------------------
-
-// A struct to represent an OkLab color
-struct ColorLABf  { float   L, a, b; };
-
-// A struct to represent an OkLab color where components are integers and
-// scaled by a factor of 510 compared to ColorLABf.
-struct ColorLABi  { int     L, a, b; };
-
-// A struct to represent a (Lab, Chroma, Hue) Polar OkLab color
+// An OkLCh color, ie. a polar OkLab color (Lab, Chroma, Hue)
 struct ColorLCHf  { float L, C, h; };
-
-#define COLOR_ROM(i)  (ROM[ROM_COLOR + (i)])
 
 
 // Conversion LABf -> LABi (ie multiply by 510)
@@ -238,11 +268,11 @@ static inline float ColorHue(int color)
 // sRGB utilities. And colors are assumed to be shown on a sRGB display device.
 //------------------------------------------------------------------------------
 
-// Return a pointer from which gamma-encoded sRGB 8-bits components
-// corresponding to the given color can be read
+// Return an array with the 3 r,g,b components (gamma-encoded sRGB) of a color
 static inline const uint8_t* ColorToRGB(int color)
-{ return ROM + ROM_COLOR + 5 + (color << 3); }
-
+{ return Rom.color_info + 5 + (color << 3); }
+// TODO ^-- replace with a proper structure for color_info
+// and DELETE: // { return ROM + ROM_COLOR + 5 + (color << 3); }
 
 // sRGB color, linear float components in [0,1]
 struct ColorRGBf { float   r, g, b; };

@@ -9,7 +9,8 @@ const char *ErrorMessage(Error error);
 
 // Builtin error types
 typedef enum ErrorBuiltin {
-   KONPU_ERROR_NONE = 0,
+   KONPU_ERROR_NONE    = 0,
+   KONPU_ERROR_FAILURE = 1,
 
    // An error that comes from a potential backend Konpu may use
    KONPU_ERROR_PLATFORM_1,

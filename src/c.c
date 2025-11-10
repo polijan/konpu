@@ -3,11 +3,12 @@
 
 #include "draw.h"
 int c_putchar_(int c) {
-   // TODO. For now, let's put a Temporary dummy implementation where we accept
-   // printable ASCII character and display it with ASCII6 font in the top left
-   // corner with color 1.
+   // TODO. For now, a temporary dummy implementation where we accept printable
+   //       ASCII character and display it with pixels with ASCII6 font in
+   //       the top left corner with color 1.
    if (c < 32 || c > 126) return 0;
-   Glyph32 g = *((const uint32_t*)(ROM + ROM_FONT_ASCII6) + c - 32);
+   Glyph32 g = *((const uint32_t*)Rom.font.ascii6 + c - 32);
+                 //     ^-- this assume litte endian.
    DrawGlyph(g ,0,0, 1);
    return c;
 }

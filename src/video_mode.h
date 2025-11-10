@@ -1,70 +1,21 @@
 #ifndef  KONPU_VIDEO_MODE_H_
 #define  KONPU_VIDEO_MODE_H_
 #include "c.h"
+#include "arch.h"
 
-//------------------------------------------------------------------------------
-// Video Card Internals
-//------------------------------------------------------------------------------
-
-// Videocard Registers (Read-only from Konpu and not memory-mapped to RAM,
-// but they are mapped to: VIDEO_MODE, _HEIGHT, _WIDTH for easy querying)
-extern const uint8_t   *VIDEO_REGISTER_MODE_;
-extern const int16_t   *VIDEO_REGISTER_WIDTH_;
-extern const int16_t   *VIDEO_REGISTER_HEIGHT_;
-extern const uint32_t  *VIDEO_REGISTER_ERRORS_;
-
-// Videocard internal configuration (see: tools/resfinder)
-#define VIDEO_FACTOR_  4 // implemented: 2,3,4,5,6,7
-#define VIDEO_LCM_SZ_  2880
-
-//------------------------------------------------------------------------------
-
-// Size in bytes of the video framebuffer
-#define VIDEO_SIZE     (VIDEO_FACTOR_ * VIDEO_LCM_SZ_)
-
-// Current Video Width in Pixels
-#define VIDEO_WIDTH    (*VIDEO_REGISTER_WIDTH_)
-
-// Current Video Height in Pixels
-#define VIDEO_HEIGHT   (*VIDEO_REGISTER_HEIGHT_)
-
-#if (INT_WIDTH >= 32) || (VIDEO_FACTOR_ == 1)
-//  Number of pixels in the framebuffer
-#   define VIDEO_COUNT_PIXELS_  (VIDEO_WIDTH * VIDEO_HEIGHT)
-#else
-//  Number of pixels in the framebuffer
-#   define VIDEO_COUNT_PIXELS_  ((int32_t)VIDEO_WIDTH * (int32_t)VIDEO_HEIGHT)
+// TODO: use the names directly, instead of those macros?
+#ifndef VIDEO_MODE
+#define VIDEO_MODE    Video.mode
+#endif
+#ifndef VIDEO_WIDTH
+#define VIDEO_WIDTH   Video.width
+#endif
+#ifndef VIDEO_HEIGHT
+#define VIDEO_HEIGHT  Video.height
 #endif
 
-// Count of video errors when rendering the framebuffer
-// (Note: an error at every frame at 60FPS takes >2.2 years to overflow it)
-#define VIDEO_ERRORS   (*VIDEO_REGISTER_ERRORS_)
-
-// Max possible framebuffer width/height achievable from any video mode
-#if VIDEO_FACTOR_ == 7
-#   define VIDEO_MAX_WIDTH   480
-#   define VIDEO_MAX_HEIGHT  336
-#elif VIDEO_FACTOR_ == 6
-#   define VIDEO_MAX_WIDTH   480
-#   define VIDEO_MAX_HEIGHT  288
-#elif VIDEO_FACTOR_ == 5
-#   define VIDEO_MAX_WIDTH   400
-#   define VIDEO_MAX_HEIGHT  288
-#elif VIDEO_FACTOR_ == 4
-#   define VIDEO_MAX_WIDTH   320
-#   define VIDEO_MAX_HEIGHT  288
-#elif VIDEO_FACTOR_ == 3
-#   define VIDEO_MAX_WIDTH   320
-#   define VIDEO_MAX_HEIGHT  216
-#elif VIDEO_FACTOR_ == 2
-#   define VIDEO_MAX_WIDTH   288
-#   define VIDEO_MAX_HEIGHT  160
-#else
-#   error "VIDEO_FACTOR_ invalid / not implemented"
-#endif
-
+/*
 // Current Video Mode
-#define VIDEO_MODE    (*VIDEO_REGISTER_MODE_)
 #ifdef KONPU_OPTION_OPTIMIZE_VIDEO_MODE
    // Normalize (to default mode) if the symbol is defined but has no value
 #  if ~(~KONPU_OPTION_OPTIMIZE_VIDEO_MODE + 0) == 0 && \
@@ -75,13 +26,14 @@ extern const uint32_t  *VIDEO_REGISTER_ERRORS_;
 #  undef  VIDEO_MODE
 #  define VIDEO_MODE  KONPU_OPTION_OPTIMIZE_VIDEO_MODE
 #endif
+*/
 
 //------------------------------------------------------------------------------
 // Enums
 //------------------------------------------------------------------------------
 
 // Indicate the dimension in pixels of a video element
-// (Glyphs, Tiles, Attributes, or Pixels)
+// (Glyphs, Tiles, Attributes, or Pixel bytes)
 enum VideoElementDimension {
    PIXELS_2x4   = 0,
    PIXELS_4x4   = 1,
@@ -91,8 +43,8 @@ enum VideoElementDimension {
    PIXELS_16x16 = 5, // value only possible for Glyphs (Glyph256)
    PIXELS       = 7, // value only possible for Pixels
 
-   // note: when elements are glyphs, the value also represents the log2 of the
-   //       size in bytes.
+   // Note: When elements are Glyphs, the value also represents the
+   //       log2 of their size in bytes.
 };
 
 // Indicate the type of colors encoded by attributes in the framebuffer.
@@ -114,22 +66,22 @@ enum AttributeColorType {       //Bytes| Description
 //
 // In attribute modes, it is the low nibble of the video mode.
 enum AttributeType {
-  ATTRIBUTE_2x4_16    = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_16),
-  ATTRIBUTE_4x4_16    = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_16),
-  ATTRIBUTE_4x8_16    = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_16),
-  ATTRIBUTE_8x8_16    = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_16),
-  ATTRIBUTE_2x4_FG256 = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_FG256),
-  ATTRIBUTE_4x4_FG256 = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_FG256),
-  ATTRIBUTE_4x8_FG256 = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_FG256),
-  ATTRIBUTE_8x8_FG256 = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_FG256),
-  ATTRIBUTE_2x4_BG256 = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_BG256),
-  ATTRIBUTE_4x4_BG256 = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_BG256),
-  ATTRIBUTE_4x8_BG256 = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_BG256),
-  ATTRIBUTE_8x8_BG256 = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_BG256),
-  ATTRIBUTE_2x4_256   = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_256),
-  ATTRIBUTE_4x4_256   = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_256),
-  ATTRIBUTE_4x8_256   = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_256),
-  ATTRIBUTE_8x8_256   = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_256)
+   ATTRIBUTE_2x4_16    = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_16),
+   ATTRIBUTE_4x4_16    = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_16),
+   ATTRIBUTE_4x8_16    = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_16),
+   ATTRIBUTE_8x8_16    = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_16),
+   ATTRIBUTE_2x4_FG256 = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_FG256),
+   ATTRIBUTE_4x4_FG256 = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_FG256),
+   ATTRIBUTE_4x8_FG256 = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_FG256),
+   ATTRIBUTE_8x8_FG256 = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_FG256),
+   ATTRIBUTE_2x4_BG256 = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_BG256),
+   ATTRIBUTE_4x4_BG256 = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_BG256),
+   ATTRIBUTE_4x8_BG256 = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_BG256),
+   ATTRIBUTE_8x8_BG256 = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_BG256),
+   ATTRIBUTE_2x4_256   = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_256),
+   ATTRIBUTE_4x4_256   = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_256),
+   ATTRIBUTE_4x8_256   = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_256),
+   ATTRIBUTE_8x8_256   = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_256)
 };
 
 //------------------------------------------------------------------------------
@@ -138,7 +90,7 @@ enum AttributeType {
 // The video mode describes the layout of the video framebuffer.
 // It is encoded by a single byte with the following binary representation:
 //
-//    .-- Has Attributes (bit)
+//    .-- Has Attributes (single bit, 0 or 1)
 //    |
 //    |  .--- Dimension  (enum VideoElementDimension)
 //    |  |
@@ -179,16 +131,15 @@ enum AttributeType {
 //                     1 << (1 << (low nibble - 8)) is the number of colors
 //------------------------------------------------------------------------------
 
-// Return VIDEO_MODE's attribute bit. (ie. whether framebuffer has Attributes)
+// Return Video Mode's attribute bit. (ie. whether framebuffer has Attributes)
 #define VideoModeHasAttributes()               (VIDEO_MODE >> 7)
 
-// Return VIDEO_MODE's dimension (ie, the dimension in pixels of the framebuffer
-// 's non-attribute elements) as an `enum VideoElementDimension`.
-static inline enum VideoElementDimension
-VideoModeDimension(void)                       { return (VIDEO_MODE >> 4) & 7; }
+// Return the Video Mode's dimension (ie, the dimension in pixels of the
+// framebuffer's non-attribute elements) as an `enum VideoElementDimension`.
+#define VideoModeDimension()                   ((VIDEO_MODE >> 4) & 7)
 
-// Return VIDEO_MODE's low nibble
-#define VideoModeLowNibble(void)               (VIDEO_MODE & 0xF)
+// Return the Video Mode's low nibble
+#define VideoModeLowNibble()                   (VIDEO_MODE & 0xF)
 
 //------------------------------------------------------------------------------
 // Functions

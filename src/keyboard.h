@@ -1,6 +1,6 @@
 #ifndef  KONPU_KEY_H_
 #define  KONPU_KEY_H_
-#include "ram.h"
+#include "arch.h"
 #include "bits.h"
 
 
@@ -174,6 +174,48 @@ enum KeyScanCode {
    KEY_SCANCODE_RGUI           = 231, // (Right) Windows, Command (Apple), Meta
 };
 
+
+// Non-zero iff any key was pressed during the last Update()
+#define KEY_IS_ANY_DOWN()                            ( \
+   Keyboard.current_u64[0] | Keyboard.current_u64[1] | \
+   Keyboard.current_u64[2] | Keyboard.current_u64[3] )
+
+// Non-zero iff any key was pressed during the previous Update()
+#define KEY_WAS_ANY_DOWN()                             ( \
+   Keyboard.previous_u64[0] | Keyboard.previous_u64[1] | \
+   Keyboard.previous_u64[2] | Keyboard.previous_u64[3] )
+
+// Non-zero iff the given key scancode was pressed during the last Update()
+#define KEY_IS_DOWN(key_scancode) \
+   BITS_GET_BIT(Keyboard.current[(key_scancode) >> 3], (key_scancode) & 7)
+
+// Non-zero iff the given key scancode was pressed during the previous Update()
+#define KEY_WAS_DOWN(key_scancode) \
+   BITS_GET_BIT(Keyboard.previous[(key_scancode) >> 3], (key_scancode) & 7)
+
+#define KEY_IS_UP(key_scancode)    (!KEY_IS_DOWN(key_scancode))
+
+#define KEY_WAS_UP(key_scancode)   (!KEY_WAS_DOWN(key_scancode))
+
+// Non-zero iff the given key was pushed just during the previous Update()
+#define KEY_IS_TRIGGERED(key_scancode) \
+   (KEY_IS_DOWN(key_scancode) && KEY_WAS_UP(key_scancode))
+
+// Non-zero iff the given key was released during the previous Update()
+#define KEY_IS_RELEASED(key_scancode) \
+   (KEY_WAS_DOWN(key_scancode) && KEY_IS_UP(key_scancode))
+
+
+//------------------------------------------------------------------------------
+// Modifier keys (SHIFTs, CTRLs, ALTs, GUI)
+//------------------------------------------------------------------------------
+
+// Non-zero iff the given key a modifier key.
+#define KEY_IS_MOD(key_scancode) \
+   ((key_scancode) >= KEY_SCANCODE_LCTRL && (key_scancode) <= KEY_SCANCODE_RGUI)
+
+// Bit number for repoting key press of modifiers keys in KEY_MOD
+// (KEY_MOD | ...) tell that the given modifer key is pressed
 enum KeyModBit {
    KEY_MOD_LCTRL   =   1u,
    KEY_MOD_LSHIFT  =   2u,
@@ -190,63 +232,16 @@ enum KeyModBit {
 #define KEY_MOD_ALT   (KEY_MOD_LALT   | KEY_MOD_RALT)
 #define KEY_MOD_GUI   (KEY_MOD_LGUI   | KEY_MOD_RGUI)
 
-
-// The keyboard state in Konpu's RAM: 256 bits, each representing the state
-// (1=key pressed, 0=key not pressed) of a USB HID keyboard scan code.
-#define KEY_CURRENT_STATE     (RAM + RAM_KEY_CURRENT_STATE)
-
-// A copy of the previous keyboard state prior to the last Update().
-#define KEY_PREVIOUS_STATE    (RAM + RAM_KEY_PREVIOUS_STATE)
-
-// Number of keys which we track on the keyboard
-#define KEY_COUNT             256
-
-// A uint8_t 'array of bits' lvalue containing state of the modifier keys
-#define KEY_MOD              \
-   (RAM[RAM_KEY_CURRENT_STATE + KEY_SCANCODE_LCTRL / CHAR_BIT])
-   static_assert(KEY_SCANCODE_LCTRL % CHAR_BIT == 0);
+// An uint8_t lvalue for the modifier keys' current status
+#define KEY_MOD  (Keyboard.current[KEY_SCANCODE_LCTRL / CHAR_BIT])
+static_assert(KEY_SCANCODE_LCTRL % CHAR_BIT == 0);
 
 
-
-// Non-zero iff any key was pressed during the last Update()
-static inline BITS_MAX64_T KEY_IS_ANY_DOWN(void) {
-   // cast is ok as KEY_*_STATE is properly aligned for uint64_t (see `ram.c`)
-   uint64_t *k64 = (uint64_t *)KEY_CURRENT_STATE;
-   return k64[0] | k64[1] | k64[2] | k64[3]; }
-
-// Non-zero iff any key was pressed during the previous Update()
-static inline BITS_MAX64_T KEY_WAS_ANY_DOWN(void) {
-   // cast is ok as KEY_*_STATE is properly aligned for uint64_t (see `ram.c`)
-   uint64_t *k64 = (uint64_t *)KEY_PREVIOUS_STATE;
-   return k64[0] | k64[1] | k64[2] | k64[3];
-}
-
-// Non-zero iff the given key scancode was pressed during the last Update()
-#define KEY_IS_DOWN(key_scancode) \
-   BITS_GET_BIT(KEY_CURRENT_STATE[(key_scancode) >> 3], (key_scancode) & 7)
-
-// Non-zero iff the given key scancode was pressed during the previous Update()
-#define KEY_WAS_DOWN(key_scancode) \
-   BITS_GET_BIT(KEY_CURRENT_STATE[(key_scancode) >> 3], (key_scancode) & 7)
-
-#define KEY_IS_UP(key_scancode)    (!KEY_IS_DOWN(key_scancode))
-
-#define KEY_WAS_UP(key_scancode)   (!KEY_WAS_DOWN(key_scancode))
-
-// Non-zero iff the given key was pushed just during the previous Update()
-#define KEY_IS_TRIGGERED(key_scancode) \
-   (KEY_IS_DOWN(key_scancode) && KEY_WAS_UP(key_scancode))
-
-// Non-zero iff the given key was released during the previous Update()
-#define KEY_IS_RELEASED(key_scancode) \
-   (KEY_WAS_DOWN(key_scancode) && KEY_IS_UP(key_scancode))
-
-
-// Non-zero iff the given key a modifier key.
-#define KEY_IS_MOD(key_scancode) \
-   ((key_scancode) >= KEY_SCANCODE_LCTRL && (key_scancode) <= KEY_SCANCODE_RGUI)
+//------------------------------------------------------------------------------
 
 // Update the Key state
-void KeyUpdate(void);
+void KeyboardUpdate(void);
+
+
 
 #endif //include guard

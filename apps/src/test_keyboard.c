@@ -23,7 +23,7 @@ int AppInit(void)
    VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph32, ATTRIBUTE_4x8_16));
    VideoGlyphSetAll();
    VideoAttributeSetAll(0x24);
-   COLOR_BORDER = 255;
+   Video.border = 255;
 
    keyboard_draw();
 
@@ -36,13 +36,13 @@ int AppInit(void)
          }
       }
       VideoRender();
-      KeyUpdate();
+      KeyboardUpdate();
       UtilSleep(30);
    }
 
 MOVE:
    UtilSleep(500);
-   KeyUpdate(); // wait for reset
+   KeyboardUpdate(); // wait for reset
    int x = VIDEO_WIDTH_GLYPH  / 2;
    int y = VIDEO_HEIGHT_GLYPH / 2;
    while (1) {
@@ -58,7 +58,7 @@ MOVE:
       }
       *VideoGlyph32(x,y) = GLYPH32_PATTERN_FULL;
       VideoRender();
-      KeyUpdate();
+      KeyboardUpdate();
       UtilSleep(30);
    }
    return 0;

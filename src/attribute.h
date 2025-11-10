@@ -36,9 +36,9 @@ AttributeDimension(void)         { return (VIDEO_MODE >> 2) & 3; }
 
 ////////////////////////////////////////////////////////////////////////////////
 // TODO
-#define ATTRIBUTE_WIDTH_LOG2      (((VIDEO_MODE >> 2 & 3) + 3) >> 1)
-#define ATTRIBUTE_HEIGHT_LOG2     (2 + (VIDEO_MODE >> 3 & 1))
-#define ATTRIBUTE_HEIGHT          (4 << ((VIDEO_MODE >> 2 & 3) > 1))
+#define ATTRIBUTE_WIDTH_LOG2     (((VIDEO_MODE >> 2 & 3) + 3) >> 1)
+#define ATTRIBUTE_HEIGHT_LOG2    (2 + (VIDEO_MODE >> 3 & 1))
+#define ATTRIBUTE_HEIGHT         (4 << ((VIDEO_MODE >> 2 & 3) > 1))
 
 // attribute's dimension
 //
@@ -64,19 +64,20 @@ AttributeDimension(void)         { return (VIDEO_MODE >> 2) & 3; }
 #include "color.h"
 
 // Return the foreground color of an attribute
-static inline int AttributeGetForeground(const uint8_t *attr)
+static inline int AttributeGetPen(const uint8_t *attr)
 {
    switch (AttributeColorType()) {
       case ATTRIBUTE_COLORS_256:   // fallthrough
       case ATTRIBUTE_COLORS_FG256: return *attr;
       case ATTRIBUTE_COLORS_16:    return *attr >> 4;
-      case ATTRIBUTE_COLORS_BG256: return COLOR_DEFAULT_FG;
+      case ATTRIBUTE_COLORS_BG256: return Video.default_pen;
+
       default: unreachable();
    }
 }
 
 // Set the foreground color of an attribute
-static inline void AttributeSetForeground(uint8_t *attr, int color)
+static inline void AttributeSetPen(uint8_t *attr, uint8_t color)
 {
    switch (AttributeColorType()) {
       case ATTRIBUTE_COLORS_256:   // fallthrough
@@ -88,19 +89,19 @@ static inline void AttributeSetForeground(uint8_t *attr, int color)
 }
 
 // Return the background color of an attribute
-static inline int AttributeGetBackground(const uint8_t *attr)
+static inline int AttributeGetPaper(const uint8_t *attr)
 {
    switch (AttributeColorType()) {
       case ATTRIBUTE_COLORS_16:    return *attr & 0xF;
       case ATTRIBUTE_COLORS_BG256: return *attr;
       case ATTRIBUTE_COLORS_256:   return attr[1];
-      case ATTRIBUTE_COLORS_FG256: return COLOR_DEFAULT_BG;
+      case ATTRIBUTE_COLORS_FG256: return Video.default_paper;
       default: unreachable();
    }
 }
 
 // Set the background color of an attribute
-static inline void AttributeSetBackground(uint8_t *attr, int color)
+static inline void AttributeSetPaper(uint8_t *attr, uint8_t color)
 {
    switch (AttributeColorType()) {
       case ATTRIBUTE_COLORS_16:    *attr = (*attr & 0xF0) | color; break;
@@ -112,13 +113,14 @@ static inline void AttributeSetBackground(uint8_t *attr, int color)
 }
 
 // Set the foreground and background colors of an attribute
-static inline void AttributeSet(uint8_t *attr, int fg_color, int bg_color)
+static inline void
+AttributeSet(uint8_t *attr, uint8_t pen_color, uint8_t paper_color)
 {
    switch (AttributeColorType()) {
-      case ATTRIBUTE_COLORS_16:    *attr = (fg_color << 4) | bg_color; break;
-      case ATTRIBUTE_COLORS_FG256: *attr = fg_color; break;
-      case ATTRIBUTE_COLORS_BG256: *attr = bg_color; break;
-      case ATTRIBUTE_COLORS_256: attr[0] = fg_color; attr[1] = bg_color; break;
+      case ATTRIBUTE_COLORS_16:    *attr = (pen_color << 4) | paper_color; break;
+      case ATTRIBUTE_COLORS_FG256: *attr = pen_color; break;
+      case ATTRIBUTE_COLORS_BG256: *attr = paper_color; break;
+      case ATTRIBUTE_COLORS_256: attr[0] = pen_color; attr[1] = paper_color; break;
       default: unreachable();
    }
 }

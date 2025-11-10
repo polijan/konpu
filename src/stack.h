@@ -1,8 +1,10 @@
 #ifndef  KONPU_STACK_H_
 #define  KONPU_STACK_H_
-#include "ram.h"
+#include "arch.h"
 #include "error.h"
 #include "var.h"
+
+/* TODO: change those
 
 // Array containing the values in the Stack.
 #define STACK_VAR_ARRAY   ((var*)(RAM + RAM_STACK_VAR))
@@ -12,6 +14,10 @@
 
 // Current size of the Stack (as an int16_t lvalue)
 #define STACK_SIZE        (*(int16_t*)(RAM + RAM_STACK_SIZE))
+*/
+#define STACK_VAR_ARRAY   ((var*)Ram.stack.lvl)
+#define STACK_TYPE_ARRAY  Ram.stack.type
+#define STACK_SIZE        Ram.stack.size
 
 
 // Returns the offset corresponding to the Waso stack level n.

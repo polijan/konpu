@@ -1,35 +1,41 @@
 #include "video.h"
 #include "init.h"
 
-// Video Registers
-static uint8_t  video_register_mode;
-static int16_t  video_register_width;
-static int16_t  video_register_height;
-// Expose address of static video registers variable for read-only access.
-const uint8_t  *VIDEO_REGISTER_MODE_   = &video_register_mode;
-const int16_t  *VIDEO_REGISTER_WIDTH_  = &video_register_width;
-const int16_t  *VIDEO_REGISTER_HEIGHT_ = &video_register_height;
+// Initialize video
+// - assuming the glyph area is zero'ed out
+// - the video mode is set to default
+static void video_init_(void)
+{
+   // Reset palette
+   ColorResetPalettes();
 
+   // Set Color fields
+   Video.border = COLOR_CSS_DARK_GRAY;
+   Video.default_pen   = COLOR16_TTY_HIGH_WHITE;
+   Video.default_paper = COLOR16_TTY_BLUE;
 
-//------------------------------------------------------------------------------
+   // Set attribute area with the default pen and paper
+   int attr_offset = VideoAttributeOffset();
+   int attr =  Video.default_pen << 4 | Video.default_paper;
+   memset(Video.frame + attr_offset, attr, VIDEO_SIZE - attr_offset);
 
-void VideoInit(void)
-{ VideoMode(VIDEO_MODE_DEFAULT);
-
-  // We need to reset the attributes...
-  int attr_offset = VideoAttributeOffset();
-  int attr = COLOR_PALETTE16[1] << 4 | COLOR_PALETTE16[0];
-  memset(VIDEO_BUFFER + attr_offset, attr, VIDEO_SIZE - attr_offset);
+   // Render the video
+   VideoRender();
 }
 
-//#include <string.h>
+void VideoInit(void)
+{
+   // We assume the whole video area is zero'ed out.
+   VideoMode(VIDEO_MODE_DEFAULT);
+   video_init_();
+}
+
 void VideoReset(void)
 {
-   VideoInit();
-
-   // Clear the glyphs
-   int attr_offset = VideoAttributeOffset();
-   memset(VIDEO_BUFFER, 0, attr_offset);
+   // Zero out the framebuffer area occupied by the Glyphs in the default mode
+   VideoMode(VIDEO_MODE_DEFAULT);
+   memset(Video.frame, 0, VIDEO_SIZE_GLYPHS);
+   video_init_();
 }
 
 int VideoMode_(int mode)
@@ -57,7 +63,7 @@ int VideoMode_(int mode)
 
    if (low_nibble > 11) return 0;
 
-   // Chuncky Modes:
+   // Chunky Modes:
    // Either we're in pixel modes (element_descriptor is 7)
    // Or otherwise, we're in tile mode, and then have constraints based on what
    // type of chunk tile the low_nibble tells us we have:
@@ -102,8 +108,15 @@ int VideoMode(int mode)
       default: unreachable();
    }
 
-   video_register_width  = 8 * ROM[ROM_RESOLUTION + index];
-   video_register_height = 8 * ROM[ROM_RESOLUTION + index + 1];
-   video_register_mode   = mode;
+   // Update the Video's mode, width, height in RAM.
+   // Note: those fields are marked const in the RAM as they aren't meant to be
+   //       modifed by the casual user, so we must "un-const" them with a cast.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-qual"
+   *(uint8_t*)&Video.mode   = mode;
+   *(int16_t*)&Video.width  = 8 * Rom.resolution_8x8[index];
+   *(int16_t*)&Video.height = 8 * Rom.resolution_8x8[index + 1];
+#pragma GCC diagnostic pop
+
    return res;
 }

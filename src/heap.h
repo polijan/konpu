@@ -3,10 +3,11 @@
 
 #ifndef  KONPU_HEAP_H_
 #define  KONPU_HEAP_H_
-#include "ram.h"
+#include "arch.h"
 #include "var.h"
 
-// The size in bytes of the smallest possible allocation from the Heap.
+// The size of a heap slort in bytes,
+// i.e. the smallest possible allocation size on the Heap.
 #define HEAP_ALLOC_MIN   8
 
 // All objects in the Heap will be at least aligned to this value.
@@ -14,8 +15,9 @@
 // in the Heap.
 #define HEAP_ALIGNMENT   8
 
-#define HEAP_MEMORY      (RAM + RAM_HEAP)
-#define HEAP_CTRL        (RAM + RAM_HEAP_CTRL)
+#define HEAP_MEMORY      Ram.heap.memory
+#define HEAP_CTRL        Ram.heap.ctrl
+
 
 // Returns a pointer from a 16-bit heap address
 static inline

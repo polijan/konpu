@@ -1,10 +1,11 @@
 #ifndef  KONPU_GLYPH_H_
 #define  KONPU_GLYPH_H_
+#include "arch.h"
 #include "bits.h"
 #include "video_mode.h"
 
 //------------------------------------------------------------------------------
-// Glyphs types and typedefs
+// Glyphs Types (they are defined in arch.h)
 //------------------------------------------------------------------------------
 
 //  Glyph terminology:        Glyph8      Glyph32         Glyph64
@@ -17,19 +18,16 @@
 // | Glyph32  |  4 x 8  |     . . . .     . . . .     . . . . . . . .
 // | Glyph64  |  8 x 8  |     . . . .     . . . .     . . . . . . . .
 // | Glyph128 |  8 x 16 |     . . . .
-// | Glyph256 | 16 x 16 |     Glyph16     Glyphs128 and Glyph256 are
+// | Glyph256 | 16 x 16 |     Glyph16     Glyph128 and Glyph256 are
 // '----------'---------'                 made of Glyph64s:
-typedef uint8_t   Glyph8;     //
-typedef uint16_t  Glyph16;    //    top         top_left | top_right
-typedef uint32_t  Glyph32;    //   ------    ------------|------------
-typedef uint64_t  Glyph64;    //   bottom    bottom_left | bottom_right
-typedef struct    Glyph128 { Glyph64 top,
-                                     bottom; } Glyph128;
-typedef struct    Glyph256 { Glyph64 top_left   , top_right,
-                                     bottom_left, bottom_right; } Glyph256;
-// When size is not specified, glyphs can be passed as a void pointer.
-typedef void      Glyph;
+//
+//                                  top         top_left | top_right
+//                                 ------    ------------|------------
+//                                 bottom    bottom_left | bottom_right
 
+//------------------------------------------------------------------------------
+// Glyph Operations
+//------------------------------------------------------------------------------
 // // Misc.:
 // bool GlyphIsEqual(glyph1, glyph2)
 //
@@ -116,7 +114,7 @@ typedef void      Glyph;
 #define GLYPH128_HEIGHT_LOG2  4
 #define GLYPH256_WIDTH_LOG2   4
 #define GLYPH256_HEIGHT_LOG2  4
-// Log2 of Width and Height of Glyphs in the frambuffer:
+// Log2 of Width and Height of Glyphs in the framebuffer:
 #define GLYPH_WIDTH_LOG2      ((VideoModeDimension() + 3) >> 1)
       // VIDEO_MODE's element dimension: |0|1|2|3|4|5|
       // log2(glyph width):              |1|2|2|3|3|4| ==> thus: (x+3)/2

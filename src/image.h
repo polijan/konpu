@@ -14,7 +14,7 @@ static inline void VideoRenderToARGB(uint32_t *frame_out, int alpha)
 
    for (int y = 0; y < VIDEO_HEIGHT; y++) {
       for (int x = 0; x < VIDEO_WIDTH; x++) {
-         const int color = PixelGet_(x, y);
+         int color = PixelGet_(x, y);
          const uint8_t *rgb = ColorToRGB((palette)? palette[color] : color);
          *frame_out++ = A | (rgb[0] << 16) | (rgb[1] << 8) | rgb[2];
       }

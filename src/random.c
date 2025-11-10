@@ -101,39 +101,36 @@ static uint32_t pcg32_boundedrand_r(pcg32_random_t* rng, uint32_t bound)
 // Adapt PCG32 to Konpu
 //------------------------------------------------------------------------------
 #include "random.h"
-#include "ram.h"
-
-// We keep a global state a RAM
-#define RAM_PCG32  ((pcg32_random_t *)(RAM + RAM_RNG_STATE))
+#include "arch.h"
+#define RNG (pcg32_random_t *)&Ram.rng
 
 uint32_t UtilRandom32_0_(void)
-{ return pcg32_random_r(RAM_PCG32); }
+{ return pcg32_random_r(RNG); }
 
 uint32_t UtilRandom32_1_(uint32_t bound)
-{ return pcg32_boundedrand_r(RAM_PCG32, bound); }
+{ return pcg32_boundedrand_r(RNG, bound); }
 
 void UtilInitRandom_2_(uint64_t seed, uint64_t seq)
-{ pcg32_srandom_r(RAM_PCG32, seed, seq); }
+{ pcg32_srandom_r(RNG, seed, seq); }
 
 #include "var.h"
 void UtilInitRandom_1_(uint64_t seed)
 {
-   // As we don't have a sequence, let's create one with bits shenanigans...
-   uint64_t seq = VarHash((var){.uint64 = seed});
-   pcg32_srandom_r(RAM_PCG32, seed, seq);
+   // As we don't have a sequence, create one with bits shenanigans...
+   uint64_t initseq = VarHash((var){.uint64 = seed});
+   pcg32_srandom_r(RNG, seed, initseq);
 }
 
 #if KONPU_PLATFORM_LIBC
 #   include <time.h>  // C's <time.h>
 #endif
 #include "time.h" // Konpu's "time.h"
-#include "rom.h"
 void UtilInitRandom_0_(void)
 {
    // Random Compile-time constant
    uint64_t seed =
       // Some pointer values that may vary in Konpu
-         (uint64_t)(uintptr_t)ROM + (uint64_t)(uintptr_t)RAM
+         (uint64_t)(uintptr_t)(&Rom) + (uint64_t)(uintptr_t)(&Ram)
       // Some constants that comes from our config/build
       +  (uint64_t)__STDC_VERSION__
       +  KONPU_VERSION_PATCH +

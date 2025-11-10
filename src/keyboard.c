@@ -1,8 +1,8 @@
-#include "key.h"
+#include "keyboard.h"
 
 #include "platform_.h"
 #if KONPU_PLATFORM_SDL_ANY
-void KeyUpdate(void)
+void KeyboardUpdate(void)
 {
    // Instruct SDL to gather input information from devices, it does not need to
    // be done explicitely if we'd used SDL_PollEvent() or SDL_WaitEvent().
@@ -11,8 +11,8 @@ void KeyUpdate(void)
    // open a config menu, etc. (maybe the menu key?)
    SDL_PumpEvents();
 
-   // Copy current key state to previsou key state
-   memcpy(KEY_PREVIOUS_STATE, KEY_CURRENT_STATE, RAM_KEY_CURRENT_STATE_SZ_);
+   // Copy current key state to previous key state
+   memcpy(Keyboard.current, Keyboard.previous, KEY_COUNT / CHAR_BIT);
 
    // Calculate new state from SDL keyboard state
    static_assert(KEY_COUNT <= SDL_NUM_SCANCODES);
@@ -21,8 +21,8 @@ void KeyUpdate(void)
 #else
    const uint8_t *state = SDL_GetKeyboardState(NULL);
 #endif
-   for (unsigned i = 0; i < RAM_KEY_CURRENT_STATE_SZ_; i++) {
-      KEY_CURRENT_STATE[i] =
+   for (unsigned i = 0; i < KEY_COUNT / CHAR_BIT; i++) {
+      Keyboard.current[i] =
          ((state[0] != 0) << 0) | ((state[1] != 0) << 1) |
          ((state[2] != 0) << 2) | ((state[3] != 0) << 3) |
          ((state[4] != 0) << 4) | ((state[5] != 0) << 5) |

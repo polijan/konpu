@@ -1,16 +1,15 @@
 #include "test.h"
 
-// A loop creating random glyph<8|16|...|256> named g<8|16|...|256>
-#define RANDOM_GLYPHS_BEGIN                                           \
-        for (int i_ = 0; i_ < 100; i_++) {                            \
-            uint8_t  g8   = UtilRandom32_0_();                        \
-            uint16_t g16  = UtilRandom32_0_();                        \
-            uint32_t g32  = UtilRandom32_0_();                        \
-            uint64_t g64  = UtilRandom64_0_();                        \
-            Glyph128 g128 = { UtilRandom64_0_(), UtilRandom64_0_() }; \
-            Glyph256 g256 = { UtilRandom64_0_(), UtilRandom64_0_(),   \
-                              UtilRandom64_0_(), UtilRandom64_0_(), };
-
+// A 100x loop in which random Glyphs named g<8|16|...|256> are available
+#define RANDOM_GLYPHS_BEGIN                                     \
+        for (int i_ = 0; i_ < 100; i_++) {                      \
+            uint8_t  g8   = UtilRandom32(0x100);                \
+            uint16_t g16  = UtilRandom32(0x10000);              \
+            uint32_t g32  = UtilRandom32();                     \
+            uint64_t g64  = UtilRandom64();                     \
+            Glyph128 g128 = { UtilRandom64(), UtilRandom64() }; \
+            Glyph256 g256 = { UtilRandom64(), UtilRandom64(),   \
+                              UtilRandom64(), UtilRandom64(), };
 
 #define RANDOM_GLYPHS_END   }
 

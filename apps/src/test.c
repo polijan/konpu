@@ -6,7 +6,7 @@
 int AppInit(void)
 {
    // 1.5 second of "tv static" effect...
-   COLOR_BORDER = 0;
+   Video.border = 0;
    VideoMode(VIDEO_MODE_GLYPH(Glyph64));
    for (int i = 0; i < 120; i++) {
       for (int n = 0; n < VIDEO_COUNT_GLYPH64; n++) {
@@ -40,7 +40,7 @@ VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_8x8_FG256));
    Printer("Factor:%d Mode:%d -> %dx%d [out of max. %dx%d]\n",
       VIDEO_FACTOR_, VIDEO_MODE,
       VIDEO_WIDTH, VIDEO_HEIGHT,
-      VIDEO_MAX_WIDTH, VIDEO_MAX_HEIGHT);
+      8 * Rom.resolution_8x8[0], 8 * Rom.resolution_8x8[1]);
    Printer("ColorDepth: %d\n", ColorDepth());
 
    Printer("Attributes: starts at %d\n", VideoAttributeOffset());
@@ -51,29 +51,30 @@ VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_8x8_FG256));
 
    VideoGlyphSetAll(soweli);
    for (int n = VideoAttributeOffset(); n < VIDEO_SIZE; n++) {
-      VIDEO_BUFFER[n] = n % 256;
+      Video.frame[n] = n % 256;
    }
    VideoRender();
 
-   COLOR_BORDER = 55;
+   Video.border = 55;
    for (int n = 0; n < VIDEO_COUNT_GLYPH256; n++) {
-      VIDEO_GLYPH256[n] = (n%2)? soweli256:sstoki;
+      Video.glyph256[n] = (n%2)? soweli256:sstoki;
       if (n%8) VideoRender();
    }
 
-   COLOR_BORDER = 70;
-   int number_of_attributes_bytes = ( (VIDEO_WIDTH  >> AttributeWidthLog2())
+   Video.border = 70;
+   int number_of_attributes_bytes = (VIDEO_WIDTH_ATTRIBUTE * VIDEO_HEIGHT_ATTRIBUTE) >> AttributeHasTwoBytes();
+/*   int number_of_attributes_bytes = ( (VIDEO_WIDTH  >> AttributeWidthLog2())
                                     * (VIDEO_HEIGHT >> AttributeHeightLog2())
-                                    ) >> AttributeHasTwoBytes();
+                                    ) >> AttributeHasTwoBytes();*/
    for (int n = 0; n < number_of_attributes_bytes; n++) {
-      VIDEO_BUFFER[n + VideoAttributeOffset()] = (n % 16) << 4;
+      Video.frame[n + VideoAttributeOffset()] = (n % 16) << 4;
       if (n % (VIDEO_WIDTH >> AttributeWidthLog2()) == 0) { // <-- once per line
          VideoRender(); UtilSleep(100);
       }
       assert(n + VideoAttributeOffset() < VIDEO_SIZE);
    }
 
-   COLOR_BORDER = 40;
+   Video.border = 40;
    for (int i = 0; i < 40; i++) {
 //      *(uint64_t*)VideoGlyph(0,0) = GlyphRotate270(*(uint64_t*)VideoGlyph(0,0));
 
@@ -81,7 +82,7 @@ VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_8x8_FG256));
       *VideoAttribute(4,4) = i%256;
 
       VideoRender(); UtilSleep(100);
-      COLOR_BORDER++;
+      Video.border++;
    }
    return 0;
 }

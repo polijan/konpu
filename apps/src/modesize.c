@@ -17,7 +17,7 @@ static void SHOW(int mode, const char *msg)
 
 int AppInit(void)
 {
-   COLOR_BORDER = 128;
+   Video.border = 128;
    SHOW(  1, "2 color modes");  // 8
    SHOW(140, "8x8-attributes"); // 9
    SHOW(136, "4x8-attributes (default) / 8x8-double-attributes");  // 10

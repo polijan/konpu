@@ -15,8 +15,7 @@
 #define KONPU_PLATFORM_POSIX
 
 
-// Override the Video RAM "factor" (ie the size of the video framebuffer is
-// factor * 2880 bytes)
-// #define VIDEO_SIZE_FACTOR_  3
+// Override the Video "factor" (size of the framebuffer is factor * 2880 bytes)
+// #define VIDEO_FACTOR_  4
 
 #endif //include guard

@@ -24,9 +24,6 @@ extern void UtilInitRandom_0_(void);
 #define RandomInit() UtilInitRandom_0_()
 #define RandomDrop()
 
-void    ColorInit(void);
-#define ColorDrop()
-
 void    VideoInit(void);
 #define VideoDrop()
 void    VideoReset(void); //TODO <-- should be public? (so move to video.h/c ?)

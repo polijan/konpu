@@ -138,7 +138,6 @@ cli_error:
    // Initialize subsystems (AFTER reading CLI arguments)
    PlatformInit();
    TimeInit();
-   ColorInit();
    HeapInit();
    StackInit();
    VideoInit();
@@ -174,7 +173,6 @@ clean: // De-Initialize subsystems
    VideoDrop();
    StackDrop();
    HeapDrop();
-   ColorDrop();
    TimeDrop();
    PlatformDrop();
 clean_cli: // De-initialized subsystems initialized before reading CLI arguments

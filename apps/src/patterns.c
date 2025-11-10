@@ -36,7 +36,7 @@ static int Show(int number_of_planes)
 
    Printer("%d plane(s) -> %d x %d  (color=%d)\n", number_of_planes, VIDEO_WIDTH, VIDEO_HEIGHT, 1 << ColorDepth());
 
-   COLOR_BORDER = 29;
+   Video.border = 29;
    VideoGlyphSetAll();
    VideoAttributeSetAll(0x01);
 
@@ -47,9 +47,9 @@ static int Show(int number_of_planes)
    //memset(VIDEO_BUFFER + VIDEO_SIZE / 2, 0xCC, VIDEO_SIZE/2);
 
    if (!VideoModeHasAttributes() && VideoModeLowNibble() > 1) {
-      int plane_offset = VIDEO_SIZE / VideoModeLowNibble();
+      int plane_offset = VideoPlaneOffset();
       for (int i = 0; i < plane_offset / C_SIZEOF(Glyph64); i++) {
-         ((Glyph64*)(VIDEO_BUFFER + plane_offset))[i] = GLYPH64_PATTERN_FULL;
+         ((Glyph64*)(Video.frame + plane_offset))[i] = GLYPH64_PATTERN_FULL;
       }
       // VideoPlaneAs(Glyph64, 1)[i] = GLYPH64_PATTERN_HALF_BOTTOM;
       //GLYPH64_PATTERN_ARCHITECTURE_ARBOR;

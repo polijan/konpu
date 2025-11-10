@@ -44,7 +44,7 @@ typedef uint8_t PixelByte;
       // n == 9  => each byte contains 4 (= 2^2) quarter colors
       // n == 10 => each byte contains 2 (= 2^1) nibble colors
       // n == 11 => each byte contains 1 (= 2^0) color
-      return VIDEO_BUFFER + y * VIDEO_WIDTH
+      return VIDEO_PIXELBYTE + y * VIDEO_WIDTH
          + ((n <= 8) ? ((x >> 3) + VideoPlaneOffset(plane)) : (x >> (11 - n)));
    }
    static inline uint8_t *PixelByteAt_function_(int x, int y, int plane) {
@@ -52,7 +52,7 @@ typedef uint8_t PixelByte;
       UtilClampCoordinate(&y, VIDEO_HEIGHT);
       int n = VideoModeLowNibble();
       UtilClampCoordinate(&plane, n);
-      return VIDEO_BUFFER + y * VIDEO_WIDTH
+      return VIDEO_PIXELBYTE + y * VIDEO_WIDTH
          + ((n <= 8) ? ((x >> 3) + VideoPlaneOffset(plane)) : (x >> (11 - n)));
    }
 
@@ -89,7 +89,7 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
             h = VIDEO_HEIGHT_GLYPH8;
             attr_offset = (w * h) << PIXELS_2x4;
             px = GlyphGetPixel(
-               VIDEO_GLYPH8[(x >> GLYPH8_WIDTH_LOG2) + w * (y >> GLYPH8_HEIGHT_LOG2)],
+               Video.glyph8[(x >> GLYPH8_WIDTH_LOG2) + w * (y >> GLYPH8_HEIGHT_LOG2)],
                x & (GLYPH8_WIDTH - 1), y & (GLYPH8_HEIGHT - 1) );
             break;
          case PIXELS_4x4:
@@ -97,7 +97,7 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
             h = VIDEO_HEIGHT_GLYPH16;
             attr_offset = (w * h) << PIXELS_4x4;
             px = GlyphGetPixel(
-               VIDEO_GLYPH16[(x >> GLYPH16_WIDTH_LOG2) + w * (y >> GLYPH16_HEIGHT_LOG2)],
+               Video.glyph16[(x >> GLYPH16_WIDTH_LOG2) + w * (y >> GLYPH16_HEIGHT_LOG2)],
                x & (GLYPH16_WIDTH - 1), y & (GLYPH16_HEIGHT - 1) );
             break;
          case PIXELS_4x8:
@@ -105,7 +105,7 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
             h = VIDEO_HEIGHT_GLYPH32;
             attr_offset = (w * h) << PIXELS_4x8;
             px = GlyphGetPixel(
-               VIDEO_GLYPH32[(x >> GLYPH32_WIDTH_LOG2) + w * (y >> GLYPH32_HEIGHT_LOG2)],
+               Video.glyph32[(x >> GLYPH32_WIDTH_LOG2) + w * (y >> GLYPH32_HEIGHT_LOG2)],
                x & (GLYPH32_WIDTH - 1), y & (GLYPH32_HEIGHT - 1) );
             break;
          case PIXELS_8x8:
@@ -113,7 +113,7 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
             h = VIDEO_HEIGHT_GLYPH64;
             attr_offset = (w * h) << PIXELS_8x8;
             px = GlyphGetPixel(
-               VIDEO_GLYPH64[(x >> GLYPH64_WIDTH_LOG2) + w * (y >> GLYPH64_HEIGHT_LOG2)],
+               Video.glyph64[(x >> GLYPH64_WIDTH_LOG2) + w * (y >> GLYPH64_HEIGHT_LOG2)],
                x & (GLYPH64_WIDTH - 1), y & (GLYPH64_HEIGHT - 1) );
             break;
          case PIXELS_8x16:
@@ -121,7 +121,7 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
             h = VIDEO_HEIGHT_GLYPH128;
             attr_offset = (w * h) << PIXELS_8x16;
             px = GlyphGetPixel(
-               VIDEO_GLYPH128[(x >> GLYPH128_WIDTH_LOG2) + w * (y >> GLYPH128_HEIGHT_LOG2)],
+               Video.glyph128[(x >> GLYPH128_WIDTH_LOG2) + w * (y >> GLYPH128_HEIGHT_LOG2)],
                x & (GLYPH128_WIDTH - 1), y & (GLYPH128_HEIGHT - 1) );
             break;
          case PIXELS_16x16:
@@ -129,14 +129,14 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
             h = VIDEO_HEIGHT_GLYPH256;
             attr_offset = (w * h) << PIXELS_16x16;
             px = GlyphGetPixel(
-               VIDEO_GLYPH256[(x >> GLYPH256_WIDTH_LOG2) + w * (y >> GLYPH256_HEIGHT_LOG2)],
+               Video.glyph256[(x >> GLYPH256_WIDTH_LOG2) + w * (y >> GLYPH256_HEIGHT_LOG2)],
                x & (GLYPH256_WIDTH - 1), y & (GLYPH256_HEIGHT - 1) );
             break;
          case PIXELS: // bit-pixels are similar to 8x1 glyphs
             w = VIDEO_WIDTH >> 3;
             h = VIDEO_HEIGHT;
             attr_offset = w * h;
-            px = BITS_GET_BIT(VIDEO_BUFFER[(x >> 3) + y * w], x & 7);
+            px = BITS_GET_BIT(VIDEO_PIXELBYTE[(x >> 3) + y * w], x & 7);
             break;
          default:
             unreachable();
@@ -146,13 +146,13 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
       int w_log2 = AttributeWidthLog2();
       x >>= w_log2;
       y >>= AttributeHeightLog2();
-      uint8_t *attr = VIDEO_BUFFER + attr_offset
+      uint8_t *attr = VIDEO_PIXELBYTE + attr_offset
          + ((x + y * (VIDEO_WIDTH >> w_log2)) << AttributeHasTwoBytes());
 
       // Step 3: Return the attribute's fg or bg color
       //         depending on whether px is on or off.
-      return (px) ? AttributeGetForeground(attr)
-                  : AttributeGetBackground(attr);
+      return (px) ? AttributeGetPen(attr)
+                  : AttributeGetPaper(attr);
    }
 
    //---------------------------------------------------------------------------
@@ -173,7 +173,7 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
    //   reconstruct the pixel color bit by bit.
    int low_nibble = VideoModeLowNibble();
    if (dimension == PIXELS) {
-      uint8_t *ptr = VIDEO_BUFFER + y * VIDEO_WIDTH;
+      uint8_t *ptr = VIDEO_PIXELBYTE + y * VIDEO_WIDTH;
       switch (low_nibble) {
          // Chunk Pixels or single-plane bit-Pixels
          case 11: return ptr[x];
@@ -233,42 +233,42 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
                w = VIDEO_WIDTH_GLYPH8;
                for (int plane = 0; plane < low_nibble; plane++)
                   px |= GlyphGetPixel(
-                     VIDEO_GLYPH8[(x >> GLYPH8_WIDTH_LOG2) + w * (y >> GLYPH8_HEIGHT_LOG2)],
+                     Video.glyph8[(x >> GLYPH8_WIDTH_LOG2) + w * (y >> GLYPH8_HEIGHT_LOG2)],
                      x & (GLYPH8_WIDTH - 1), y & (GLYPH8_HEIGHT - 1) ) << plane;
                return px;
             case PIXELS_4x4:
                w = VIDEO_WIDTH_GLYPH16;
                for (int plane = 0; plane < low_nibble; plane++)
                   px |= GlyphGetPixel(
-                     VIDEO_GLYPH16[(x >> GLYPH16_WIDTH_LOG2) + w * (y >> GLYPH16_HEIGHT_LOG2)],
+                     Video.glyph16[(x >> GLYPH16_WIDTH_LOG2) + w * (y >> GLYPH16_HEIGHT_LOG2)],
                      x & (GLYPH16_WIDTH - 1), y & (GLYPH16_HEIGHT - 1) ) << plane;
                return px;
             case PIXELS_4x8:
                w = VIDEO_WIDTH_GLYPH32;
                for (int plane = 0; plane < low_nibble; plane++)
                   px |= GlyphGetPixel(
-                     VIDEO_GLYPH32[(x >> GLYPH32_WIDTH_LOG2) + w * (y >> GLYPH32_HEIGHT_LOG2)],
+                     Video.glyph32[(x >> GLYPH32_WIDTH_LOG2) + w * (y >> GLYPH32_HEIGHT_LOG2)],
                      x & (GLYPH32_WIDTH - 1), y & (GLYPH32_HEIGHT - 1) ) << plane;
                return px;
             case PIXELS_8x8:
                w = VIDEO_WIDTH_GLYPH64;
                for (int plane = 0; plane < low_nibble; plane++)
                   px |= GlyphGetPixel(
-                     VIDEO_GLYPH64[(x >> GLYPH64_WIDTH_LOG2) + w * (y >> GLYPH64_HEIGHT_LOG2)],
+                     Video.glyph64[(x >> GLYPH64_WIDTH_LOG2) + w * (y >> GLYPH64_HEIGHT_LOG2)],
                      x & (GLYPH64_WIDTH - 1), y & (GLYPH64_HEIGHT - 1) ) << plane;
                return px;
             case PIXELS_8x16:
                w = VIDEO_WIDTH_GLYPH128;
                for (int plane = 0; plane < low_nibble; plane++)
                   px |= GlyphGetPixel(
-                     VIDEO_GLYPH128[(x >> GLYPH128_WIDTH_LOG2) + w * (y >> GLYPH128_HEIGHT_LOG2)],
+                     Video.glyph128[(x >> GLYPH128_WIDTH_LOG2) + w * (y >> GLYPH128_HEIGHT_LOG2)],
                      x & (GLYPH128_WIDTH - 1), y & (GLYPH128_HEIGHT - 1) ) << plane;
                return px;
             case PIXELS_16x16:
                w = VIDEO_WIDTH_GLYPH256;
                for (int plane = 0; plane < low_nibble; plane++)
                   px |= GlyphGetPixel(
-                     VIDEO_GLYPH256[(x >> GLYPH256_WIDTH_LOG2) + w * (y >> GLYPH256_HEIGHT_LOG2)],
+                     Video.glyph256[(x >> GLYPH256_WIDTH_LOG2) + w * (y >> GLYPH256_HEIGHT_LOG2)],
                      x & (GLYPH256_WIDTH - 1), y & (GLYPH256_HEIGHT - 1) ) << plane;
                return px;
             default: unreachable();
@@ -307,7 +307,7 @@ static C_HINT_ALWAYS_INLINE void PixelSet_internal_(int x, int y, int color)
             h = VIDEO_HEIGHT_GLYPH8;
             attr_offset = (w * h) << PIXELS_2x4;
             GlyphSetPixel(
-               VIDEO_GLYPH8[(x >> GLYPH8_WIDTH_LOG2) + w * (y >> GLYPH8_HEIGHT_LOG2)],
+               Video.glyph8[(x >> GLYPH8_WIDTH_LOG2) + w * (y >> GLYPH8_HEIGHT_LOG2)],
                x & (GLYPH8_WIDTH - 1), y & (GLYPH8_HEIGHT - 1), 1);
             break;
          case PIXELS_4x4:
@@ -315,7 +315,7 @@ static C_HINT_ALWAYS_INLINE void PixelSet_internal_(int x, int y, int color)
             h = VIDEO_HEIGHT_GLYPH16;
             attr_offset = (w * h) << PIXELS_4x4;
             px = GlyphPixelAt(
-               VIDEO_GLYPH16[(x >> GLYPH16_WIDTH_LOG2) + w * (y >> GLYPH16_HEIGHT_LOG2)],
+               Video.glyph16[(x >> GLYPH16_WIDTH_LOG2) + w * (y >> GLYPH16_HEIGHT_LOG2)],
                x & (GLYPH16_WIDTH - 1), y & (GLYPH16_HEIGHT - 1) );
             break;
          case PIXELS_4x8:
@@ -323,7 +323,7 @@ static C_HINT_ALWAYS_INLINE void PixelSet_internal_(int x, int y, int color)
             h = VIDEO_HEIGHT_GLYPH32;
             attr_offset = (w * h) << PIXELS_4x8;
             px = GlyphPixelAt(
-               VIDEO_GLYPH32[(x >> GLYPH32_WIDTH_LOG2) + w * (y >> GLYPH32_HEIGHT_LOG2)],
+               Video.glyph32[(x >> GLYPH32_WIDTH_LOG2) + w * (y >> GLYPH32_HEIGHT_LOG2)],
                x & (GLYPH32_WIDTH - 1), y & (GLYPH32_HEIGHT - 1) );
             break;
          case PIXELS_8x8:
@@ -331,7 +331,7 @@ static C_HINT_ALWAYS_INLINE void PixelSet_internal_(int x, int y, int color)
             h = VIDEO_HEIGHT_GLYPH64;
             attr_offset = (w * h) << PIXELS_8x8;
             px = GlyphPixelAt(
-               VIDEO_GLYPH64[(x >> GLYPH64_WIDTH_LOG2) + w * (y >> GLYPH64_HEIGHT_LOG2)],
+               Video.glyph64[(x >> GLYPH64_WIDTH_LOG2) + w * (y >> GLYPH64_HEIGHT_LOG2)],
                x & (GLYPH64_WIDTH - 1), y & (GLYPH64_HEIGHT - 1) );
             break;
          case PIXELS_8x16:
@@ -339,7 +339,7 @@ static C_HINT_ALWAYS_INLINE void PixelSet_internal_(int x, int y, int color)
             h = VIDEO_HEIGHT_GLYPH128;
             attr_offset = (w * h) << PIXELS_8x16;
             px = GlyphPixelAt(
-               VIDEO_GLYPH128[(x >> GLYPH128_WIDTH_LOG2) + w * (y >> GLYPH128_HEIGHT_LOG2)],
+               Video.glyph128[(x >> GLYPH128_WIDTH_LOG2) + w * (y >> GLYPH128_HEIGHT_LOG2)],
                x & (GLYPH128_WIDTH - 1), y & (GLYPH128_HEIGHT - 1) );
             break;
          case PIXELS_16x16:
@@ -347,7 +347,7 @@ static C_HINT_ALWAYS_INLINE void PixelSet_internal_(int x, int y, int color)
             h = VIDEO_HEIGHT_GLYPH256;
             attr_offset = (w * h) << PIXELS_16x16;
             px = GlyphPixelAt(
-               VIDEO_GLYPH256[(x >> GLYPH256_WIDTH_LOG2) + w * (y >> GLYPH256_HEIGHT_LOG2)],
+               Video.glyph256[(x >> GLYPH256_WIDTH_LOG2) + w * (y >> GLYPH256_HEIGHT_LOG2)],
                x & (GLYPH256_WIDTH - 1), y & (GLYPH256_HEIGHT - 1) );
             break;
          case PIXELS:
@@ -366,7 +366,7 @@ static C_HINT_ALWAYS_INLINE void PixelSet_internal_(int x, int y, int color)
       y >>= AttributeHeightLog2();
       uint8_t *attr = VIDEO_BUFFER + attr_offset
          + ((x + y * (VIDEO_WIDTH >> w_log2)) << AttributeHasTwoBytes());
-      AttributeSetForeground(attr, color);
+      AttributeSetPen(attr, color);
    */
    }
 
@@ -389,7 +389,7 @@ static C_HINT_ALWAYS_INLINE void PixelSet_internal_(int x, int y, int color)
    int low_nibble = VideoModeLowNibble();
    if (dimension == PIXELS) {
 
-      uint8_t *ptr = VIDEO_BUFFER + y * VIDEO_WIDTH;
+      uint8_t *ptr = VIDEO_PIXELBYTE + y * VIDEO_WIDTH;
       switch (low_nibble) {
          // Chunk Pixels or single-plane bit-Pixels
          case 11: ptr[x] = color; return;
@@ -443,11 +443,11 @@ static C_HINT_ALWAYS_INLINE void PixelSet_internal_(int x, int y, int color)
 static inline int PixelGet(int x, int y)
 {
    return (x < 0 || x >= VIDEO_WIDTH || y < 0 || y >= VIDEO_HEIGHT) ?
-      COLOR_DEFAULT_BG : PixelGet_(x, y);
-   //TODO: FIXME
+      Video.default_paper : PixelGet_(x, y);
+   //TODO: FIXME, what to return when out of bound?
    // We could return the border color? It could make sense, however the
    // border color is always in 256 color mode, but the framebuffer isn't.
-   // What about COLOR_DEFAULT_BG, it's the same thing or what?
+   // What about Video.default_paper, it's the same thing or what?
 }
 
 // Set the the pixel (x,y) to the given color.

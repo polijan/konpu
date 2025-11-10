@@ -9,11 +9,6 @@
 
 #include "printer.h" // TODO: for fast ugly DEBUG(), remove.
 
-// Video Register for Errors:
-static uint32_t  video_register_errors = 0;
-// Expose address of static video registers variable for read-only access.
-const uint32_t *VIDEO_REGISTER_ERRORS_ = &video_register_errors;
-
 
 // An icon for ilo Konpu (TODO)
 #define ICON_WIDTH           64
@@ -34,9 +29,9 @@ static struct {
    // When rendering a frame, we check if those fields have the same value as
    // their Konpu's counterpart values. If they don't have, we have to take
    // actions during the rendering.
-   int16_t  width;  // mimics the value of VIDEO_WIDTH
-   int16_t  height; // mimics the value of VIDEO_HEIGHT
-   int16_t  border; // mimics the value of COLOR_BORDER
+   int16_t  width;  // mimics the value of Video.width
+   int16_t  height; // mimics the value of Video.height
+   int16_t  border; // mimics the value of Video.border
 
 } sdl = {
    .window   = NULL,
@@ -54,7 +49,7 @@ static struct {
 // Given a 2D array (same width as Konpu's framebuffer) of pixel values,
 // Return a pointer to the pixel (x,y)
 #define PIXEL(pixels, x,y) \
-   ((pixels) + (x) +(y) * VIDEO_WIDTH)
+   ((pixels) + (x) + (y) * Video.width)
 
 //------------------------------------------------------------------------------
 
@@ -68,7 +63,7 @@ void VideoBackendDrop(void)
 }
 
 
-// Initialize the SDL video system, sdl.window, and sdl.enderer.
+// Initialize the SDL video system, sdl.window, and sdl.renderer.
 // sdl.texture is left null, because it is (re)initialized in the rendering
 // function (whenever Konpu's resolution has changed).
 //
@@ -87,7 +82,13 @@ int VideoBackendInit(int zoom_desired_max)
    assert(sdl.renderer == NULL);
    assert(sdl.texture  == NULL);
 
-   video_register_errors = 0;
+   // video.errors is const publicly but should be modifiable from this file
+   // so we "un-const" it with a cast
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-qual"
+   *(uint32_t*)&Video.errors = 0;
+#pragma GCC diagnostic pop
+
    // Make sure that at first render, the texture will be allocated and the
    // border redrawn.
    sdl.width  = -1;
@@ -102,17 +103,20 @@ int VideoBackendInit(int zoom_desired_max)
    // By default in SDL, the hint `SDL_HINT_RENDER_SCALE_QUALITY` is set to
    // "nearest" which is crisp and blocky and probably what's wished for Konpu.
    // Other options are "best" and "linear" ("best" might be same as "linear")
-   //if (!SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best"))
-   //   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+   // if (!SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "best"))
+   //    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 
 
-   // Zoom level by which to multiply the max. size of a Konpu framebuffer so
+   // Determine a zoom level by which to multiply the dimension of Konpu's
+   // framebuffer.
    // that it fits in the display of size w x h pixels. If zoom is zero, we'll
    // try to go full screen
    int zoom = 0;
+   int max_width  = 8 * Rom.resolution_8x8[0];
+   int max_height = 8 * Rom.resolution_8x8[1];
    SDL_DisplayMode display;
    if (SDL_GetDesktopDisplayMode(0, &display) == 0) {
-      zoom = UTIL_MIN(display.w/VIDEO_MAX_WIDTH, display.h/VIDEO_MAX_HEIGHT);
+      zoom = UTIL_MIN(display.w / max_width, display.h / max_height);
       if (zoom < 2) {
          zoom = 0; // try to go full screen
       } else if (zoom > zoom_desired_max) {
@@ -129,8 +133,7 @@ DEBUG("%dx%d -> zoom=%d\n", display.w, display.h, zoom); //TODO:REMOVE
    if (zoom <= 0)  win_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
    sdl.window = SDL_CreateWindow("ilo Konpu",
                   SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                  zoom * VIDEO_MAX_WIDTH, zoom * VIDEO_MAX_HEIGHT,
-                  win_flags);
+                  zoom * max_width, zoom * max_height,  win_flags);
    if (sdl.window == NULL) goto error;
 
 #if (ICON_BYTES_PER_PIXEL == 3) || (ICON_BYTES_PER_PIXEL == 4)
@@ -172,8 +175,8 @@ DEBUG("%dx%d -> zoom=%d\n", display.w, display.h, zoom); //TODO:REMOVE
 //                                       .w = width, .h = height});
 
    // we have an open window with nothing in it, so let's render once ???
-   error = VideoRender();
-   if (error) goto error;
+   //error = VideoRender();
+   //if (error) goto error;
 
    return 0;
 error:
@@ -193,10 +196,10 @@ int VideoRender(void)
    if (sdl.window == NULL) return 0;
    assert(sdl.renderer != NULL);
 
-   // (Re)create the texture if necessary, ie. when the dimensions have changed.
-   if (sdl.width != VIDEO_WIDTH || sdl.height != VIDEO_HEIGHT) {
-      sdl.width  = VIDEO_WIDTH;
-      sdl.height = VIDEO_HEIGHT;
+   // (Re)create the texture if necessary (ie. when the dimensions have changed)
+   if (sdl.width != Video.width || sdl.height != Video.height) {
+      sdl.width  = Video.width;
+      sdl.height = Video.height;
 
       // Delete and recreate as there's no resizing for textures
       if (sdl.texture != NULL)  SDL_DestroyTexture(sdl.texture);
@@ -204,19 +207,19 @@ int VideoRender(void)
          SDL_PIXELFORMAT_ARGB8888,    // could we use other formats (RGB888)...?
          SDL_TEXTUREACCESS_STREAMING, // A "Streaming texture" is intended to be
                        // updated often and assumes a full update of the texture
-         VIDEO_WIDTH, VIDEO_HEIGHT);
+         Video.width, Video.height);
       if (sdl.texture == NULL)  return -1;
 
       // TODO: remove later, but useful for now to give us some info:
       const char fmt[] = "ilo Konpu - nasin sitelen # %3d ";
       char title[UTIL_STRING_LITERAL_LENGTH(fmt) + 1];
-      snprintf(title, UTIL_STRING_LITERAL_LENGTH(fmt), fmt, VIDEO_MODE);
-                      // ^--- videomode as a string is no longer than "%d" in the title
+      snprintf(title, UTIL_STRING_LITERAL_LENGTH(fmt), fmt, Video.mode);
+                      // ^--- videomode as a string is no longer than "%3d" in the title
       SDL_SetWindowTitle(sdl.window, title);
 
       // `SDL_RenderSetLogicalSize` applies "letter boxing" to the viewport
       // thus creating Konpu's border.
-      SDL_RenderSetLogicalSize(sdl.renderer, VIDEO_WIDTH, VIDEO_HEIGHT);
+      SDL_RenderSetLogicalSize(sdl.renderer, Video.width, Video.height);
 
       // As dimensions changed, ensure that we'll repaint the border area.
       sdl.border = -1;
@@ -231,18 +234,23 @@ int VideoRender(void)
    SDL_LockTexture(sdl.texture, NULL, &pixel_data, &pitch);
    uint32_t *pixels = pixel_data;
    assert(pixels != NULL);
-   assert(pitch == (C_SIZEOF(*pixels) * VIDEO_WIDTH));
+   assert(pitch == (C_SIZEOF(*pixels) * Video.width));
 
-   // Render Konpu's frambuffer in to the locked texture, and as soon as we've
-   // finnished drawing, release (unlock) the texture.
+   // Render Konpu's framebuffer to the locked texture.
    VideoRenderToARGB(pixels, SDL_ALPHA_OPAQUE);
-      // Here in the Future: after rendering video to a framebuffer, we can add
-      // sprites or whatever overlay on top (Debug text, FPS counter, etc.)
+
+   // Render sprites
+   // TODO ...
+
+   // Render whatever Platform overlay (Debug text, FPS counter, etc.)
+   // TODO ... (maybe)
+
+   // Drawing is finished, so release (unlock) the texture now.
    SDL_UnlockTexture(sdl.texture);
 
    // Set/draw border when the border color has changed.
-   if (sdl.border != COLOR_BORDER) {
-      sdl.border = COLOR_BORDER;
+   if (sdl.border != Video.border) {
+      sdl.border = Video.border;
       const uint8_t *rgb = ColorToRGB(sdl.border);
       SDL_SetRenderDrawColor(sdl.renderer, rgb[0], rgb[1], rgb[2], SDL_ALPHA_OPAQUE);
    }
@@ -256,7 +264,10 @@ int VideoRender(void)
    // Render
    int err = SDL_RenderCopy(sdl.renderer, sdl.texture, NULL, NULL);
    if (err) {
-      video_register_errors++;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-qual"
+      ++*(uint32_t*)&Video.errors;
+#pragma GCC diagnostic pop
       return err;
    }
    SDL_RenderPresent(sdl.renderer);
