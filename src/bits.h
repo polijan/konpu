@@ -123,11 +123,14 @@
       uint32_t: BITS_SET_BIT_u32_    , \
       uint64_t: BITS_SET_BIT_u64_      \
    )((uint), (index), (bit))
-   static inline unsigned BITS_SET_BIT_u_(unsigned x, unsigned n, unsigned bit)
+   static inline C_ATTRIBUTE_NODISCARD unsigned
+   BITS_SET_BIT_u_(unsigned x, unsigned n, unsigned bit)
    { return (x & ~(1u << n)) | (bit << n); }
-   static inline BITS_MAX32_T BITS_SET_BIT_u32_(uint32_t x, unsigned n, BITS_MAX32_T bit)
+   static inline C_ATTRIBUTE_NODISCARD BITS_MAX32_T
+   BITS_SET_BIT_u32_(uint32_t x, unsigned n, BITS_MAX32_T bit)
    { return (x & ~(UINT32_C(1) << n)) | (bit << n); }
-   static inline BITS_MAX64_T BITS_SET_BIT_u64_(uint64_t x, unsigned n, BITS_MAX64_T bit)
+   static inline C_ATTRIBUTE_NODISCARD BITS_MAX64_T
+   BITS_SET_BIT_u64_(uint64_t x, unsigned n, BITS_MAX64_T bit)
    { return (x & ~(UINT64_C(1) << n)) | (bit << n); }
 
 #define BITS_SET_QUARTER(uint, index, quarter) \
@@ -137,11 +140,14 @@
       uint32_t: BITS_SET_QUARTER_u32_        , \
       uint64_t: BITS_SET_QUARTER_u64_          \
    )((uint), (index), (quarter))
-   static inline unsigned BITS_SET_QUARTER_u_(unsigned x, unsigned n, unsigned quarter)
+   static inline C_ATTRIBUTE_NODISCARD
+   unsigned BITS_SET_QUARTER_u_(unsigned x, unsigned n, unsigned quarter)
    { n <<= 1; return (x & ~(0x3u << n)) | (quarter << n); }
-   static inline BITS_MAX32_T BITS_SET_QUARTER_u32_(uint32_t x, unsigned n, BITS_MAX32_T quarter)
+   static inline C_ATTRIBUTE_NODISCARD BITS_MAX32_T
+   BITS_SET_QUARTER_u32_(uint32_t x, unsigned n, BITS_MAX32_T quarter)
    { n <<= 1; return (x & ~(UINT32_C(3) << n)) | (quarter << n); }
-   static inline BITS_MAX64_T BITS_SET_QUARTER_u64_(uint64_t x, unsigned n, BITS_MAX64_T quarter)
+   static inline C_ATTRIBUTE_NODISCARD BITS_MAX64_T
+   BITS_SET_QUARTER_u64_(uint64_t x, unsigned n, BITS_MAX64_T quarter)
    { n <<= 1; return (x & ~(UINT64_C(3) << n)) | (quarter << n); }
 
 #define BITS_SET_NIBBLE(uint, index, nibble) \
@@ -151,11 +157,14 @@
       uint32_t: BITS_SET_NIBBLE_u32_       , \
       uint64_t: BITS_SET_NIBBLE_u64_         \
    )((uint), (index), (nibble))
-   static inline unsigned BITS_SET_NIBBLE_u_(unsigned x, unsigned n, unsigned nibble)
+   static inline C_ATTRIBUTE_NODISCARD unsigned
+   BITS_SET_NIBBLE_u_(unsigned x, unsigned n, unsigned nibble)
    { n <<= 2; return (x & ~(0xFu << n)) | (nibble << n); }
-   static inline BITS_MAX32_T BITS_SET_NIBBLE_u32_(uint32_t x, unsigned n, BITS_MAX32_T nibble)
+   static inline C_ATTRIBUTE_NODISCARD BITS_MAX32_T
+   BITS_SET_NIBBLE_u32_(uint32_t x, unsigned n, BITS_MAX32_T nibble)
    { n <<= 2; return (x & ~(UINT32_C(0xF) << n)) | (nibble << n); }
-   static inline BITS_MAX64_T BITS_SET_NIBBLE_u64_(uint64_t x, unsigned n, BITS_MAX64_T nibble)
+   static inline C_ATTRIBUTE_NODISCARD BITS_MAX64_T
+   BITS_SET_NIBBLE_u64_(uint64_t x, unsigned n, BITS_MAX64_T nibble)
    { n <<= 2; return (x & ~(UINT64_C(0xF) << n)) | (nibble << n); }
 
 #define BITS_SET_BYTE(uint, index, byte)                      \
@@ -164,11 +173,14 @@
       uint16_t: BITS_SET_BYTE_u_((uint), (index), (byte))   , \
       uint32_t: BITS_SET_BYTE_u32_((uint), (index), (byte)) , \
       uint64_t: BITS_SET_BYTE_u64_((uint), (index), (byte))   )
-   static inline unsigned BITS_SET_BYTE_u_(unsigned x, unsigned n, unsigned byte)
+   static inline C_ATTRIBUTE_NODISCARD unsigned
+   BITS_SET_BYTE_u_(unsigned x, unsigned n, unsigned byte)
    { n <<= 3; return (x & ~(0xFFu << n)) | (byte << n); }
-   static inline BITS_MAX32_T BITS_SET_BYTE_u32_(uint32_t x, unsigned n, BITS_MAX32_T byte)
+   static inline C_ATTRIBUTE_NODISCARD BITS_MAX32_T
+   BITS_SET_BYTE_u32_(uint32_t x, unsigned n, BITS_MAX32_T byte)
    { n <<= 3; return (x & ~(UINT32_C(0xFF) << n)) | (byte << n); }
-   static inline BITS_MAX64_T BITS_SET_BYTE_u64_(uint64_t x, unsigned n, BITS_MAX64_T byte)
+   static inline C_ATTRIBUTE_NODISCARD BITS_MAX64_T
+   BITS_SET_BYTE_u64_(uint64_t x, unsigned n, BITS_MAX64_T byte)
    { n <<= 3; return (x & ~(UINT64_C(0xFF) << n)) | (byte << n); }
 
 
