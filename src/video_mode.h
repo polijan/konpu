@@ -1,18 +1,67 @@
 #ifndef  KONPU_VIDEO_MODE_H_
 #define  KONPU_VIDEO_MODE_H_
-#include "c.h"
 #include "arch.h"
 
-// TODO: use the names directly, instead of those macros?
-#ifndef VIDEO_MODE
-#define VIDEO_MODE    Video.mode
-#endif
-#ifndef VIDEO_WIDTH
-#define VIDEO_WIDTH   Video.width
-#endif
-#ifndef VIDEO_HEIGHT
-#define VIDEO_HEIGHT  Video.height
-#endif
+//------------------------------------------------------------------------------
+// Enums
+//------------------------------------------------------------------------------
+
+// Indicate the dimension in pixels of a video element
+// (Glyphs, Tiles, PixelStrips, or Attributes)
+enum VideoElementDimension {
+   PIXELS_2x4   = 0,
+   PIXELS_4x4   = 1,
+   PIXELS_4x8   = 2,
+   PIXELS_8x8   = 3, // value not possible  for 8bpp Tiles
+   PIXELS_8x16  = 4, // value not possible  for Attributes or >=4bpp Tiles
+   PIXELS_16x16 = 5, // value only possible for Glyphs (Glyph256)
+   PIXELS_Nx1   = 7, // value only possible for PixelStrips
+
+   // Note: When elements are Glyphs, the value also represents the
+   //       log2 of their size in bytes.
+};
+
+// Indicate the type of colors encoded by Attributes in the framebuffer.
+enum AttributeColorType {      // Bytes| Description
+   ATTRIBUTE_COLORS_16       = 0, // 1 | Nibbles specify 16-color pen and paper
+   ATTRIBUTE_COLORS_PEN256   = 1, // 1 | Byte specifies the pen   as full color
+   ATTRIBUTE_COLORS_PAPER256 = 2, // 1 | Byte specifies the paper as full color
+   ATTRIBUTE_COLORS_256      = 3  // 2 | Bytes specify full color pen and paper
+};
+
+// The full list of the all 16 possible Attributes type.
+// It is a nibble value composed of two quarters:
+// - an VideoElementDimension (max. 8x8)
+// - and an AttributeColorType.
+//                       .------ attributes px size (enum VideoElementDimension)
+//                       |  .--- attributes color type (enum AttributeColorType)
+//                       v  v
+//                      |..|..|
+//
+// In attribute modes, it is the low nibble of the video mode.
+enum AttributeType {
+   ATTRIBUTE_2x4_16       = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_16),
+   ATTRIBUTE_2x4_PEN256   = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_PEN256),
+   ATTRIBUTE_2x4_PAPER256 = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_PAPER256),
+   ATTRIBUTE_2x4_256      = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_256),
+   ATTRIBUTE_4x4_16       = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_16),
+   ATTRIBUTE_4x4_PEN256   = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_PEN256),
+   ATTRIBUTE_4x4_PAPER256 = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_PAPER256),
+   ATTRIBUTE_4x4_256      = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_256),
+   ATTRIBUTE_4x8_16       = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_16),
+   ATTRIBUTE_4x8_PEN256   = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_PEN256),
+   ATTRIBUTE_4x8_PAPER256 = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_PAPER256),
+   ATTRIBUTE_4x8_256      = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_256),
+   ATTRIBUTE_8x8_16       = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_16),
+   ATTRIBUTE_8x8_PEN256   = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_PEN256),
+   ATTRIBUTE_8x8_PAPER256 = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_PAPER256),
+   ATTRIBUTE_8x8_256      = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_256)
+};
+
+
+//------------------------------------------------------------------------------
+// Dimensions of the video framebuffer
+//------------------------------------------------------------------------------
 
 /*
 // Current Video Mode
@@ -28,64 +77,96 @@
 #endif
 */
 
+#ifndef VIDEO_MODE
+#define VIDEO_MODE    Video.mode
+#endif
+#ifndef VIDEO_WIDTH
+#define VIDEO_WIDTH   Video.width
+#endif
+#ifndef VIDEO_HEIGHT
+#define VIDEO_HEIGHT  Video.height
+#endif
+
+
+
+// VIDEO_WIDTH_<element>: Width of the video framebuffer but in other "units"
+// than pixels (framebuffer must contain element of the type)
+#define VIDEO_WIDTH_GLYPH           (VIDEO_WIDTH >> GLYPH_WIDTH_LOG2)
+#define VIDEO_WIDTH_GLYPH8          (VIDEO_WIDTH >> GLYPH8_WIDTH_LOG2)
+#define VIDEO_WIDTH_GLYPH16         (VIDEO_WIDTH >> GLYPH16_WIDTH_LOG2)
+#define VIDEO_WIDTH_GLYPH32         (VIDEO_WIDTH >> GLYPH32_WIDTH_LOG2)
+#define VIDEO_WIDTH_GLYPH64         (VIDEO_WIDTH >> GLYPH64_WIDTH_LOG2)
+#define VIDEO_WIDTH_GLYPH128        (VIDEO_WIDTH >> GLYPH128_WIDTH_LOG2)
+#define VIDEO_WIDTH_GLYPH256        (VIDEO_WIDTH >> GLYPH256_WIDTH_LOG2)
+#define VIDEO_WIDTH_TILE            VIDEO_WIDTH_GLYPH
+//TODO: VIDEO_WIDTH_TILExxx         ...
+#define VIDEO_WIDTH_ATTRIBUTE       (VIDEO_WIDTH >> AttributeWidthLog2())
+#define VIDEO_WIDTH_ATTRIBUTE_2x4   (VIDEO_WIDTH >> 1)
+#define VIDEO_WIDTH_ATTRIBUTE_4x4   (VIDEO_WIDTH >> 2)
+#define VIDEO_WIDTH_ATTRIBUTE_4x8   (VIDEO_WIDTH >> 2)
+#define VIDEO_WIDTH_ATTRIBUTE_8x8   (VIDEO_WIDTH >> 3)
+#define VIDEO_WIDTH_PIXELSTRIP      (VIDEO_WIDTH >> PIXELSTRIP_WIDTH_LOG2)
+#define VIDEO_WIDTH_PIXELSTRIP1     (VIDEO_WIDTH >> PIXELSTRIP1_WIDTH_LOG2)
+#define VIDEO_WIDTH_PIXELSTRIP2     (VIDEO_WIDTH >> PIXELSTRIP2_WIDTH_LOG2)
+#define VIDEO_WIDTH_PIXELSTRIP4     (VIDEO_WIDTH >> PIXELSTRIP4_WIDTH_LOG2)
+#define VIDEO_WIDTH_PIXELSTRIP8     (VIDEO_WIDTH >> PIXELSTRIP8_WIDTH_LOG2)
+
+// VIDEO_HEIGHT_<element>: Width of the video framebuffer but in other "units"
+// than pixels (framebuffer must contain element of the type)
+#define VIDEO_HEIGHT_GLYPH          (VIDEO_HEIGHT >> GLYPH_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_GLYPH8         (VIDEO_HEIGHT >> GLYPH8_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_GLYPH16        (VIDEO_HEIGHT >> GLYPH16_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_GLYPH32        (VIDEO_HEIGHT >> GLYPH32_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_GLYPH64        (VIDEO_HEIGHT >> GLYPH64_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_GLYPH128       (VIDEO_HEIGHT >> GLYPH128_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_GLYPH256       (VIDEO_HEIGHT >> GLYPH256_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_TILE           VIDEO_HEIGHT_GLYPH
+//TODO: VIDEO_HEIGHT_TILExxx        ...
+#define VIDEO_HEIGHT_ATTRIBUTE      (VIDEO_HEIGHT >> AttributeHeightLog2())
+#define VIDEO_HEIGHT_ATTRIBUTE_2x4  (VIDEO_HEIGHT >> 2)
+#define VIDEO_HEIGHT_ATTRIBUTE_4x4  (VIDEO_HEIGHT >> 2)
+#define VIDEO_HEIGHT_ATTRIBUTE_4x8  (VIDEO_HEIGHT >> 3)
+#define VIDEO_HEIGHT_ATTRIBUTE_8x8  (VIDEO_HEIGHT >> 3)
+#define VIDEO_HEIGHT_PIXELSTRIP     VIDEO_HEIGHT
+
+// VIDEO_COUNT_<element>: The number of such elements in the framebuffer
+// (video mode should be such that it really contains that type of element)
+#if (INT_WIDTH >= 32) || (VIDEO_FACTOR_ == 1)
+#   define VIDEO_COUNT_PIXELS       (VIDEO_WIDTH * VIDEO_HEIGHT)
+#else
+#   define VIDEO_COUNT_PIXELS       ((int32_t)VIDEO_WIDTH * (int32_t)VIDEO_HEIGHT)
+#endif
+#define VIDEO_COUNT_GLYPH           (VIDEO_COUNT_PIXELS >> (3 + VideoModeDimension()))
+#define VIDEO_COUNT_GLYPH8          (VIDEO_COUNT_PIXELS >> (GLYPH8_WIDTH_LOG2   + GLYPH8_HEIGHT_LOG2))
+#define VIDEO_COUNT_GLYPH16         (VIDEO_COUNT_PIXELS >> (GLYPH16_WIDTH_LOG2  + GLYPH16_HEIGHT_LOG2))
+#define VIDEO_COUNT_GLYPH32         (VIDEO_COUNT_PIXELS >> (GLYPH32_WIDTH_LOG2  + GLYPH32_HEIGHT_LOG2))
+#define VIDEO_COUNT_GLYPH64         (VIDEO_COUNT_PIXELS >> (GLYPH64_WIDTH_LOG2  + GLYPH64_HEIGHT_LOG2))
+#define VIDEO_COUNT_GLYPH128        (VIDEO_COUNT_PIXELS >> (GLYPH128_WIDTH_LOG2 + GLYPH128_HEIGHT_LOG2))
+#define VIDEO_COUNT_GLYPH256        (VIDEO_COUNT_PIXELS >> (GLYPH256_WIDTH_LOG2 + GLYPH256_HEIGHT_LOG2))
+#define VIDEO_COUNT_TILE            VIDEO_COUNT_GLYPH // Tiles dimensions uses same indicator in the VIDEO_MODE as Glyphs.
+//TODO: VIDEO_COUNT_TILExxx         ...
+#define VIDEO_COUNT_PIXELSTRIP      (VIDEO_COUNT_PIXELS >> (PIXELSTRIP_WIDTH_LOG2  + PIXELSTRIP_HEIGHT_LOG2))
+#define VIDEO_COUNT_PIXELSTRIP1     (VIDEO_COUNT_PIXELS >> (PIXELSTRIP1_WIDTH_LOG2 + PIXELSTRIP_HEIGHT_LOG2))
+#define VIDEO_COUNT_PIXELSTRIP2     (VIDEO_COUNT_PIXELS >> (PIXELSTRIP1_WIDTH_LOG2 + PIXELSTRIP_HEIGHT_LOG2))
+#define VIDEO_COUNT_PIXELSTRIP4     (VIDEO_COUNT_PIXELS >> (PIXELSTRIP1_WIDTH_LOG2 + PIXELSTRIP_HEIGHT_LOG2))
+#define VIDEO_COUNT_PIXELSTRIP8     (VIDEO_COUNT_PIXELS >> (PIXELSTRIP1_WIDTH_LOG2 + PIXELSTRIP_HEIGHT_LOG2))
+#define VIDEO_COUNT_ATTRIBUTE       //TODO: does it make sense, because attributes is wide sometimes
+                                    // (VIDEO_SIZE_ATTRIBUTES >> ATTRIBUTE_SIZE_LOG2)
+#define VIDEO_COUNT_PLANE           VideoModeLowNibble()
+
+// Size in bytes of regions in the framebuffer.
+// Remember that it only make sense to use a macro if the frembuffer actually
+// contains the associated regions (for example, if video doesn't have planes or
+// attributes, then VIDEO_SIZE_PLANE and VIDEO_SIZE_ATTRIBUTES aren't 0)
+#define VIDEO_SIZE_PIXELS           ((VIDEO_COUNT_PIXELS >> 3) * PIXELSTRIP_COLOR_DEPTH) ///?
+#define VIDEO_SIZE_GLYPHS           (VIDEO_COUNT_PIXELS >> 3)
+#define VIDEO_SIZE_TILES            VIDEO_SIZE // tiles never have attributes
+#define VIDEO_SIZE_ATTRIBUTES       (VIDEO_SIZE - (VIDEO_COUNT_PIXELS >> 3))
+#define VIDEO_SIZE_PLANE            (VIDEO_SIZE / VIDEO_COUNT_PLANE)
+
+
 //------------------------------------------------------------------------------
-// Enums
-//------------------------------------------------------------------------------
-
-// Indicate the dimension in pixels of a video element
-// (Glyphs, Tiles, Attributes, or Pixel bytes)
-enum VideoElementDimension {
-   PIXELS_2x4   = 0,
-   PIXELS_4x4   = 1,
-   PIXELS_4x8   = 2,
-   PIXELS_8x8   = 3, // value not possible for 8bpp Tiles
-   PIXELS_8x16  = 4, // value not possible for Attributes or >=4bpp Tiles
-   PIXELS_16x16 = 5, // value only possible for Glyphs (Glyph256)
-   PIXELS       = 7, // value only possible for Pixels
-
-   // Note: When elements are Glyphs, the value also represents the
-   //       log2 of their size in bytes.
-};
-
-// Indicate the type of colors encoded by attributes in the framebuffer.
-enum AttributeColorType {       //Bytes| Description
-   ATTRIBUTE_COLORS_16    = 0,  //   1 | Nibbles specify a fg and bg 16-color
-   ATTRIBUTE_COLORS_FG256 = 1,  //   1 | Byte specifies one foreground 256-color
-   ATTRIBUTE_COLORS_BG256 = 2,  //   1 | Byte specifies one background 256-color
-   ATTRIBUTE_COLORS_256   = 3   //   2 | Bytes specify a fg and bg 256-color
-};
-
-// The full list of the all 16 possible Attributes type.
-// It is nibble value which is composed of two quarters:
-// - an VideoElementDimension (max. 8x8)
-// - and an AttributeColorType.
-//                       .------ attributes px size (enum VideoElementDimension)
-//                       |  .--- attributes color type (enum AttributeColorType)
-//                       v  v
-//                      |..|..|
-//
-// In attribute modes, it is the low nibble of the video mode.
-enum AttributeType {
-   ATTRIBUTE_2x4_16    = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_16),
-   ATTRIBUTE_4x4_16    = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_16),
-   ATTRIBUTE_4x8_16    = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_16),
-   ATTRIBUTE_8x8_16    = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_16),
-   ATTRIBUTE_2x4_FG256 = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_FG256),
-   ATTRIBUTE_4x4_FG256 = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_FG256),
-   ATTRIBUTE_4x8_FG256 = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_FG256),
-   ATTRIBUTE_8x8_FG256 = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_FG256),
-   ATTRIBUTE_2x4_BG256 = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_BG256),
-   ATTRIBUTE_4x4_BG256 = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_BG256),
-   ATTRIBUTE_4x8_BG256 = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_BG256),
-   ATTRIBUTE_8x8_BG256 = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_BG256),
-   ATTRIBUTE_2x4_256   = ((PIXELS_2x4 << 2) | ATTRIBUTE_COLORS_256),
-   ATTRIBUTE_4x4_256   = ((PIXELS_4x4 << 2) | ATTRIBUTE_COLORS_256),
-   ATTRIBUTE_4x8_256   = ((PIXELS_4x8 << 2) | ATTRIBUTE_COLORS_256),
-   ATTRIBUTE_8x8_256   = ((PIXELS_8x8 << 2) | ATTRIBUTE_COLORS_256)
-};
-
-//------------------------------------------------------------------------------
-// Definition of the VIDEO_MODE
+// Definition of the Video.mode
 //------------------------------------------------------------------------------
 // The video mode describes the layout of the video framebuffer.
 // It is encoded by a single byte with the following binary representation:
@@ -129,6 +210,26 @@ enum AttributeType {
 //                           11 -> byte    Pixels or Tiles (256 colors)
 //               Note: 1 << (low nibble - 8) is the number of bits per pixel,
 //                     1 << (1 << (low nibble - 8)) is the number of colors
+//
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//
+// Note: A struct like this may have facilitated dealing with video mode, but
+//       bit fields in C are a bit "broken" in that alignment and packing is
+//       compiler dependent, so it might be that the following might not be like
+//       a byte (altough it probably does in most compilers, and also compiler-
+//       specifc attribute may ensure it is so).
+//       MAYBE: change to that in the future?
+//
+//       typedef
+//       struct __attribute__((packed, aligned(1))) VideoMode {
+//          uint8_t  has_attribute  : 1;
+//          uint8_t  elem_dimension : 3;
+//          uint8_t  low_nibble     : 4;
+//       } VideoMode;
+//
+//       static_assert(sizeof(struct VideoMode)  == sizeof(uint8_t));
+//       static_assert(alignof(struct VideoMode) == alignof(uint8_t));
+//
 //------------------------------------------------------------------------------
 
 // Return Video Mode's attribute bit. (ie. whether framebuffer has Attributes)
@@ -149,16 +250,16 @@ enum AttributeType {
 // It can be used for example to test if mode would be a valid video mode.
 int VideoMode_(int mode);
 
-// Set the video mode to the given mode (if valid)
-// Return Value:
-// - If the mode is invalid, return 0.
-// - Otherwise a non-zero return value (which is the number of bytes required to
-//   encode an 8x8 pixel area in the given mode).
 #ifndef KONPU_OPTION_OPTIMIZE_VIDEO_MODE
+   // Set the video mode to the given mode (if valid)
+   // Return Value:
+   // - If the mode is invalid, return 0.
+   // - Otherwise a non-zero return value (which is the number of bytes required
+   //   to encode an 8x8 pixel area in the given mode).
    int VideoMode(int mode);
 #else
    static inline int VideoMode(int mode)
-   { return (mode == VIDEO_MODE)? VideoMode_(mode) : 0; }
+   { return (mode == VIDEO_MODE) ? VideoMode_(mode) : 0; }
    // When optimized, the video mode must not be changed.
 #endif
 
@@ -167,18 +268,19 @@ int VideoMode_(int mode);
 //------------------------------------------------------------------------------
 // Functions or macros to easily create a value that could be assigned to the
 // video mode.
-//------------------------------------------------------------------------------
-//
-//                              Layout chosen for coloring
-//             .------------------.-------------------.-------------------------
-//             | BitPlanes        | "Chunky" element  | Attributes
-//-------------|------------------|-------------------|-------------------------
-// Glyph/Tiles | GLYPH PLANES     | TILES             | GLYPHS + ATTRIBUTES
-// Pixels      | bit-PIXEL PLANES | (non-bit)PIXELS   | bit-PIXELS + ATTRIBUTES
-//-------------'------------------'-------------------'-------------------------
+//------------.-----------------------------------------------------------------
+//            |                 Method used for coloring:
+// Framebuffer|-------------------.-------------------.-------------------------
+// Elements   |    Bit Planes     | "Chunky" Elements |       Attributes
+//------------|-------------------|-------------------|-------------------------
+// Glyph/Tile | Glyph Planes      | Tiles             | Glyphs + Attributes
+//------------|-------------------|-------------------|-------------------------
+// PixelStrip |PixelStrip8 Planes | PixelStrip<1|2|4> | PixelStrip8 + Attributes
+//            |(bit pixel)        |                   | (bit pixels)
+//------------'-------------------'-------------------'-------------------------
 
 //------------------------------------------------------------------------------
-// VIDEO_MODE*: macros or functions to specify a video mode value
+// VIDEO_MODE_*: macros (or functions) to specify a video mode value
 //------------------------------------------------------------------------------
 // VIDEO_MODE_DEFAULT
 // VIDEO_MODE_(attribute_bit, dimension, low_nibble)
@@ -198,8 +300,8 @@ int VideoMode_(int mode);
 #define VIDEO_MODE_DEFAULT   168
 
 // Return a video mode based on its three parts (as explained in the doc):
-// - the attribute bit,
-// - the dimension (enum VideoElementDimension)
+// - the attribute bit (0 or 1),
+// - the dimension     (enum VideoElementDimension)
 // - the low_nibble
 #define VIDEO_MODE_(attribute_bit, dimension, low_nibble) \
    ((int)((attribute_bit) << 7 | (dimension) << 4 | (low_nibble)))
@@ -260,17 +362,17 @@ int VideoMode_(int mode);
 // Return a mode number with chunk pixels or (a single plane of) bit pixels
 // based on the given bits per pixel, which should be 1,2,4,8.
 static inline int VIDEO_MODE_PIXEL(int bits_per_pixel)
-{ return VIDEO_MODE_(0, PIXELS,
+{ return VIDEO_MODE_(0, PIXELS_Nx1,
       (bits_per_pixel == 1) ? 1 : (9 + (bits_per_pixel >> 2)) ); }
 
 // Return a mode number based on bit pixels with the given amount of planes
 // The number of planes should be 1,2,3,4,5,6,or 8.
 static inline int VIDEO_MODE_PIXEL_PLANES(int number_of_planes)
-{ return VIDEO_MODE_(0, PIXELS, (number_of_planes)); }
+{ return VIDEO_MODE_(0, PIXELS_Nx1, (number_of_planes)); }
 
 // Return a mode number with bit pixels and the bigven attribute type.
 static inline int VIDEO_MODE_PIXEL_ATTRIBUTES(enum AttributeType attr_type)
-{ return VIDEO_MODE_(1, PIXELS, attr_type); }
+{ return VIDEO_MODE_(1, PIXELS_Nx1, attr_type); }
 
 // Return a Tile mode with the given tile type
 #define VIDEO_MODE_TILE(TILE_TYPE)   // TODO
@@ -301,7 +403,7 @@ AttributeColorType(void) {
    return VIDEO_MODE & 3;
 }
 
-// TODO: may I move this to color.h???
+// TODO: Could I move this to color.h???
 // Return the current color depth,
 // ie. the log2 of the max. number of colors that can be in the framebuffer
 static inline int ColorDepth()
@@ -314,7 +416,7 @@ static inline int ColorDepth()
 
    // Non-Attributes modes
    int n = VideoModeLowNibble();
-   return (n <= 8)? n : 1 << (n - 8);
+   return (n <= 8) ? n : 1 << (n - 8);
       //  ^--- This is because:
       //
       // Low   | Chunk and Number of Colors  | How that's expressed in terms of
@@ -327,21 +429,48 @@ static inline int ColorDepth()
       // }
 }
 
-// Given a value, return it normalized between 0 and the current color count.
-#define ColorNormalize(color)   ((color) & ((1 << ColorDepth()) - 1))
-/* static inline unsigned ColorNormalize(int color)
-   { return color & ((1 << ColorDepth()) - 1); }
-*/
-   // We want to return: color % current number of color.
-   // As the number of color is a power of 2 (i.e. it's 1 << ColorDepth()),
-   // we can optimize the modulo as: color & (current number of color - 1)
-   //
-   // In fact, the & technique makes the color normalization correct for
-   // negative numbers too (on two's complement systems, which Konpu [and C23]
-   // assumes)
-
 // This will define VIDEO_WIDTH and VIDEO_WEIGHT when not "FORCED" and in the
 // case where the OPTIMIZE_VIDEO_MODE option is on.
 #include "video_mode_auto.h"
+
+
+
+
+
+//------------------------------------------------------------------------------
+// Access to bit Planes
+//
+// Reminder:
+// - Video elements are Glyph or PixelStrip8 (aka bit pixels)
+// - Video has no attributes (Video.mode attribute bit is off)
+// - Video.mode's low nibble (or VIDEO_COUNT_PLANE) gives the number of planes
+//------------------------------------------------------------------------------
+
+// TYPE *VideoPlaneAt_([TYPE], plane)
+// Return a pointer (TYPE*) to the start of the n-th plane (zero-indexed)
+// - TYPE : should normally be Glyph<n> or PixelStrip8 (bit pixels) as that's
+//          what planes give colors too.
+//          If omitted, return a `uint8_t *`
+// - plane: MUST be positive and < VIDEO_COUNT_PLANE
+#define VideoPlaneAt_(...)  \
+   UTIL_OVERLOAD(VideoPlaneAt_, __VA_ARGS__)
+#  define VideoPlaneAt__2_(TYPE, n)  ((TYPE *)VideoPlaneAt__1_((n)))
+   static inline uint8_t *VideoPlaneAt__1_(int n) {
+      assert(n >= 0 && n < VIDEO_COUNT_PLANE);
+      return Video.frame + n * VIDEO_SIZE_PLANE;
+   }
+
+//------------------------------------------------------------------------------
+// Misc. Video functions
+//------------------------------------------------------------------------------
+
+// Reset color, mode, empty framebuffer, etc.
+void VideoReset(void);
+
+// Render the video framebuffer on screen.
+// Return value may be non-zero on error (in which case VIDEO_RENDER_ERRRORS
+// counter will also be increased by one).
+int VideoRender(void);
+
 
 #endif //include guard

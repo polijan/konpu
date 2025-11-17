@@ -4,7 +4,7 @@
 //------------------------------------------------------------------------------
 #include "konpu.h"
 
-static const char *attr_color_type_str[] = {"16", "FG256", "BG256", "256"};
+static const char *attr_color_type_str[] = {"16", "PEN256", "PAPER256", "256"};
 static const char *dimension_str[] = {"2x4","4x4","4x8","8x8","8x16","16x16"};
 static const char *bpp_chunk_str[] = {"Quarter", "Nibble", "Byte"};
 
@@ -26,7 +26,7 @@ int AppInit(void)
 
       // Attribute Modes -------------------------------------------------------
       if (VideoModeHasAttributes()) {
-         if (elem_dimension == PIXELS) {
+         if (elem_dimension == PIXELS_Nx1) {
             Printer("Bit-Pixels (as %dx%d bytes)",
                VIDEO_WIDTH >> 3, VIDEO_HEIGHT);
          } else {
@@ -43,7 +43,7 @@ int AppInit(void)
       } else if (low_nibble > 8) {
          int bpp = 1 << (low_nibble - 8);
          const char *chunk = bpp_chunk_str[low_nibble - 9];
-         if (elem_dimension == PIXELS) {
+         if (elem_dimension == PIXELS_Nx1) {
             Printer("%s-Pixels (as %dx%d bytes)",
               chunk, VIDEO_WIDTH * bpp / 8, VIDEO_HEIGHT);
          } else {
@@ -52,7 +52,7 @@ int AppInit(void)
                dimension_str[elem_dimension],
                // TODO: we probably want VIDEO_WIDTH_TILE, VIDEO_HEIGHT_TILE
                //       name. In any case, tile's width and height depends
-               //       on the same dimension indicator in the VIDEO_MOVE,
+               //       on the same dimension indicator in the VIDEO_MODE,
                //       so it's in fact same implementation as glyphs:
                VIDEO_WIDTH_GLYPH, VIDEO_HEIGHT_GLYPH);
          }
@@ -60,10 +60,10 @@ int AppInit(void)
       // Planar Modes ----------------------------------------------------------
       } else {
          if (low_nibble > 1) Printer("%d ", low_nibble);
-         if (elem_dimension == PIXELS) {
+         if (elem_dimension == PIXELS_Nx1) {
             Printer("Bit-Pixel%s(as %dx%d bytes",
                (low_nibble > 1)? " Planes ":"s ",
-               VIDEO_WIDTH_PIXELBYTE_8x1, VIDEO_HEIGHT_PIXELBYTE);
+               VIDEO_WIDTH_PIXELSTRIP8, VIDEO_HEIGHT_PIXELSTRIP);
          } else {
             Printer("Glyph%d%s (%dx%d",
                8 << elem_dimension, (low_nibble > 1)? " Planes":"",

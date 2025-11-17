@@ -4,7 +4,7 @@
 //------------------------------------------------------------------------------
 #include "konpu.h"
 
-static const char *attr_color_type[] = {"16", "FG256", "BG256", "256"};
+static const char *attr_color_type[] = {"16", "PEN256", "PAPER256", "256"};
 static const char *elem_size_str[] = {"2x4", "4x4", "4x8", "8x8", "8x16", "16x16"};
 
 int AppInit(void)
@@ -19,16 +19,15 @@ int AppInit(void)
       Printer("%3d  %2d  %3dx%3d  %3dx%2d  Glyph%d%s  %5d  %3dx%2d  ATTRIBUTE_%s_%s",
          i, nbytes,
          VIDEO_WIDTH, VIDEO_HEIGHT,
-         VIDEO_WIDTH  >> VideoGlyphLog2Width(), VIDEO_HEIGHT >> VideoGlyphLog2Height(),
+         VIDEO_WIDTH_GLYPH, VIDEO_HEIGHT_GLYPH,
          8 * (1 << elem_sz), (elem_sz == 0)? "  " : ((elem_sz < 4)? " " : ""),
          VideoAttributeOffset(),
-         VIDEO_WIDTH  >> AttributeWidthLog2(), VIDEO_HEIGHT >> AttributeHeightLog2(),
+         VIDEO_WIDTH_ATTRIBUTE, VIDEO_HEIGHT_ATTRIBUTE,
          elem_size_str[AttributeDimension()],
          attr_color_type[AttributeColorType()]
       );
 
-      if ( (VIDEO_WIDTH  % (1 << VideoGlyphLog2Width())) ||
-           (VIDEO_HEIGHT % (1 << VideoGlyphLog2Height())) )
+      if ((VIDEO_WIDTH  % GLYPH_WIDTH) || (VIDEO_HEIGHT % GLYPH_HEIGHT))
          Printer("*\n");
       else
          Printer("\n");

@@ -70,7 +70,7 @@ static const char *testVideoModes(void)
             int pixel_sz = VIDEO_WIDTH * VIDEO_HEIGHT * bpp / 8;
             TestTrace("buffer: pixels(%d bpp) => %5d (vs %5d)\n", bpp, pixel_sz, VIDEO_SIZE);
             TestAssert("size of packed pixels vs framebuffer size", pixel_sz == VIDEO_SIZE);
-         } else if (VideoModeDimension() == PIXELS) {
+         } else if (VideoModeDimension() == PIXELS_Nx1) {
             // planar pixels
             int pixel_sz = VIDEO_WIDTH * VIDEO_HEIGHT * planes / 8;
             TestTrace("planar pixels (x%d) => %5d (vs %5d)\n", planes, pixel_sz, VIDEO_SIZE);

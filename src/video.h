@@ -5,95 +5,14 @@
 #include "glyph.h"
 #include "color.h"
 
-//------------------------------------------------------------------------------
-// Video Buffer, access and dimensions
-//------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+// TODO: - we will want to move everything here to glyph.h, attribute.h,
+//         pixel.h, color.h, or video_mode.h
+//       - then we will want to rename video_mode.h as video.h
+////////////////////////////////////////////////////////////////////////////////
 
-/* TODO: Remove (all/most of ?) those:
-// VIDEO_<element>: An array (in the framebuffer) containing the given elements
-// (video mode should be such that it really contains that type of element)
-//#define VIDEO_GLYPH                 ((void*)Video.frame)      // <-- delete this, not needed.
-#define VIDEO_GLYPH8                Video.frame                 //TODO: replace with Video.glyph8
-#define VIDEO_GLYPH16               ((uint16_t*)Video.frame)    //TODO: replace with Video.glyph16
-#define VIDEO_GLYPH32               ((uint32_t*)Video.frame)    //TODO: replace with Video.glyph32
-#define VIDEO_GLYPH64               ((uint64_t*)Video.frame)    //TODO: replace with Video.glyph64
-#define VIDEO_GLYPH128              ((Glyph128*)Video.frame)    //TODO: replace with ...
-#define VIDEO_GLYPH256              ((Glyph256*)Video.frame)    //TODO: replace with ...
-#define VIDEO_ATTRIBUTE             (Video.frame + (VIDEO_COUNT_PIXELS >> 3)) //TODO: verify
-#define VIDEO_PIXELBYTE             Video.frame
-*/
-#define VIDEO_GLYPH64               Video.glyph64
-#define VIDEO_ATTRIBUTE             (Video.frame + (VIDEO_COUNT_PIXELS >> 3)) //TODO: verify
-#define VIDEO_PIXELBYTE             Video.pixel
 
-// VIDEO_COUNT_<element>: The number of such elements
-// (video mode should be such that it really contains that type of element)
-#if (INT_WIDTH >= 32) || (VIDEO_FACTOR_ == 1)
-#   define VIDEO_COUNT_PIXELS       (VIDEO_WIDTH * VIDEO_HEIGHT)
-#else
-#   define VIDEO_COUNT_PIXELS       ((int32_t)VIDEO_WIDTH * (int32_t)VIDEO_HEIGHT)
-#endif
-#define VIDEO_COUNT_GLYPH           (VIDEO_COUNT_PIXELS >> (3 + VideoModeDimension()))
-#define VIDEO_COUNT_GLYPH8          (VIDEO_COUNT_PIXELS >> (GLYPH8_WIDTH_LOG2   + GLYPH8_HEIGHT_LOG2))
-#define VIDEO_COUNT_GLYPH16         (VIDEO_COUNT_PIXELS >> (GLYPH16_WIDTH_LOG2  + GLYPH16_HEIGHT_LOG2))
-#define VIDEO_COUNT_GLYPH32         (VIDEO_COUNT_PIXELS >> (GLYPH32_WIDTH_LOG2  + GLYPH32_HEIGHT_LOG2))
-#define VIDEO_COUNT_GLYPH64         (VIDEO_COUNT_PIXELS >> (GLYPH64_WIDTH_LOG2  + GLYPH64_HEIGHT_LOG2))
-#define VIDEO_COUNT_GLYPH128        (VIDEO_COUNT_PIXELS >> (GLYPH128_WIDTH_LOG2 + GLYPH128_HEIGHT_LOG2))
-#define VIDEO_COUNT_GLYPH256        (VIDEO_COUNT_PIXELS >> (GLYPH256_WIDTH_LOG2 + GLYPH256_HEIGHT_LOG2))
-#define VIDEO_COUNT_TILE            (VIDEO_COUNT_PIXELS >> (3 + VideoModeDimension()))
-#define VIDEO_COUNT_PIXELBYTE_8x1   (VIDEO_COUNT_PIXELS >> 3) // bit-pixels
-#define VIDEO_COUNT_PIXELBYTE_4x1   (VIDEO_COUNT_PIXELS >> 2) // quarter-pixels
-#define VIDEO_COUNT_PIXELBYTE_2x1   (VIDEO_COUNT_PIXELS >> 1) // nibble-pixels
-#define VIDEO_COUNT_PIXELBYTE_1x1   VIDEO_COUNT_PIXELS        // byte-pixels
-#define VIDEO_COUNT_PIXELBYTE       //TODO. NO IT DEPENDS ON WHAT SORT OF PIXEL
-#define VIDEO_COUNT_ATTRIBUTE       //TODO: does it make sense, because attributes is wide sometimes
-#define VIDEO_COUNT_PLANE           VideoModeLowNibble()
-
-// Width of the video framebuffer but in other "units" than pixels
-// (framebuffer must contain element of the type)
-#define VIDEO_WIDTH_GLYPH           (VIDEO_WIDTH >> GLYPH_WIDTH_LOG2)
-#define VIDEO_WIDTH_GLYPH8          (VIDEO_WIDTH >> GLYPH8_WIDTH_LOG2)
-#define VIDEO_WIDTH_GLYPH16         (VIDEO_WIDTH >> GLYPH16_WIDTH_LOG2)
-#define VIDEO_WIDTH_GLYPH32         (VIDEO_WIDTH >> GLYPH32_WIDTH_LOG2)
-#define VIDEO_WIDTH_GLYPH64         (VIDEO_WIDTH >> GLYPH64_WIDTH_LOG2)
-#define VIDEO_WIDTH_GLYPH128        (VIDEO_WIDTH >> GLYPH128_WIDTH_LOG2)
-#define VIDEO_WIDTH_GLYPH256        (VIDEO_WIDTH >> GLYPH256_WIDTH_LOG2)
-#define VIDEO_WIDTH_ATTRIBUTE       (VIDEO_WIDTH >> AttributeWidthLog2())
-#define VIDEO_WIDTH_ATTRIBUTE_2x4   (VIDEO_WIDTH >> 1)
-#define VIDEO_WIDTH_ATTRIBUTE_4x4   (VIDEO_WIDTH >> 2)
-#define VIDEO_WIDTH_ATTRIBUTE_4x8   (VIDEO_WIDTH >> 2)
-#define VIDEO_WIDTH_ATTRIBUTE_8x8   (VIDEO_WIDTH >> 3)
-#define VIDEO_WIDTH_PIXELBYTE_8x1   (VIDEO_WIDTH >> 3) // bit-pixel
-#define VIDEO_WIDTH_PIXELBYTE_4x1   (VIDEO_WIDTH >> 2) // quarter-pixel
-#define VIDEO_WIDTH_PIXELBYTE_2x1   (VIDEO_WIDTH >> 1) // nibble-pixel
-#define VIDEO_WIDTH_PIXELBYTE_1x1   VIDEO_WIDTH        // byte-pixel
-
-// Height of the video framebuffer but in other "units" than pixels
-// (framebuffer must contain element of the type)
-#define VIDEO_HEIGHT_GLYPH          (VIDEO_HEIGHT >> GLYPH_HEIGHT_LOG2)
-#define VIDEO_HEIGHT_GLYPH8         (VIDEO_HEIGHT >> GLYPH8_HEIGHT_LOG2)
-#define VIDEO_HEIGHT_GLYPH16        (VIDEO_HEIGHT >> GLYPH16_HEIGHT_LOG2)
-#define VIDEO_HEIGHT_GLYPH32        (VIDEO_HEIGHT >> GLYPH32_HEIGHT_LOG2)
-#define VIDEO_HEIGHT_GLYPH64        (VIDEO_HEIGHT >> GLYPH64_HEIGHT_LOG2)
-#define VIDEO_HEIGHT_GLYPH128       (VIDEO_HEIGHT >> GLYPH128_HEIGHT_LOG2)
-#define VIDEO_HEIGHT_GLYPH256       (VIDEO_HEIGHT >> GLYPH256_HEIGHT_LOG2)
-#define VIDEO_HEIGHT_ATTRIBUTE      (VIDEO_HEIGHT >> AttributeHeightLog2())
-#define VIDEO_HEIGHT_ATTRIBUTE_2x4  (VIDEO_HEIGHT >> 2)
-#define VIDEO_HEIGHT_ATTRIBUTE_4x4  (VIDEO_HEIGHT >> 2)
-#define VIDEO_HEIGHT_ATTRIBUTE_4x8  (VIDEO_HEIGHT >> 3)
-#define VIDEO_HEIGHT_ATTRIBUTE_8x8  (VIDEO_HEIGHT >> 3)
-#define VIDEO_HEIGHT_PIXELBYTE      VIDEO_HEIGHT
-
-// Size in bytes of regions in the framebuffer.
-// Remember that it only make sense to use a macro if the frembuffer actually
-// contains the associated regions (for example, if video doesn't have planes or
-// attributes, then VIDEO_SIZE_PLANE and VIDEO_SIZE_ATTRIBUTES aren't 0)
-#define VIDEO_SIZE_PIXELS           (VIDEO_COUNT_PIXELS >> 3)
-#define VIDEO_SIZE_GLYPHS           (VIDEO_COUNT_PIXELS >> 3)
-#define VIDEO_SIZE_TILES            VIDEO_SIZE
-#define VIDEO_SIZE_ATTRIBUTES       (VIDEO_SIZE - (VIDEO_COUNT_PIXELS >> 3))
-#define VIDEO_SIZE_PLANE            (VIDEO_SIZE / VIDEO_COUNT_PLANE)
-
+/* TODO: delete, we don't need!
 // Assert that the given pointer indicates a location inside the framebuffer
 static inline void VideoAssertInFramebuffer(void *pointer)
 {
@@ -103,9 +22,9 @@ static inline void VideoAssertInFramebuffer(void *pointer)
    // `assert()` expands to nothing.
    (void)(pointer);
 }
+   */
 
-// Reset color, mode, empty framebuffer, etc.
-void VideoReset(void);
+
 
 
 //------------------------------------------------------------------------------
@@ -160,6 +79,16 @@ static inline uint8_t *VideoPlane(int n)
 //------------------------------------------------------------------------------
 // Access to Attributes
 //------------------------------------------------------------------------------
+
+/* TODO:
+// Access to video attributes, no bound checking
+static inline uint8_t *VIDEO_ATTRIBUTE_AT_(int x, int y) {
+   assert(x >= 0 && x < VIDEO_ATTRIBUTE_WIDTH);
+   assert(y >= 0 && x < VIDEO_ATTRIBUTE_HEIGHT);
+   return VIDEO_ATTRIBUTE + ((x + (y << VIDEO_ATTRIBUTE_WIDTH_LOG2)) << AttributeHasTwoBytes());
+}
+*/
+
 
 // Same as `VideoAttributeOffset()`, but assumes video is in attribute mode.
 static inline int VideoAttributeOffset_(void)
@@ -256,7 +185,7 @@ static inline uint8_t *VideoAttributeAtPixel(int x, int y)
       VideoAttributeSetAll_2_(COLOR_DEFAULT_FG, COLOR_DEFAULT_BG)
 
 //------------------------------------------------------------------------------
-// Access to Glyphs
+// Access to framebuffer's Glyphs: Get(), Set(), ...
 //------------------------------------------------------------------------------
 
 // Glyph *VideoGlyph(int x, int y, [plane[=0]]);
@@ -526,17 +455,6 @@ static inline uint8_t *VideoAttributeAtPixel(int x, int y)
          Glyph256: VideoGlyphSetAll_2_256_  \
       )((glyph), (plane))
    //TODO: implement VideoGlyphSetAll_2_*_
-
-
-
-//------------------------------------------------------------------------------
-// Rendering the Framebuffer
-//------------------------------------------------------------------------------
-
-// Render the video framebuffer on screen.
-// Return value may be non-zero on error (in which case VIDEO_RENDER_ERRRORS
-// counter will also be increased by one).
-int VideoRender(void);
 
 
 #endif //include guard

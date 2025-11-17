@@ -10,11 +10,10 @@ int AppInit(void)
    VideoMode(VIDEO_MODE_GLYPH(Glyph64));
    for (int i = 0; i < 120; i++) {
       for (int n = 0; n < VIDEO_COUNT_GLYPH64; n++) {
-         VIDEO_GLYPH64[n] = UtilRandom64();
+         Video.glyph64[n] = UtilRandom64();
       }
       VideoRender();
    }
-
 
    Glyph64  soweli    = 0x001515204054403E;
    Glyph128 soweli128 = GlyphUpscale(soweli);
@@ -23,7 +22,7 @@ int AppInit(void)
                           0x00F00C028241C141, 0x00030C1013242724 };
 
 
-VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_8x8_FG256));
+   VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_8x8_PEN256));
 // VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_2x4_16)); <-- crash
 
 

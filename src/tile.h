@@ -64,6 +64,10 @@ typedef void Tile; // dynamic (from the video buffer)
 // TODO ...
 
 
+#define TILE_COLORS_LOG2      (1 << (VideoModeLowNibble() - 8))
+#define TILE_COLORS           (1 << TILE_COLORS_LOG2)
+
+
 //------------------------------------------------------------------------------
 // Access to Tiles from the Video buffer
 //------------------------------------------------------------------------------

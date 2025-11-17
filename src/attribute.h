@@ -7,6 +7,9 @@
 // depending on the video mode (see: video_mode.h)
 #include "video_mode.h"
 
+//------------------------------------------------------------------------------
+// Attributes Dimension
+//------------------------------------------------------------------------------
 
 // In attribute modes, returns the attributes pixel size.
 // Note: Return value is one of: PIXELS_2x4, PIXELS_4x4, PIXELS_4x8, PIXELS_8x8.
@@ -36,9 +39,16 @@ AttributeDimension(void)         { return (VIDEO_MODE >> 2) & 3; }
 
 ////////////////////////////////////////////////////////////////////////////////
 // TODO
+
+// Return one of the following `enum VideoElementDimension`
+// PIXELS_2x4, PIXELS_4x4, PIXELS_4x8, PIXELS_8x8.
+#define ATTRIBUTE_DIMENSION      ((VIDEO_MODE >> 2) & 3)
+
 #define ATTRIBUTE_WIDTH_LOG2     (((VIDEO_MODE >> 2 & 3) + 3) >> 1)
 #define ATTRIBUTE_HEIGHT_LOG2    (2 + (VIDEO_MODE >> 3 & 1))
-#define ATTRIBUTE_HEIGHT         (4 << ((VIDEO_MODE >> 2 & 3) > 1))
+#define ATTRIBUTE_WIDTH          (1 << ATTRIBUTE_WIDTH_LOG2)
+#define ATTRIBUTE_HEIGHT         (1 << ATTRIBUTE_HEIGHT_LOG2)
+                                 //^also works: (4 << (ATTRIBUTE_DIMENSION > 1))
 
 // attribute's dimension
 //
@@ -61,17 +71,40 @@ AttributeDimension(void)         { return (VIDEO_MODE >> 2) & 3; }
 //                               // ^-- faster than 1 << AttributeHeightLog2()
 ////////////////////////////////////////////////////////////////////////////////
 
+
+
+//------------------------------------------------------------------------------
+// Attributes Access: Get(), Set(), ...
+//------------------------------------------------------------------------------
+
+// Offset Where the attributes start
+#define VIDEO_ATTRIBUTE_OFFSET   (VIDEO_COUNT_PIXELS >> 3)
+
+// Start of the attributes in the video framebuffer
+// (only make sense if the video framebuffer has attributes)
+#define VIDEO_ATTRIBUTE          (Video.frame + (VIDEO_COUNT_PIXELS >> 3))
+
+// Return pointer to attribute at (x,y)
+// No bound checking, x/y MUST be positive and < VIDEO_WIDTH/HEIGHT_ATTRIBUTE
+static inline uint8_t *VideoAttributeAt_(int x, int y)
+{
+   assert(x >= 0 && x < VIDEO_WIDTH_ATTRIBUTE);
+   assert(y >= 0 && y < VIDEO_HEIGHT_ATTRIBUTE);
+   int index = x + y * VIDEO_WIDTH_ATTRIBUTE;
+   return VIDEO_ATTRIBUTE + (index << AttributeHasTwoBytes());
+}
+
+
 #include "color.h"
 
 // Return the foreground color of an attribute
-static inline int AttributeGetPen(const uint8_t *attr)
+static inline uint8_t AttributeGetPen(const uint8_t *attr)
 {
    switch (AttributeColorType()) {
-      case ATTRIBUTE_COLORS_256:   // fallthrough
-      case ATTRIBUTE_COLORS_FG256: return *attr;
-      case ATTRIBUTE_COLORS_16:    return *attr >> 4;
-      case ATTRIBUTE_COLORS_BG256: return Video.default_pen;
-
+      case ATTRIBUTE_COLORS_256:      //return attr[0]; same as: // fallthrough
+      case ATTRIBUTE_COLORS_PEN256:   return *attr;
+      case ATTRIBUTE_COLORS_16:       return *attr >> 4;
+      case ATTRIBUTE_COLORS_PAPER256: return Video.attr_default_pen;
       default: unreachable();
    }
 }
@@ -80,22 +113,22 @@ static inline int AttributeGetPen(const uint8_t *attr)
 static inline void AttributeSetPen(uint8_t *attr, uint8_t color)
 {
    switch (AttributeColorType()) {
-      case ATTRIBUTE_COLORS_256:   // fallthrough
-      case ATTRIBUTE_COLORS_FG256: *attr = color; break;
-      case ATTRIBUTE_COLORS_16:    *attr = (color << 4) | (*attr & 0xF); break;
-      case ATTRIBUTE_COLORS_BG256: break;
+      case ATTRIBUTE_COLORS_256:    // attr[0] = color; same as: // fallthrough
+      case ATTRIBUTE_COLORS_PEN256: *attr = color; break;
+      case ATTRIBUTE_COLORS_16:     *attr = (color << 4) | (*attr & 0xF); break;
+      case ATTRIBUTE_COLORS_PAPER256: break;
       default: unreachable();
    }
 }
 
 // Return the background color of an attribute
-static inline int AttributeGetPaper(const uint8_t *attr)
+static inline uint8_t AttributeGetPaper(const uint8_t *attr)
 {
    switch (AttributeColorType()) {
-      case ATTRIBUTE_COLORS_16:    return *attr & 0xF;
-      case ATTRIBUTE_COLORS_BG256: return *attr;
-      case ATTRIBUTE_COLORS_256:   return attr[1];
-      case ATTRIBUTE_COLORS_FG256: return Video.default_paper;
+      case ATTRIBUTE_COLORS_16:       return *attr & 0xF;
+      case ATTRIBUTE_COLORS_PAPER256: return *attr;
+      case ATTRIBUTE_COLORS_256:      return attr[1];
+      case ATTRIBUTE_COLORS_PEN256:   return Video.attr_default_paper;
       default: unreachable();
    }
 }
@@ -104,10 +137,10 @@ static inline int AttributeGetPaper(const uint8_t *attr)
 static inline void AttributeSetPaper(uint8_t *attr, uint8_t color)
 {
    switch (AttributeColorType()) {
-      case ATTRIBUTE_COLORS_16:    *attr = (*attr & 0xF0) | color; break;
-      case ATTRIBUTE_COLORS_BG256: *attr = color; break;
-      case ATTRIBUTE_COLORS_256:   attr[1] = color; break;
-      case ATTRIBUTE_COLORS_FG256: break;
+      case ATTRIBUTE_COLORS_16:       *attr = (*attr & 0xF0) | color; break;
+      case ATTRIBUTE_COLORS_PAPER256: *attr = color; break;
+      case ATTRIBUTE_COLORS_256:      attr[1] = color; break;
+      case ATTRIBUTE_COLORS_PEN256:   break;
       default: unreachable();
    }
 }
@@ -117,9 +150,9 @@ static inline void
 AttributeSet(uint8_t *attr, uint8_t pen_color, uint8_t paper_color)
 {
    switch (AttributeColorType()) {
-      case ATTRIBUTE_COLORS_16:    *attr = (pen_color << 4) | paper_color; break;
-      case ATTRIBUTE_COLORS_FG256: *attr = pen_color; break;
-      case ATTRIBUTE_COLORS_BG256: *attr = paper_color; break;
+      case ATTRIBUTE_COLORS_16: *attr = (pen_color << 4) | paper_color; break;
+      case ATTRIBUTE_COLORS_PEN256:   *attr = pen_color; break;
+      case ATTRIBUTE_COLORS_PAPER256: *attr = paper_color; break;
       case ATTRIBUTE_COLORS_256: attr[0] = pen_color; attr[1] = paper_color; break;
       default: unreachable();
    }
@@ -136,8 +169,8 @@ static inline void AttributeReverse(uint8_t *attr)
          ; uint8_t tmp = attr[0]; attr[1] = attr[0]; attr[0] = tmp;
          break;
       // We can't video reverse those:
-      case ATTRIBUTE_COLORS_FG256:  break;
-      case ATTRIBUTE_COLORS_BG256:  break;
+      case ATTRIBUTE_COLORS_PEN256:   break;
+      case ATTRIBUTE_COLORS_PAPER256: break;
       default: unreachable();
    }
 }

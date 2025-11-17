@@ -1,22 +1,30 @@
 #include "video.h"
 #include "init.h"
+#include "rectangle.h"
 
 // Initialize video
 // - assuming the glyph area is zero'ed out
 // - the video mode is set to default
 static void video_init_(void)
 {
+// memset(&Video, 0, sizeof(Video));
+
    // Reset palette
    ColorResetPalettes();
 
-   // Set Color fields
+   // Reset border / stray
    Video.border = COLOR_CSS_DARK_GRAY;
-   Video.default_pen   = COLOR16_TTY_HIGH_WHITE;
-   Video.default_paper = COLOR16_TTY_BLUE;
 
-   // Set attribute area with the default pen and paper
+   // needs to be set in the video mode function!!!
+   Video.active_window = (Window){
+      .geometry = RECTANGLE_SCREEN,
+      .pen = 15, // <-- TODO
+   };
+
+   // Set attribute area with the pen 1 and paper 0
    int attr_offset = VideoAttributeOffset();
-   int attr =  Video.default_pen << 4 | Video.default_paper;
+   int attr =  Video.active_window.pen << 4 | Video.active_window.paper;
+   //int attr = 0x10;
    memset(Video.frame + attr_offset, attr, VIDEO_SIZE - attr_offset);
 
    // Render the video

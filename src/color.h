@@ -47,6 +47,17 @@ static inline uint8_t *ColorPalette(void)
    }
 }
 
+// Given a value, return it normalized between 0 and the current color count.
+#define ColorNormalize(color) \
+   ((color) & ((1 << ColorDepth()) - 1))
+   // We want to return: color % current number of color.
+   // As the number of color is a power of 2 (i.e. it's 1 << ColorDepth()),
+   // we can optimize the modulo as: color & (current number of color - 1)
+   //
+   // In fact, the & technique makes the color normalization correct for
+   // negative numbers too (on two's complement systems, which Konpu [and C23]
+   // assumes)
+
 //------------------------------------------------------------------------------
 // Color Constants for INDEXED color indices
 // MAYBE DELETE as this file deals with "true" colors, not index

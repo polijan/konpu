@@ -7,7 +7,7 @@
 // Helper function implementing the flood fill algorithm.
 // Use DrawFill() instead.
 static void // no inline, because recursive
-DrawFill_(int x, int y, int old_color, int new_color) {
+DrawFill_(int x, int y, int old_color, uint8_t new_color) {
    // This is the simple 4-ways recursive flood fill algorithm.
    // See: https://en.wikipedia.org/wiki/Flood_fill
    if (x < 0 || x >= VIDEO_WIDTH || y < 0 || y >= VIDEO_HEIGHT) return;
@@ -25,12 +25,12 @@ DrawFill_(int x, int y, int old_color, int new_color) {
 //                  you can access from (x,y) by going up,left,right,down.
 // Note: implementtaion of the flood fill here is good for code size, but
 // not optimized for performance, and uses a lot of C stack space.
-static inline void DrawFill(int x, int y, int color)
+static inline void DrawFill(int x, int y, uint8_t color)
 { DrawFill_(x, y, PixelGet(x,y), color); }
 
 
 // Draw the line between (x0,y0) and (x1,y1) with pixels of the given color
-static inline void DrawLine(int x0, int y0, int x1, int y1, int color)
+static inline void DrawLine(int x0, int y0, int x1, int y1, uint8_t color)
 {
    // Draw the line using the classic Brensenham's algorithm.
    // See: https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm#All_cases
@@ -73,7 +73,7 @@ static inline void DrawLine(int x0, int y0, int x1, int y1, int color)
 
 // Draw the circle of the given radius centered as (x0,y0) and (x1,y1)
 // with pixels of the given color
-static inline void DrawCircle(int x0, int y0, int radius, int color)
+static inline void DrawCircle(int x0, int y0, int radius, uint8_t color)
 {
    // Draw the line using the classic Brensenham's / Midpoint circle algorithm.
    // See: https://en.wikipedia.org/wiki/Midpoint_circle_algorithm
@@ -133,32 +133,32 @@ static inline void DrawCircleFilled(int x0, int y0, int radius, uint8_t color)
       Glyph128: DrawGlyph_128_      ,\
       Glyph256: DrawGlyph_256_       \
    )((glyph), (x), (y), (color))
-   static inline void  DrawGlyph_8_(uint8_t g, int x, int y, int c)
+   static inline void  DrawGlyph_8_(uint8_t g, int x, int y, uint8_t c)
    {  for (int j = 0; j < GLYPH8_HEIGHT; j++)
          for (int i = 0; i < GLYPH8_WIDTH; i++)
-            if (GlyphGetPixel(g, i, j)) PixelSet(x+i, y+j, c);
+            if (GlyphGetPixel(g, i, j))  PixelSet(x+i, y+j, c);
    }
-   static inline void  DrawGlyph_16_(uint16_t g, int x, int y, int c)
+   static inline void  DrawGlyph_16_(uint16_t g, int x, int y, uint8_t c)
    {  for (int j = 0; j < GLYPH16_HEIGHT; j++)
          for (int i = 0; i < GLYPH16_WIDTH; i++)
             if (GlyphGetPixel(g, i, j))  PixelSet(x+i, y+j, c);
    }
-   static inline void  DrawGlyph_32_(uint32_t g, int x, int y, int c)
+   static inline void  DrawGlyph_32_(uint32_t g, int x, int y, uint8_t c)
    {  for (int j = 0; j < GLYPH32_HEIGHT; j++)
          for (int i = 0; i < GLYPH32_WIDTH; i++)
             if (GlyphGetPixel(g, i, j))  PixelSet(x+i, y+j, c);
    }
-   static inline void  DrawGlyph_64_(uint64_t g, int x, int y, int c)
+   static inline void  DrawGlyph_64_(uint64_t g, int x, int y, uint8_t c)
    {  for (int j = 0; j < GLYPH64_HEIGHT; j++)
          for (int i = 0; i < GLYPH64_WIDTH; i++)
             if (GlyphGetPixel(g, i, j))  PixelSet(x+i, y+j, c);
    }
-   static inline void  DrawGlyph_128_(Glyph128 g, int x, int y, int c)
+   static inline void  DrawGlyph_128_(Glyph128 g, int x, int y, uint8_t c)
    {  for (int j = 0; j < GLYPH128_HEIGHT; j++)
       for (int i = 0; i < GLYPH128_WIDTH; i++)
          if (GlyphGetPixel(g, i, j))  PixelSet(x+i, y+j, c);
    }
-   static inline void  DrawGlyph_256_(Glyph256 g, int x, int y, int c)
+   static inline void  DrawGlyph_256_(Glyph256 g, int x, int y, uint8_t c)
    {  for (int j = 0; j < GLYPH256_HEIGHT; j++)
       for (int i = 0; i < GLYPH256_WIDTH; i++)
          if (GlyphGetPixel(g, i, j))  PixelSet(x+i, y+j, c);

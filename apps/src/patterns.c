@@ -72,7 +72,7 @@ static int Show(int number_of_planes)
 
       // Write the glyph pattern and some "soweli" glyphs
       for (int j = 0; j < VIDEO_COUNT_GLYPH64; j++) {
-         VIDEO_GLYPH64[j] = (j % 7)? g : (g ^ SOWELI);
+         Video.glyph64[j] = (j % 7)? g : (g ^ SOWELI);
       }
       VideoRender();
       UtilSleep(100);
