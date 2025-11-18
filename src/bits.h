@@ -140,8 +140,8 @@
       uint32_t: BITS_SET_QUARTER_u32_        , \
       uint64_t: BITS_SET_QUARTER_u64_          \
    )((uint), (index), (quarter))
-   static inline C_ATTRIBUTE_NODISCARD
-   unsigned BITS_SET_QUARTER_u_(unsigned x, unsigned n, unsigned quarter)
+   static inline C_ATTRIBUTE_NODISCARD unsigned
+   BITS_SET_QUARTER_u_(unsigned x, unsigned n, unsigned quarter)
    { n <<= 1; return (x & ~(0x3u << n)) | (quarter << n); }
    static inline C_ATTRIBUTE_NODISCARD BITS_MAX32_T
    BITS_SET_QUARTER_u32_(uint32_t x, unsigned n, BITS_MAX32_T quarter)
