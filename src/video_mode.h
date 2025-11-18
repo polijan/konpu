@@ -221,7 +221,7 @@ enum AttributeType {
 //       MAYBE: change to that in the future?
 //
 //       typedef
-//       struct __attribute__((packed, aligned(1))) VideoMode {
+//       struct alignas(uint8_t) __attribute__((packed)) VideoMode {
 //          uint8_t  has_attribute  : 1;
 //          uint8_t  elem_dimension : 3;
 //          uint8_t  low_nibble     : 4;
@@ -375,7 +375,7 @@ static inline int VIDEO_MODE_PIXEL_ATTRIBUTES(enum AttributeType attr_type)
 { return VIDEO_MODE_(1, PIXELS_Nx1, attr_type); }
 
 // Return a Tile mode with the given tile type
-#define VIDEO_MODE_TILE(TILE_TYPE)   // TODO
+#define VIDEO_MODE_TILE(...)   VIDEO_MODE_DEFAULT // TODO/FIXME
 /*
 static inline
 int VIDEO_MODE_TILE(enum VideoElementDimension tile_size, int bits_per_pixel) {
