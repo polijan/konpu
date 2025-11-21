@@ -28,15 +28,9 @@ typedef uint8_t   Glyph8;
 typedef uint16_t  Glyph16;
 typedef uint32_t  Glyph32;
 typedef uint64_t  Glyph64;
-typedef struct {
-   Glyph64  top,
-            bottom;
-} Glyph128;
-typedef struct {
-   Glyph64  top_left,    top_right,
-            bottom_left, bottom_right;
-} Glyph256;
-
+typedef struct    Glyph128 { Glyph64   top, bottom; } Glyph128;
+typedef struct    Glyph256 { Glyph64   top_left,    top_right,
+                                       bottom_left, bottom_right; } Glyph256;
 
 /* TODO: Does it make sense to use C23's fixed-bits integers _BintInt() ?
 
@@ -62,6 +56,19 @@ typedef union {
 #endif
 } Glyph256;
 */
+
+// Hold information (64-bits) about the Konpu 256 possible colors
+
+typedef struct ColorInfo {
+   // Components in OkLab color space (transformed from [0,1] to 8-bits):
+   uint8_t L_half;      //<  L = 2 * L_half        / 510
+   int8_t  a_minus_12;  //<  a = (a_minus_12 + 12) / 510
+   int8_t  b_plus_30;   //<  b = (b_plus_30 + 30)  / 510
+   // Color distance to other colors encoded as a Kd-tree:
+   uint8_t kd_left, kd_right;
+   // Components in sRGB color space (gamma-encoded, 8-bits):
+   uint8_t r, g, b;
+} ColorInfo;
 
 // Geometry types
 
@@ -172,6 +179,7 @@ struct _VideoMemory {
          };
       };
 
+      // TODO: finalize what we keep here:
       // Out of bound parameters: border color and "stray" elements
       uint8_t      border;            // border color (true color)
       union {                         // stray Attributes parameters
@@ -208,7 +216,7 @@ struct _VideoMemory {
 #if KONPU_MODEL < 86
    Rectangle UTIL_CAT(_reserved_for_future_models_, __LINE__);
 #else
-   // Manually change it, but will also be reset by the `VideoMode()`
+   // User may change it, but it will also be reset by `VideoMode()`
    Rectangle viewport;          // rendering viewport
 #endif
 
@@ -243,20 +251,11 @@ struct _VideoMemory {
 struct ROM_ {
    uint8_t version[1/*major*/ +1/*minor*/ +2/*patch*/];
 
-   // Possible framebuffer Resolutions (size in 8x8 cells)
+   // Possible Framebuffer Resolutions (width and height in 8x8 cells)
    uint8_t resolution_8x8[2 * 11/*# possible resolutions*/];
 
-   // Definition of Konpu colors
-   uint8_t color_info[256/*colors*/ * 8/*Lab + kd + RGB*/];
-   /* TODO: replace the color_info byte array with that more explicit structure:
-   struct RomColorInfo_ {
-      uint8_t L_half;
-      int8_t  a_minus_12;
-      int8_t  b_plus_30;
-      uint8_t kd_left, kd_right; // kd-tree for fast color search
-      uint8_t r, g, b;           // color's sRGB components
-   } color_info[256];
-   */
+   // Information about the 256 existing Konpu colors
+   ColorInfo color[256];
 
    // Default palettes (mirror the similar structure in Ram)
    union {
@@ -274,6 +273,7 @@ struct ROM_ {
       };
    };
 
+   // Default font data (stored in bytes with little endian)
    struct {
       uint8_t ascii4[95/*printable ascii chars*/ * 2/*sizeof Glyph16*/];
       uint8_t ascii5[95/*printable ascii chars*/ * 4/*sizeof Glyph32*/];
@@ -348,7 +348,6 @@ struct RAM_
    } heap;
 
    // System Memory
-
    union {
       uint8_t   generic[1 << 16];
       uintmax_t generic_ensure_alignment_;

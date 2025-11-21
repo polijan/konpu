@@ -73,6 +73,17 @@ AttributeDimension(void)         { return (VIDEO_MODE >> 2) & 3; }
 
 
 
+
+
+// In attribute modes, return the VIDEO_MODE attributes' type
+static inline enum AttributeColorType
+AttributeColorType(void) {
+   // assert(VideoModeHasAttributes());
+   return VIDEO_MODE & 3;
+}
+
+
+
 //------------------------------------------------------------------------------
 // Attributes Access: Get(), Set(), ...
 //------------------------------------------------------------------------------
@@ -94,8 +105,6 @@ static inline uint8_t *VideoAttributeAt_(int x, int y)
    return VIDEO_ATTRIBUTE + (index << AttributeHasTwoBytes());
 }
 
-
-#include "color.h"
 
 // Return the foreground color of an attribute
 static inline uint8_t AttributeGetPen(const uint8_t *attr)

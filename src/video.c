@@ -10,7 +10,7 @@ static void video_init_(void)
 // memset(&Video, 0, sizeof(Video));
 
    // Reset palette
-   ColorResetPalettes();
+   ColorResetPalette();
 
    // Reset border / stray
    Video.border = COLOR_CSS_DARK_GRAY;

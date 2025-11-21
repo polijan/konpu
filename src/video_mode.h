@@ -391,43 +391,6 @@ int VIDEO_MODE_TILE(enum VideoElementDimension tile_size, int bits_per_pixel) {
 
 
 
-//------------------------------------------------------------------------------
-// This would be better some place else, but because of the way we construct
-// the consolidated konpu.h, it needs to be here.
-//------------------------------------------------------------------------------
-
-// In attribute modes, return the VIDEO_MODE attributes' type
-static inline enum AttributeColorType
-AttributeColorType(void) {
-   // assert(VideoModeHasAttributes());
-   return VIDEO_MODE & 3;
-}
-
-// TODO: Could I move this to color.h???
-// Return the current color depth,
-// ie. the log2 of the max. number of colors that can be in the framebuffer
-static inline int ColorDepth()
-{
-   // Attribute modes
-   if (VideoModeHasAttributes())
-      return 4 << (AttributeColorType() != ATTRIBUTE_COLORS_16);
-      //     ^--- 16 colors attributes => color depth is 4
-      //          otherwise            => color depth is 8
-
-   // Non-Attributes modes
-   int n = VideoModeLowNibble();
-   return (n <= 8) ? n : 1 << (n - 8);
-      //  ^--- This is because:
-      //
-      // Low   | Chunk and Number of Colors  | How that's expressed in terms of
-      // Nibble|                             | the Low Nibble n.
-      // ------|-----------------------------|----------------------------------
-      //   1-8 | planar mode give 2^n color  --> = 1 << n
-      //     9 | quarter chunk ->   4 colors --> = 1 << (1<<1) = 1 << (1 << n-8)
-      //    10 | nibble chunk  ->  16 colors --> = 1 << (1<<2) = 1 << (1 << n-8)
-      //    11 | byte          -> 256 colors --> = 1 << (1<<3) = 1 << (1 << n-8)
-      // }
-}
 
 // This will define VIDEO_WIDTH and VIDEO_WEIGHT when not "FORCED" and in the
 // case where the OPTIMIZE_VIDEO_MODE option is on.

@@ -1,19 +1,18 @@
 #include "color.h"
-#include "init.h"
 
 // Recursively find the closest Konpu color by performing a Nearest Neighbor
 // Seach using the color k-d tree information included in the ROM.
 // This is the function called by ColorFromLABf
 // The implementation is similar to tools/kule/kule-kdtree.h
-static void closest_color( int color, float Lx510, float ax510, float bx510,
-                           int *best_color, float *best_distance2, int depth)
+static void closest_color(int color,
+   float Lx510, float ax510, float bx510,
+   int *best_color, float *best_distance2, int depth)
 {
-   int i = color << 3;
+   ColorInfo c = Rom.color[color];
+   float dL = Lx510 - ((int)c.L_half << 1);
+   float da = ax510 - (c.a_minus_12 + 12);
+   float db = bx510 - (c.b_plus_30  - 30);
 
-//printf("depth:%d color:%3d best_d^2=%f\n", depth, color, *best_distance2); //TODO:remove
-   float dL = Lx510 -    ((int)(COLOR_ROM(i)) << 1);
-   float da = ax510 - ((int8_t)(COLOR_ROM(i + 1)) + 12);
-   float db = bx510 - ((int8_t)(COLOR_ROM(i + 2)) - 30);
    float d2 = dL*dL + da*da + db*db;
    if (d2 < *best_distance2) {
       *best_distance2 = d2;
@@ -30,11 +29,11 @@ static void closest_color( int color, float Lx510, float ax510, float bx510,
 
    int near;
    if (axis_distance < 0) {
-      near = COLOR_ROM(i + 3); // left
+      near = c.kd_left;
       if (near != 127) {
          closest_color(near, Lx510,ax510,bx510, best_color, best_distance2, depth + 1);
          // in Konpu's palette, if left != 127, right is also != 127
-         int far = COLOR_ROM(i + 4); // right
+         int far = c.kd_right;
          if ((axis_distance * axis_distance) < *best_distance2)
             closest_color(far, Lx510,ax510,bx510, best_color, best_distance2, depth + 1);
       } else {
@@ -45,11 +44,11 @@ static void closest_color( int color, float Lx510, float ax510, float bx510,
                Lx510,ax510,bx510, best_color, best_distance2, depth + 1);
       }
    } else {
-      near = COLOR_ROM(i + 4); // right
+      near = c.kd_right;
       // in Konpu palette, if right is 127, left is always 127, and we can stop
       if (near == 127) return;
       closest_color(near, Lx510,ax510,bx510, best_color, best_distance2, depth + 1);
-      int far = COLOR_ROM(i + 3); // left
+      int far = c.kd_left;
       if (((axis_distance * axis_distance) < *best_distance2) && far != 127)
          closest_color(far, Lx510,ax510,bx510, best_color, best_distance2, depth + 1);
    }
@@ -66,13 +65,14 @@ int ColorFromLABf(struct ColorLABf lab)
 
 // Same as closest_color (ie Nearest Neighbor Serach via the k-d tree info
 // included in the ROM). This is the function called by ColorFromLABi.
-static void closest_color_i(  int color, int L, int a, int b, int *best_color,
-                              int_fast32_t *best_distance2, int depth)
+static void closest_color_i(int color,
+   int_fast32_t L, int_fast32_t a, int_fast32_t b,
+   int *best_color, int_fast32_t *best_distance2, int depth)
 {
-   int i = color << 3;
-   int_fast32_t dL = L - ((int)(COLOR_ROM(i)) << 1);
-   int_fast32_t da = a - ((int8_t)(COLOR_ROM(i + 1)) + 12);
-   int_fast32_t db = b - ((int8_t)(COLOR_ROM(i + 2)) - 30);
+   ColorInfo c = Rom.color[color];
+   int_fast32_t dL = L - ((int_fast32_t)c.L_half << 1);
+   int_fast32_t da = a - ((int_fast32_t)c.a_minus_12 + 12);
+   int_fast32_t db = b - ((int_fast32_t)c.b_plus_30  - 30);
    int_fast32_t d2 = dL*dL + da*da + db*db;
    if (d2 < *best_distance2) {
       *best_distance2 = d2;
@@ -89,11 +89,11 @@ static void closest_color_i(  int color, int L, int a, int b, int *best_color,
 
    int near;
    if (axis_distance < 0) {
-      near = COLOR_ROM(i + 3); // left
+      near = c.kd_left;
       if (near != 127) {
          closest_color_i(near, L,a,b, best_color, best_distance2, depth + 1);
          // in Konpu's palette, if left != 127, right is also != 127
-         int far = COLOR_ROM(i + 4); // right
+         int far = c.kd_right;
          if ((axis_distance * axis_distance) < *best_distance2)
             closest_color_i(far, L,a,b, best_color, best_distance2, depth + 1);
       } else {
@@ -104,11 +104,11 @@ static void closest_color_i(  int color, int L, int a, int b, int *best_color,
                L,a,b, best_color, best_distance2, depth + 1);
       }
    } else {
-      near = COLOR_ROM(i + 4); // right
+      near = c.kd_right;
       // in Konpu palette, if right is 127, left is always 127, and we can stop
       if (near == 127) return;
       closest_color_i(near, L,a,b, best_color, best_distance2, depth + 1);
-      int far = COLOR_ROM(i + 3); // left
+      int far = c.kd_left;
       if (((axis_distance * axis_distance) < *best_distance2) && far != 127)
          closest_color_i(far, L,a,b, best_color, best_distance2, depth + 1);
    }

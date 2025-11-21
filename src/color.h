@@ -2,6 +2,7 @@
 #define  KONPU_COLOR_H_
 #include "arch.h"
 #include "video_mode.h"
+#include "attribute.h"
 
 
 //------------------------------------------------------------------------------
@@ -12,15 +13,50 @@
 // in distinct areas.
 //------------------------------------------------------------------------------
 
-// TODO: Maybe those should be called `VideoResetPalette<N>()`
-#define ColorResetPalette2()  memcpy(Video.palette2,  Rom.default_palette2,  2)
-#define ColorResetPalette4()  memcpy(Video.palette4,  Rom.default_palette4,  4)
-#define ColorResetPalette8()  memcpy(Video.palette8,  Rom.default_palette8,  8)
-#define ColorResetPalette16() memcpy(Video.palette16, Rom.default_palette16, 16)
-#define ColorResetPalette32() memcpy(Video.palette32, Rom.default_palette32, 32)
-#define ColorResetPalette64() memcpy(Video.palette64, Rom.default_palette64, 64)
-#define ColorResetPalette128() memcpy(Video.palette128, Rom.default_palette128, 128)
-#define ColorResetPalettes()  ColorResetPalette128()
+// Return the current color depth, ie. the log2 of the max. number of colors
+// that can be in the framebuffer
+static inline int ColorDepth()
+{
+   // Attribute modes
+   if (VideoModeHasAttributes())
+      return 4 << (AttributeColorType() != ATTRIBUTE_COLORS_16);
+      //     ^--- 16 colors attributes => color depth is 4
+      //          otherwise            => color depth is 8
+
+   // Non-Attributes modes
+   int n = VideoModeLowNibble();
+   return (n <= 8) ? n : 1 << (n - 8);
+      //  ^--- This is because:
+      //
+      // Low   | Chunk and Number of Colors  | How that's expressed in terms of
+      // Nibble|                             | the Low Nibble n.
+      // ------|-----------------------------|----------------------------------
+      //   1-8 | planar mode give 2^n color  --> = 1 << n
+      //     9 | quarter chunk ->   4 colors --> = 1 << (1<<1) = 1 << (1 << n-8)
+      //    10 | nibble chunk  ->  16 colors --> = 1 << (1<<2) = 1 << (1 << n-8)
+      //    11 | byte          -> 256 colors --> = 1 << (1<<3) = 1 << (1 << n-8)
+      // }
+}
+
+// Given a value, return it normalized between 0 and the current color count.
+#define ColorNormalize(color) \
+   ((color) & ((1 << ColorDepth()) - 1))
+   // We want to return: color % current number of color.
+   // As the number of color is a power of 2 (i.e. it's 1 << ColorDepth()),
+   // we can optimize the modulo as: color & (current number of color - 1)
+   //
+   // In fact, the & technique makes the color normalization correct for
+   // negative numbers too (on two's complement systems, which Konpu [and C23]
+   // assumes)
+
+// ColorResetPalette([N])
+// If N is a *literal* <2|4|8|16|32|64|128>, reset that palette
+// If N is omitted, reset the entire palette area
+#define ColorResetPalette(...)     UTIL_OVERLOAD(ColorResetPalette, __VA_ARGS__)
+#  define ColorResetPalette_0_()   ColorResetPalette_1_(128)
+#  define ColorResetPalette_1_(N)  \
+      memcpy(Video.palette##N, Rom.default_palette##N, N)
+
 
 
 // Return the palette in-use or NULL (in 256 color modes)
@@ -47,16 +83,6 @@ static inline uint8_t *ColorPalette(void)
    }
 }
 
-// Given a value, return it normalized between 0 and the current color count.
-#define ColorNormalize(color) \
-   ((color) & ((1 << ColorDepth()) - 1))
-   // We want to return: color % current number of color.
-   // As the number of color is a power of 2 (i.e. it's 1 << ColorDepth()),
-   // we can optimize the modulo as: color & (current number of color - 1)
-   //
-   // In fact, the & technique makes the color normalization correct for
-   // negative numbers too (on two's complement systems, which Konpu [and C23]
-   // assumes)
 
 //------------------------------------------------------------------------------
 // Color Constants for INDEXED color indices
@@ -98,10 +124,6 @@ extern float cbrtf(float x);
 extern float powf(float x, float y);
 // misc math.
 extern float roundf(float x);
-
-// TODO: replace and remove remove!
-#define COLOR_ROM(i)  (Rom.color_info[i])
-
 
 //------------------------------------------------------------------------------
 
@@ -152,33 +174,30 @@ ColorLABiToLABf(struct ColorLABi lab)
 // given color
 static inline struct ColorLABi ColorToLABi(int color)
 {
-   int i = color << 3;
    return (struct ColorLABi) {
-      .L = COLOR_ROM(i) << 1,
-      .a = (int8_t)(COLOR_ROM(1 + i)) + 12,
-      .b = (int8_t)(COLOR_ROM(2 + i)) - 30,
+      .L = Rom.color[color].L_half     * 2,
+      .a = Rom.color[color].a_minus_12 + 12,
+      .b = Rom.color[color].b_plus_30  - 30,
    };
 }
 
 // Return a OkLab color (float) for the given color
 static inline struct ColorLABf ColorToLABf(int color)
 {
-   int i = color << 3;
    return (struct ColorLABf) {
-      .L = COLOR_ROM(i) / 255.f,
-      .a = ((int8_t)(COLOR_ROM(1 + i)) + 12) / 510.f,
-      .b = ((int8_t)(COLOR_ROM(2 + i)) - 30) / 510.f,
+      .L =  Rom.color[color].L_half     * (2.f/ 510.f),
+      .a = (Rom.color[color].a_minus_12 + 12) / 510.f,
+      .b = (Rom.color[color].b_plus_30  - 30) / 510.f,
    };
 }
 
 // Return a OkLCh color (float) for the given color
 static inline struct ColorLCHf ColorToLCHf(int color)
 {
-   int i = color << 3;
-   int32_t a_x510 = (int8_t)(COLOR_ROM(1 + i)) + 12;
-   int32_t b_x510 = (int8_t)(COLOR_ROM(2 + i)) - 30;
+   int_fast32_t a_x510 = Rom.color[color].a_minus_12 + 12;
+   int_fast32_t b_x510 = Rom.color[color].b_plus_30  - 30;
    return (struct ColorLCHf) {
-      .L = COLOR_ROM(i) / 255.f,
+      .L = Rom.color[color].L_half * (2.f / 510.f),
       .C = sqrtf(a_x510 * a_x510 + b_x510 * b_x510) / 510.f,
       .h = atan2f(b_x510, a_x510),
    };
@@ -206,36 +225,27 @@ ColorLCHfToLABf(struct ColorLCHf lch)
 { return (struct ColorLABf){lch.L, lch.C * cosf(lch.h), lch.C * sinf(lch.h)}; }
 
 
-
 // Return the 'L' component (= perceptual lightness) of a color (integer scale)
-static inline int ColorLightness(int color)
-{ return COLOR_ROM(color << 3) << 1; }
-
-// Return the 'a' component ("green" to "red") of a color (integer scale)
-static inline int ColorA(int color)
-{ return (int8_t)(COLOR_ROM(1 + (color << 3))) + 12; }
-
-// Return the 'b' component ("blue" to "yellow") of a color (integer scale)
-static inline int ColorB(int color)
-{ return (int8_t)(COLOR_ROM(2 + (color << 3))) - 30; }
+#define ColorLightness(color)   (Rom.color[(color)].L_half * 2)
 
 // Return the distance squared between two colors
 static inline int32_t ColorDistanceSquared(int color1, int color2)
 {
-   int i1 = color1 << 3;
-   int i2 = color2 << 3;
-   int_fast32_t dL = (COLOR_ROM(i1) - COLOR_ROM(i2)) << 1;
-   int_fast32_t da = COLOR_ROM(1 + i1) - COLOR_ROM(1 + i2);
-   int_fast32_t db = COLOR_ROM(2 + i1) - COLOR_ROM(2 + i2);
+   int_fast32_t dL = ( (int_fast32_t)Rom.color[color1].L_half
+                     - (int_fast32_t)Rom.color[color2].L_half
+                     ) << 1;
+   int_fast32_t da =   (int_fast32_t)Rom.color[color1].a_minus_12
+                     - (int_fast32_t)Rom.color[color2].a_minus_12;
+   int_fast32_t db =   (int_fast32_t)Rom.color[color1].b_plus_30
+                     - (int_fast32_t)Rom.color[color2].b_plus_30;
    return dL*dL + da*da + db*db;
 }
 
 // Return a color's chroma (ie "colorfullness") squared (integer scale)
 static inline int32_t ColorChromaSquared(int color)
 {
-   int i = color << 3;
-   int_fast32_t a = (int8_t)(COLOR_ROM(1 + i)) + 12;
-   int_fast32_t b = (int8_t)(COLOR_ROM(2 + i)) - 30;
+   int_fast32_t a = Rom.color[color].a_minus_12 + 12;
+   int_fast32_t b = Rom.color[color].b_plus_30  - 30;
    return a*a + b*b;
 }
 
@@ -243,14 +253,19 @@ static inline int32_t ColorChromaSquared(int color)
 // (ie saturation = chroma in proportion of its luminance)
 static inline int32_t ColorSaturationSquared(int color)
 {
+   // Avoid L to be zero as we will divide by it:
    if (color == 0) return INT32_MAX;
-   int i = color << 3;
-   int_fast32_t L_half = COLOR_ROM(i);
-   int_fast32_t a = (int8_t)(COLOR_ROM(1 + i)) + 12;
-   int_fast32_t b = (int8_t)(COLOR_ROM(2 + i)) - 30;
+   int_fast32_t L_half = Rom.color[color].L_half;
+   // ^-- Those two lines are because we know from Rom data that the color 0 is
+   //     the only one with Luminosity 0. So this is (micro-)optimized for color
+   //     0, otherwise we should have done this:
+   //     int_fast32_t L_half = Rom.color[color].L_half;
+   //     if (L_half == 0) return INT32_MAX;
+
+   int_fast32_t a = Rom.color[color].a_minus_12 + 12;
+   int_fast32_t b = Rom.color[color].b_plus_30  - 30;
    return (4*510) * (a*a + b*b) / (L_half*L_half);
 }
-
 
 #define ColorSaturation(color)         sqrtf(ColorSaturationSquared((color)))
 #define ColorChroma(color)             sqrtf(ColorChromaSquared((color)))
@@ -261,12 +276,9 @@ static inline int32_t ColorSaturationSquared(int color)
 // Return the hue of a color as a angle in [-pi, pi]
 // TODO: could we maybe have some fast "atan2i" maybe giving the angle in
 //       degrees as an integer or in 0..255?
-static inline float ColorHue(int color)
-{
-   int i = color << 3;
-   int a = (int8_t)(COLOR_ROM(1 + i)) + 12;
-   int b = (int8_t)(COLOR_ROM(2 + i)) - 30;
-   return atan2f(b, a);
+static inline float ColorHue(int color) {
+   return atan2f( Rom.color[color].b_plus_30  - 30,
+                  Rom.color[color].a_minus_12 + 12);
 }
 
 
@@ -278,12 +290,6 @@ static inline float ColorHue(int color)
 // recommended to perform color work directly in sRGB. But Konpu C API provides
 // sRGB utilities. And colors are assumed to be shown on a sRGB display device.
 //------------------------------------------------------------------------------
-
-// Return an array with the 3 r,g,b components (gamma-encoded sRGB) of a color
-static inline const uint8_t* ColorToRGB(int color)
-{ return Rom.color_info + 5 + (color << 3); }
-// TODO ^-- replace with a proper structure for color_info
-// and DELETE: // { return ROM + ROM_COLOR + 5 + (color << 3); }
 
 // sRGB color, linear float components in [0,1]
 struct ColorRGBf { float   r, g, b; };
@@ -334,6 +340,12 @@ ColorRGBRedmeanDistanceSquared(struct ColorRGBi c1, struct ColorRGBi c2)
          + (((767 - rm) * db*db) >> 8);
    // TODO: this looks equivalent but "faster", right?
    //return ((512 + rm) * dr*dr + ((dg*dg) << 10) + (767 - rm) * db*db) >> 8;
+}
+
+// Conversion Color -> RGBi
+static inline struct ColorRGBi ColorToRGBi(int color) {
+   return (struct ColorRGBi)
+      { Rom.color[color].r, Rom.color[color].g, Rom.color[color].b};
 }
 
 // Conversion RGBf -> RGBi
@@ -416,6 +428,7 @@ ColorLABfToRGBf(struct ColorLABf c)
 
 // Remaining Conversions:
 
+#define ColorToRGBf(color)        ColorRGBiToRGBf(ColorToRGBi((color)))
 #define ColorFromLCHf(lch)        ColorFromLABf(ColorLCHfToLABf(lch))
 #define ColorFromRGBf(rgb)        ColorFromLABf(ColorRGBfToLABf(rgb))
 #define ColorLABfToRGBi(lab)      ColorRGBfToRGBi(ColorLABfToRGBf((lab)))
@@ -428,6 +441,12 @@ ColorLABfToRGBf(struct ColorLABf c)
    ColorRGBfToRGBi( ColorLABfToRGBf(ColorLABiToLABf((lab))) )
 #define ColorFromRGBi(rgb)        \
    ColorFromLABf( ColorRGBfToLABf(ColorRGBiToRGBf((rgb))) )
+
+// TODO: still missing some conversion from to LCHf:
+//   LABiToLCHf
+//   LCHfToLABi, LCHfToRGBf, LCHfToRGBi
+//   RGBftoLCHf
+//   RGBitoLCHf
 
 
 //------------------------------------------------------------------------------

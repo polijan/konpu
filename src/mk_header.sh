@@ -44,7 +44,7 @@ echo "#endif // End of Konpu's External Dependencies'"
 include  config.h platform.h c.h                                               \
          bits.h util.h character.h time.h random.h options.h                   \
          var.h arch.h video_mode.h keyboard.h                                  \
-         video_mode_auto.h glyph.h color.h attribute.h video.h pixel.h tile.h  \
+         video_mode_auto.h glyph.h attribute.h color.h video.h pixel.h tile.h  \
          draw.h                                                                \
          error.h heap.h stack.h                                                \
          \

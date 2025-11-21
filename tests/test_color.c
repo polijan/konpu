@@ -4,18 +4,16 @@
 // Ensure the consistency of the sRGB vs OkLab color data in ROM
 static const char *testColorRomData(void)
 {
-   for (int c = 0; c < 256; c++) {
-      // Approximate OkLab data from ROM
-      int L8 = COLOR_ROM(8*c) << 1;
-      int a8 = (int8_t)(COLOR_ROM(8*c + 1)) + 12;
-      int b8 = (int8_t)(COLOR_ROM(8*c + 2)) - 30;
+   for (int color = 0; color < 256; color++) {
+      ColorInfo c = Rom.color[color];
 
-      // sRGB data from ROM (create a "real" OkLab color from it)
-      struct ColorRGBi rgb = {
-         .r = COLOR_ROM(8*c + 5),
-         .g = COLOR_ROM(8*c + 6),
-         .b = COLOR_ROM(8*c + 7),
-      };
+      // Approximate OkLab data from ROM
+      int L8 = c.L_half     * 2;
+      int a8 = c.a_minus_12 + 12;
+      int b8 = c.b_plus_30  - 30;
+
+      // Create a float OkLab color from the ROM's sRGB data
+      struct ColorRGBi rgb = { c.r, c.g, c.b };
       struct ColorLABf lab = ColorRGBiToLABf(rgb);
 
       // Compare

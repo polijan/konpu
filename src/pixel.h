@@ -1,6 +1,8 @@
 #ifndef KONPU_PIXEL_H_
 #define KONPU_PIXEL_H_
-#include "video.h"
+#include "video_mode.h"
+#include "glyph.h"
+#include "attribute.h"
 
 // A "strip" is a byte representing a small horizontal line of 1,2,4,or 8
 // pixels. When the framebuffer contains pixels, they are stored as strips.
@@ -9,13 +11,13 @@
 // PixelStrip: Dimensions and Properties
 //----------------------------..----------.---------.--------.------------------
 // PixelStrip                 // Pixel    |Dimension|  # of  | Video.mode's
-typedef uint8_t PixelStrip;   // Chunk(s) |in Pixels| Colors | Low Nibble
+typedef uint8_t  PixelStrip;  // Chunk(s) |in Pixels| Colors | Low Nibble
 //----------------------------//----------|---------|--------|------------------
 typedef uint8_t  PixelStrip8; // Bits     |  8 x 1  |    2   |    1
 typedef uint8_t  PixelStrip4; // Quarters |  4 x 1  |    4   |    9
 typedef uint8_t  PixelStrip2; // Nibbles  |  2 x 1  |   16   |   10
 typedef uint8_t  PixelStrip1; // Byte     |  1 x 1  |  256   |   11
-//---------------------------------------'---------'--------'-------------------
+//----------------------------''----------'---------'--------'------------------
 
 #define PIXELSTRIP_WIDTH        (1 << PIXELSTRIP_WIDTH_LOG2)
 #define PIXELSTRIP_HEIGHT       1
