@@ -46,7 +46,7 @@ CWARN = -Wall -Wextra -pedantic  \
 CDEBUG = #-ggdb3 # -Werror #<-- don't build with warnings
 
 # Optimization:
-# + -O2 or `-O3 -fexpensive-optimizations` or ...
+# + -O2 or `-O3 -march=native -mtune=native -fexpensive-optimizations` or ...
 # + -Wsuggest* warnings, search for -Wsuggest in: https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
 COPTIMIZE = -O2
 #COPTIMIZE = -O2 \
