@@ -87,10 +87,11 @@ static void DrawGrid(Glyph256 g, int x, int y) {
          uintattr_t bg;
          if (x == i && y == j) {
            str = "▔🭾";
-           bg = GlyphPixelAt(g, i,j)? TB_YELLOW:(TB_BLACK|TB_BRIGHT);
+
+           bg = GlyphGetPixel(g, i,j)? TB_YELLOW:(TB_BLACK|TB_BRIGHT);
          } else {
            bg = TB_BLACK;
-           str = GlyphPixelAt(g, i,j)? "██":"▔🭾";
+           str = GlyphGetPixel(g, i,j)? "██":"▔🭾";
          }
          tb_print(1+2*i, 3+j, TB_WHITE|TB_BRIGHT, bg, str);
       }
@@ -215,8 +216,8 @@ int main(int argc, char *argv[])
                   break;
                case TB_KEY_SPACE:
                   // TODO: Those are not implemented in Konpu's "glyph.h"
-                  //GlyphPixelToggle(glyph, cursor_x, cursor_y);
-                  //GlyphPixelSet(glyph, cursor_x, cursor_y);
+                  //Toggle(glyph, cursor_x, cursor_y);
+                  //GlyphSetPixel(glyph, cursor_x, cursor_y);
                   paint = true;
                   break;
                case TB_KEY_ARROW_UP:

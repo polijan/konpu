@@ -108,10 +108,10 @@ uint32_t UnicodeBrailleOctant(unsigned octant)
    // between octants pixels and braille.       16  32  \    /  4  32
    //                                           64  128        64  128
    int braille =
-      (BITS_BIT_AT(octant, 0))      | (BITS_BIT_AT(octant, 1) << 3) |
-      (BITS_BIT_AT(octant, 2) << 1) | (BITS_BIT_AT(octant, 3) << 4) |
-      (BITS_BIT_AT(octant, 4) << 2) | (BITS_BIT_AT(octant, 5) << 5) |
-      (BITS_BIT_AT(octant, 6) << 6) | (BITS_BIT_AT(octant, 7) << 7) ;
+      (BITS_GET_BIT(octant, 0))      | (BITS_GET_BIT(octant, 1) << 3) |
+      (BITS_GET_BIT(octant, 2) << 1) | (BITS_GET_BIT(octant, 3) << 4) |
+      (BITS_GET_BIT(octant, 4) << 2) | (BITS_GET_BIT(octant, 5) << 5) |
+      (BITS_GET_BIT(octant, 6) << 6) | (BITS_GET_BIT(octant, 7) << 7) ;
    return 0x2800 + braille;
    // Note: UTF-8 representation would be the following three-bytes sequence:
    // 0xE2, 0xA0|(braille>>6), (128|(braille & 63))
@@ -141,11 +141,11 @@ void UnicodePutChar(uint32_t c)
 // Extending Function on Glyphs.
 //------------------------------------------------------------------------------
 
-#define GLYPH_PRINT_OCTANT(G, x, y)       UnicodePutChar(UnicodeOctants[ \
-   GlyphPixelAt(G, x, y    ) << 0 | GlyphPixelAt(G, x + 1, y    ) << 1 | \
-   GlyphPixelAt(G, x, y + 1) << 2 | GlyphPixelAt(G, x + 1, y + 1) << 3 | \
-   GlyphPixelAt(G, x, y + 2) << 4 | GlyphPixelAt(G, x + 1, y + 2) << 5 | \
-   GlyphPixelAt(G, x, y + 3) << 6 | GlyphPixelAt(G, x + 1, y + 3) << 7 ])
+#define GLYPH_PRINT_OCTANT(G, x, y)         UnicodePutChar(UnicodeOctants[ \
+   GlyphGetPixel(G, x, y    ) << 0 | GlyphGetPixel(G, x + 1, y    ) << 1 | \
+   GlyphGetPixel(G, x, y + 1) << 2 | GlyphGetPixel(G, x + 1, y + 1) << 3 | \
+   GlyphGetPixel(G, x, y + 2) << 4 | GlyphGetPixel(G, x + 1, y + 2) << 5 | \
+   GlyphGetPixel(G, x, y + 3) << 6 | GlyphGetPixel(G, x + 1, y + 3) << 7 ])
 
 #define GLYPH_PRINT_OCTANT_2(G, y)   \
    do { GLYPH_PRINT_OCTANT(G, 0, y); \
@@ -413,48 +413,52 @@ void SymbolPrintDecimal(Symbol s, bool mirror)
       case  1:
          ;uint8_t g8 = mirror? s.glyph8 : GlyphMirror(s.glyph8);
          printf("%d,%d,%d,%d",
-            GlyphLineAt(g8, 0), GlyphLineAt(g8, 1),
-            GlyphLineAt(g8, 2), GlyphLineAt(g8, 3));
+            GlyphGetLine(g8, 0), GlyphGetLine(g8, 1),
+            GlyphGetLine(g8, 2), GlyphGetLine(g8, 3));
          break;
       case  2:
          ;uint16_t g16 = mirror ? s.glyph16 : GlyphMirror(s.glyph16);
          printf("%d,%d,%d,%d",
-            GlyphLineAt(g16, 0), GlyphLineAt(g16, 1),
-            GlyphLineAt(g16, 2), GlyphLineAt(g16, 3));
+            GlyphGetLine(g16, 0), GlyphGetLine(g16, 1),
+            GlyphGetLine(g16, 2), GlyphGetLine(g16, 3));
          break;
       case  4:
          ;uint32_t g32 = mirror ? s.glyph32 : GlyphMirror(s.glyph32);
          printf("%d,%d,%d,%d,%d,%d,%d,%d",
-            GlyphLineAt(g32, 0), GlyphLineAt(g32, 1), GlyphLineAt(g32, 2),
-            GlyphLineAt(g32, 3), GlyphLineAt(g32, 4), GlyphLineAt(g32, 5),
-            GlyphLineAt(g32, 6), GlyphLineAt(g32, 7));
+            GlyphGetLine(g32, 0), GlyphGetLine(g32, 1), GlyphGetLine(g32, 2),
+            GlyphGetLine(g32, 3), GlyphGetLine(g32, 4), GlyphGetLine(g32, 5),
+            GlyphGetLine(g32, 6), GlyphGetLine(g32, 7));
          break;
       case  8:
          ;uint64_t g64 = mirror ? s.glyph64 :GlyphMirror(s.glyph64);
          printf("%d,%d,%d,%d,%d,%d,%d,%d",
-            GlyphLineAt(g64, 0), GlyphLineAt(g64, 1), GlyphLineAt(g64, 2),
-            GlyphLineAt(g64, 3), GlyphLineAt(g64, 4), GlyphLineAt(g64, 5),
-            GlyphLineAt(g64, 6), GlyphLineAt(g64, 7));
+            GlyphGetLine(g64, 0), GlyphGetLine(g64, 1), GlyphGetLine(g64, 2),
+            GlyphGetLine(g64, 3), GlyphGetLine(g64, 4), GlyphGetLine(g64, 5),
+            GlyphGetLine(g64, 6), GlyphGetLine(g64, 7));
          break;
       case 16:
          ;Glyph128 g128 = mirror ? s.glyph128 :GlyphMirror(s.glyph128);
          printf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-            GlyphLineAt(g128, 0), GlyphLineAt(g128, 1), GlyphLineAt(g128, 2),
-            GlyphLineAt(g128, 3), GlyphLineAt(g128, 4), GlyphLineAt(g128, 5),
-            GlyphLineAt(g128, 6), GlyphLineAt(g128, 7), GlyphLineAt(g128, 8),
-            GlyphLineAt(g128, 9), GlyphLineAt(g128, 10), GlyphLineAt(g128, 11),
-            GlyphLineAt(g128, 12), GlyphLineAt(g128, 13), GlyphLineAt(g128, 14),
-            GlyphLineAt(g128, 15));
+            GlyphGetLine(g128,  0), GlyphGetLine(g128,  1),
+            GlyphGetLine(g128,  2), GlyphGetLine(g128,  3),
+            GlyphGetLine(g128,  4), GlyphGetLine(g128,  5),
+            GlyphGetLine(g128,  6), GlyphGetLine(g128,  7),
+            GlyphGetLine(g128,  8), GlyphGetLine(g128,  9),
+            GlyphGetLine(g128, 10), GlyphGetLine(g128, 11),
+            GlyphGetLine(g128, 12), GlyphGetLine(g128, 13),
+            GlyphGetLine(g128, 14), GlyphGetLine(g128, 15));
          break;
       case 32:
          ;Glyph256 g256 = mirror ? s.glyph256 :GlyphMirror(s.glyph256);
          printf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-            GlyphLineAt(g256, 0), GlyphLineAt(g256, 1), GlyphLineAt(g256, 2),
-            GlyphLineAt(g256, 3), GlyphLineAt(g256, 4), GlyphLineAt(g256, 5),
-            GlyphLineAt(g256, 6), GlyphLineAt(g256, 7), GlyphLineAt(g256, 8),
-            GlyphLineAt(g256, 9), GlyphLineAt(g256, 10), GlyphLineAt(g256, 11),
-            GlyphLineAt(g256, 12), GlyphLineAt(g256, 13), GlyphLineAt(g256, 14),
-            GlyphLineAt(g256, 15));
+            GlyphGetLine(g256,  0), GlyphGetLine(g256,  1),
+            GlyphGetLine(g256,  2), GlyphGetLine(g256,  3),
+            GlyphGetLine(g256,  4), GlyphGetLine(g256,  5),
+            GlyphGetLine(g256,  6), GlyphGetLine(g256,  7),
+            GlyphGetLine(g256,  8), GlyphGetLine(g256,  9),
+            GlyphGetLine(g256, 10), GlyphGetLine(g256, 11),
+            GlyphGetLine(g256, 12), GlyphGetLine(g256, 13),
+            GlyphGetLine(g256, 14), GlyphGetLine(g256, 15));
          break;
    }
 }
@@ -528,7 +532,7 @@ void SymbolPrintKbitxBitmap(Symbol s)
       }
    } else {
       for (int n = 0; n < 16; n++) {
-         unsigned line = GlyphLineAt(s.glyph256, n);
+         unsigned line = GlyphGetLine(s.glyph256, n);
          for (int i = 0; i < 16; i++) {
             *dst++ = (line & 1)? 0x41 : 0x01;
             line >>= 1;

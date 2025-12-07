@@ -2,8 +2,8 @@
 #define UTIL_CAT(item, ...)        UTIL_CAT_(item, __VA_ARGS__)
    #define UTIL_CAT_(item, ...)    item##__VA_ARGS__
 
-#ifndef KONPU_GLYPH_H
-   #define KONPU_GLYPH_H  // Prevent inclusion of Konpu's "glyph.h"
+#ifndef KONPU_GLYPH_H_
+   #define KONPU_GLYPH_H_  // Prevent inclusion of Konpu's "glyph.h"
    #define GLYPH8(x)   x
    #define GLYPH16(x)  x
    #define GLYPH32(x)  x
