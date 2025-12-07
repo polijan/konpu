@@ -7,7 +7,7 @@ int AppInit(void)
 {
    // 1.5 second of "tv static" effect...
    Video.border = 0;
-   VideoMode(VIDEO_MODE_GLYPH(Glyph64));
+   VideoMode(VIDEO_MODE_GLYPH(64));
    for (int i = 0; i < 120; i++) {
       for (int n = 0; n < VIDEO_COUNT_GLYPH64; n++) {
          Video.glyph64[n] = UtilRandom64();
@@ -22,11 +22,11 @@ int AppInit(void)
                           0x00F00C028241C141, 0x00030C1013242724 };
 
 
-   VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_8x8_PEN256));
-// VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph256, ATTRIBUTE_2x4_16)); <-- crash
+//   VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(256, ATTRIBUTE8_8x8_PEN));
+   VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(256, ATTRIBUTE8_2x4)); // Crash, why?
 
 
- //VideoMode(VIDEO_MODE_GLYPH(Glyph128));
+ //VideoMode(VIDEO_MODE_GLYPH(128));
 //VideoMode(217);
 //VideoMode(223); // weird modes with 24x15 glyph256
 
@@ -44,7 +44,7 @@ int AppInit(void)
 
    Printer("Attributes: starts at %d\n", VideoAttributeOffset());
    Printer("  Log2(width) = %d, Log2(height) = %d, Log2Sizeof ) %d\n",
-      AttributeWidthLog2(), AttributeHeightLog2(), AttributeHasTwoBytes());
+      ATTRIBUTE_WIDTH_LOG2, ATTRIBUTE_HEIGHT_LOG2, ATTRIBUTE_SIZE_LOG2);
    Printer("End       : %d\n", VIDEO_SIZE);
 
 
@@ -61,13 +61,13 @@ int AppInit(void)
    }
 
    Video.border = 70;
-   int number_of_attributes_bytes = (VIDEO_WIDTH_ATTRIBUTE * VIDEO_HEIGHT_ATTRIBUTE) >> AttributeHasTwoBytes();
-/*   int number_of_attributes_bytes = ( (VIDEO_WIDTH  >> AttributeWidthLog2())
-                                    * (VIDEO_HEIGHT >> AttributeHeightLog2())
-                                    ) >> AttributeHasTwoBytes();*/
-   for (int n = 0; n < number_of_attributes_bytes; n++) {
+   assert(
+      ((VIDEO_WIDTH_ATTRIBUTE * VIDEO_HEIGHT_ATTRIBUTE) >> ATTRIBUTE_SIZE_LOG2)
+      == VIDEO_ATTRIBUTES_SIZE
+   );
+   for (int n = 0; n < VIDEO_ATTRIBUTES_SIZE; n++) {
       Video.frame[n + VideoAttributeOffset()] = (n % 16) << 4;
-      if (n % (VIDEO_WIDTH >> AttributeWidthLog2()) == 0) { // <-- once per line
+      if (n % VIDEO_WIDTH_ATTRIBUTE == 0) { // <-- once per line
          VideoRender(); UtilSleep(100);
       }
       assert(n + VideoAttributeOffset() < VIDEO_SIZE);

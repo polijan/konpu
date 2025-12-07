@@ -23,7 +23,7 @@
 static const char *testDefaultVideoMode(void)
 {
    TestAssert("VIDEO_MODE_DEFAULT should be 4x8 glyphs with similar 16 color attributes",
-      VIDEO_MODE_DEFAULT == VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph32));
+      VIDEO_MODE_DEFAULT == VIDEO_MODE_GLYPH_ATTRIBUTES(32));
    return 0;
 }
 
@@ -48,16 +48,11 @@ static const char *testVideoModes(void)
             glyph_sz
          );
          // ... and then the attributes
-         int attr_sz = (1 << AttributeHasTwoBytes()) // <- 1 or 2 bytes
-                     * VIDEO_WIDTH   / (1 << AttributeWidthLog2())
-                     * VIDEO_HEIGHT  / (1 << AttributeHeightLog2());
+         int attr_sz = ATTRIBUTE_SIZE * VIDEO_WIDTH_ATTRIBUTE * VIDEO_HEIGHT_ATTRIBUTE;
          TestTrace("+ attr%02d[%3dx%3d]x%d:%5d ",
-            8 * (1 << AttributeDimension()),
-            VIDEO_WIDTH  / (1 << AttributeWidthLog2()),
-            VIDEO_HEIGHT / (1 << AttributeHeightLog2()),
-            1 <<  AttributeHasTwoBytes(),
-            attr_sz
-         );
+            8 << ATTRIBUTE_DIMENSION,
+            VIDEO_WIDTH_ATTRIBUTE, VIDEO_HEIGHT_ATTRIBUTE,
+            ATTRIBUTE_SIZE, attr_sz);
 
          TestTrace("=> %5d (vs %5d)\n", glyph_sz + attr_sz, VIDEO_SIZE);
          TestAssert("size of glyph & attr vs framebuffer size", glyph_sz + attr_sz == VIDEO_SIZE);

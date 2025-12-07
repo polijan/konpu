@@ -109,7 +109,7 @@
 //                      reversed (TODO... or not?)
 //------------------------------------------------------------------------------
 
-#define BITS_GET_BIT(uint, index)           (((uint) >> ((index)     )) & 1u)
+#define BITS_GET_BIT(uint, index)           (((uint) >> (index)) & 1u)
 #define BITS_GET_QUARTER(uint, index)       (((uint) >> ((index) << 1)) & 3u)
 #define BITS_GET_NIBBLE(uint, index)        (((uint) >> ((index) << 2)) & 0xFu)
 #define BITS_GET_BYTE(uint, index)          (((uint) >> ((index) << 3)) & 0xFFu)

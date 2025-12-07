@@ -8,13 +8,13 @@ die() { printf '%s\n' "$*... " >&2; exit 5; }
 hr()  { printf '\n//%78s\n' '' | tr ' ' '@'; }
 
 include() {
-    for header in "$@"; do
-        printf '\n'; hr
-        [ -f "$header" ] || die "$header not found"
-        printf '// %s' "$header"; hr
-        # print header, but remove non-system #includes
-        sed 's|^#include "|// #include "|g' < "$header"
-    done
+   for header in "$@"; do
+      printf '\n'; hr
+      [ -f "$header" ] || die "$header not found"
+      printf '// %s' "$header"; hr
+      # print header, but remove non-system #includes
+      sed 's|^#include "|// #include "|g' < "$header"
+   done
 }
 
 cd src || exit
@@ -43,9 +43,11 @@ echo "#endif // End of Konpu's External Dependencies'"
 # API Includes
 include  config.h platform.h c.h                                               \
          bits.h util.h character.h time.h random.h options.h                   \
-         var.h arch.h video_mode.h keyboard.h                                  \
-         video_mode_auto.h glyph.h attribute.h color.h video.h pixel.h tile.h  \
-         draw.h                                                                \
+         var.h arch.h                                                          \
+         video_mode.h keyboard.h video_mode_auto.h                             \
+         glyph.h tile.h strip.h attribute.h color.h                            \
+         video.h pixel.h tile.h                                                \
+         rectangle.h draw.h                                                    \
          error.h heap.h stack.h                                                \
          \
          printer.h

@@ -30,9 +30,9 @@ static const uint64_t pattern[] = {
 static int Show(int number_of_planes)
 {
    // Set Video Mode and Clear Screen
-   //VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph64, ATTRIBUTE_2x4_16));
-   //VideoMode(VIDEO_MODE_GLYPH(Glyph64));
-   VideoMode(VIDEO_MODE_GLYPH_PLANES(Glyph64, number_of_planes));
+   //VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(64, ATTRIBUTE8_2x4));
+   //VideoMode(VIDEO_MODE_GLYPH(64));
+   VideoMode(VIDEO_MODE_GLYPH_PLANES(64, number_of_planes));
 
    Printer("%d plane(s) -> %d x %d  (color=%d)\n", number_of_planes, VIDEO_WIDTH, VIDEO_HEIGHT, 1 << ColorDepth());
 

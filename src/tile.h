@@ -1,97 +1,175 @@
 #ifndef  KONPU_TILE_H_
 #define  KONPU_TILE_H_
 #include "glyph.h"
-#include "color.h"
-
 
 //------------------------------------------------------------------------------
-// Tiles typedefs
+// Tiles' Chunk/Color Type, and (full) Type
 //------------------------------------------------------------------------------
 
-// Names with only the size in bytes.
-
-typedef uint16_t  Tile16;   //  2x4 2bpp
-typedef uint32_t  Tile32;   //  4x4 2bpp, or 2x4 4bpp
-typedef uint64_t  Tile64;   //  4x8 2bpp, or 4x4 4bpp, or 2x4 8bpp
-typedef Glyph128  Tile128;  //  8x8 2bpp, or 4x8 4bpp, or 4x4 8bpp
-typedef Glyph256  Tile256;  // 8x16 2bpp, or 8x8 4bpp, or 4x8 8bpp
-
-// names with the chunck (Quarter = 2bpp, Nibble = 4bpp, Byte = 8bpp)
-
-//TileQuarter2x4
-//TileQuarter4x4
-//TileQuarter4x8
-//TileQuarter8x8
-//TileQuarter8x16
-//TileNibble2x4
-//TileNibble4x4
-//TileNibble4x8
-//TileNibble8x8
-//TileByte2x4
-//TileByte4x4
-//TileByte4x8
-
-//Tile2x4_2bpp;
-//TileQuarter4x4;
-//TileQuarter4x8;
-//TileQuarter8x8;
-//TileQuarter8x16;
-
-typedef uint16_t  TileQuarter16;   //  2x4 2-bits (= 4 colors) tile
-typedef uint32_t  TileQuarter32;   //  4x4 2-bits (= 4 colors) tile
-typedef uint32_t  TileQuarter64;   //  4x8 2-bits (= 4 colors) tile
-typedef Glyph128  TileQuarter128;  //  8x8 2-bits (= 4 colors) tile
-typedef Glyph256  TileQuarter256;  // 8x16 2-bits (= 4 colors) tile
-
-typedef uint32_t  TileNibble32;    //  2x4 4-bits (= 16 colors) tile
-typedef uint64_t  TileNibble64;    //  4x4 4-bits (= 16 colors) tile
-typedef Glyph128  TileNibble128;   //  4x8 4-bits (= 16 colors) tile
-typedef Glyph256  TileNibble256;   //  8x8 4-bits (= 16 colors) tile
-
-typedef uint64_t  TileByte64;      //  2x4 8-bits (=256 colors) tile
-typedef Glyph128  TileByte128;     //  4x4 8-bits (=256 colors) tile
-typedef Glyph256  TileByte256;     //  4x8 8-bits (=256 colors) tile
-
-typedef void Tile; // dynamic (from the video buffer)
-
-//------------------------------------------------------------------------------
-// Measurements
-//------------------------------------------------------------------------------
-
-// Width and Height constants:
-#define TILE_QUARTER16_WIDTH  2
-#define TILE_QUARTER32_WIDTH  4
-// TODO ...
-
-
-#define TILE_COLORS_LOG2      (1 << (VideoModeLowNibble() - 8))
-#define TILE_COLORS           (1 << TILE_COLORS_LOG2)
-
-
-//------------------------------------------------------------------------------
-// Access to Tiles from the Video buffer
-//------------------------------------------------------------------------------
-
-
-// Bits:         16           32           64           128           256
-// Color:
-//           Tile16_2x4   Tile32_2x4   Tile64_2x4
-//           Glyph16      Tile32_4x4   Tile64_4x4   Tile128_4x4
-//                        Glyph32      Tile64_4x8   Tile128_4x8   Tile256_4x8
-//                                     Glyph64      Tile128_8x8   Tile256_8x8
-//                                                  Glyph128      Tile256_8x16
-//                                                                Glyph256
+// The chunk used by a Tile, which gives the number of color(s)
+// In tile modes, that number is used as the low nibble of the Video.mode
 //
+//                           Tile   |  # of  |Video.mode's
+//                          Chunks  | Colors |Low Nibble
+enum TileColorType {    //----------|--------|-------------
+   TILE_QUARTER =  9,   // Quarters |    4   |    9
+   TILE_NIBBLE  = 10,   // Nibbles  |   16   |   10
+   TILE_BYTE    = 11,   // Byte     |  256   |   11
 
-// Tile *TileAt(int x, int y, [int plane[=0]]);
-// VideoTileSetAll(...)
+   // Note: We can observe that log2(#Colors) = 1 << (Tile's ColorType - 8)
+   //       or it can also be:  log2(#Colors) = 1 << (Tile's ColorType & 3)
+   //       '--> ... which also happens to be = 1 << (Video.mode & 3)
+};
 
+
+// The (full) type of a Tile, combining
+// * its dimension (can be PIXELS_<2x4|4x4|4x8|8x8|8x16>)
+// * and its color/chunk type
+// It is used to pass to the VIDEO_MODE_TILE(...) macro to give a Video mode
+enum TileType {
+   TILE16_2x4   = (PIXELS_2x4  << 4) | TILE_QUARTER,  //   4 colors
+   TILE32_2x4   = (PIXELS_2x4  << 4) | TILE_NIBBLE,   //  16 colors
+   TILE32_4x4   = (PIXELS_4x4  << 4) | TILE_QUARTER,  //   4 colors
+   TILE64_2x4   = (PIXELS_2x4  << 4) | TILE_BYTE,     // 256 colors
+   TILE64_4x4   = (PIXELS_4x4  << 4) | TILE_NIBBLE,   //  16 colors
+   TILE64_4x8   = (PIXELS_4x8  << 4) | TILE_QUARTER,  //   4 colors
+   TILE128_4x4  = (PIXELS_4x4  << 4) | TILE_BYTE,     // 256 colors
+   TILE128_4x8  = (PIXELS_4x8  << 4) | TILE_NIBBLE,   //  16 colors
+   TILE128_8x8  = (PIXELS_8x8  << 4) | TILE_QUARTER,  //   4 colors
+   TILE256_4x8  = (PIXELS_4x8  << 4) | TILE_BYTE,     // 256 colors
+   TILE256_8x8  = (PIXELS_8x8  << 4) | TILE_NIBBLE,   //  16 colors
+   TILE256_8x16 = (PIXELS_8x16 << 4) | TILE_QUARTER,  //   4 colors
+
+   // Note: In fact, this TileType exactly IS the video mode when using the
+   //       specified tiles.
+   //       .-- Has Attributes
+   //       |  .--- Dimension  (enum VideoElementDimension)
+   //       |  |   .--- TileColorType
+   //       v  v   v
+   //      |0|...|....|
+};
+
+
+
+// This table summarize the relationship between the Tile<N> c type,
+// the Chunk/Color, and the Dimension:
+//
+//  C Type --> Tile16    Tile32    Tile64   Tile128   Tile256
+// Dimension|
+//   2x4    |  Quarter   Nibble    Byte
+//   4x4    |  (glyph)   Quarter   Nibble    Byte
+//   4x8    |            (glyph)   Quarter   Nibble    Byte
+//   8x8    |                      (glyph)   Quarter   Nibble
+//   8x16   |                                          Quarter
+
+// Tiles' full type (value is as `enum TileType`)
+#define TILE_TYPE          VIDEO_MODE
+
+// Tiles' color/chunk type (value is as `enum TileColorType`)
+#define TILE_COLOR_TYPE    (TILE_TYPE & 0xF)
+
+// Tiles' dimensions (value as `enum VideoElementDimension`).
+// Possible values are PIXELS_<2x4|4x4|4x8|8x8|8x16>
+#define TILE_DIMENSION     (TILE_TYPE >> 4)
 
 //------------------------------------------------------------------------------
+// Tile measurements: Simple macros giving their Width and Height (pixels),
+// Size (in bytes), the numbers of Bit (ie = count of pixels), as well as the
+// Log2 of those values.
+//------------------------------------------------------------------------------
 
-// Tile<Quarter|Nibble|Byte><Shift|Cycle><Up|Down|Left|Right>
-// Tile<Quarter|Nibble|Byte>Rotate<90|180|270>
-// Tile<>Rotate<90|180|270>
-// ...
+#define TILE_SIZE                  (1 << TILE_SIZE_LOG2)
+#define TILE_WIDTH                 (2 << ((TILE_DIMENSION + 1) >> 1))
+#define TILE_HEIGHT                (4 << (TILE_TYPE >> 5))
+#define TILE_COUNT_BITS            (8 << TILE_SIZE_LOG2)
+#define TILE_COUNT_PIXELS          (8 << TILE_DIMENSION)
+#define TILE_COUNT_COLOR           (1 << TILE_COUNT_COLOR_LOG2)
+
+#define TILE_SIZE_LOG2             ((TILE_TYPE >> 4) + (TILE_TYPE & 3))
+#define TILE_WIDTH_LOG2            ((TILE_DIMENSION + 3) >> 1)
+#define TILE_HEIGHT_LOG2           (2 + (TILE_TYPE >> 5))
+#define TILE_COUNT_BITS_LOG2       (3 + (TILE_TYPE >> 4) + (TILE_TYPE & 3))
+#define TILE_COUNT_PIXELS_LOG2     (TILE_DIMENSION + 3)
+#define TILE_COUNT_COLOR_LOG2      (1 << (TILE_TYPE & 3))
+
+// ^-- Implementation notes about the macros above:
+//
+// - Formula for H and log2(H) obtained by replacing Dimension=TILE_TYPE>>4 into
+//   the Video Element formulas H=4<<(Dimension>>1) and log2(H)=2+(Dimension>>1)
+//
+// - log2(#bits) = log2(#pixels * color_depth)
+//               = log2(#pixels) + log2(color_depth)
+//               = (TILE_DIMENSION + 3) + log2(1 << (TILE_TYPE & 3))
+//               = 3 + (TILE_TYPE >> 4) + (TILE_TYPE & 3)
+// - log2(size) = log2(#bits) - 3
+
+
+// v-- Measurements (possibly) optimized for the Tile<16|32|64|128|256> C types:
+
+#define TILE16_SIZE                2
+#define TILE16_WIDTH               2
+#define TILE16_HEIGHT              4
+#define TILE16_COUNT_BITS          16
+#define TILE16_COUNT_PIXELS        8
+#define TILE16_COUNT_COLOR         4
+#define TILE16_SIZE_LOG2           1
+#define TILE16_WIDTH_LOG2          1
+#define TILE16_HEIGHT_LOG2         2
+#define TILE16_COUNT_BITS_LOG2     4
+#define TILE16_COUNT_PIXELS_LOG2   3
+#define TILE16_COUNT_COLOR_LOG2    2
+
+#define TILE32_SIZE                4
+#define TILE32_WIDTH               (2 << (TILE_TYPE == TILE32_4x4))
+#define TILE32_HEIGHT              4
+#define TILE32_COUNT_BITS          32
+#define TILE32_COUNT_PIXELS        (8 << (TILE_TYPE == TILE32_4x4))
+#define TILE32_COUNT_COLOR         (1 << TILE32_COUNT_COLOR_LOG2)
+#define TILE32_SIZE_LOG2           2
+#define TILE32_WIDTH_LOG2          (1 + (TILE_TYPE == TILE32_4x4))
+#define TILE32_HEIGHT_LOG2         2
+#define TILE32_COUNT_BITS_LOG2     5
+#define TILE32_COUNT_PIXELS_LOG2   (3 + (TILE_TYPE == TILE32_4x4))
+#define TILE32_COUNT_COLOR_LOG2    (2 << (TILE_TYPE == TILE32_2x4))
+
+#define TILE64_SIZE                8
+#define TILE64_WIDTH               (2 << (TILE_TYPE != TILE64_2x4))
+#define TILE64_HEIGHT              (4 << (TILE_TYPE == TILE64_4x8))
+#define TILE64_COUNT_BITS          64
+#define TILE64_COUNT_PIXELS        TILE_COUNT_PIXELS
+#define TILE64_COUNT_COLOR         TILE_COUNT_COLOR
+#define TILE64_SIZE_LOG2           3
+#define TILE64_WIDTH_LOG2          (1 + (TILE_TYPE != TILE64_2x4))
+#define TILE64_HEIGHT_LOG2         (2 + (TILE_TYPE == TILE64_4x8))
+#define TILE64_COUNT_BITS_LOG2     6
+#define TILE64_COUNT_PIXELS_LOG2   TILE_COUNT_PIXELS_LOG2
+#define TILE64_COUNT_COLOR_LOG2    TILE_COUNT_COLOR_LOG2
+
+#define TILE128_SIZE               16
+#define TILE128_WIDTH              (4 << (TILE_TYPE == TILE128_8x8))
+#define TILE128_HEIGHT             (4 << (TILE_TYPE != TILE128_4x4))
+#define TILE128_COUNT_BITS         128
+#define TILE128_COUNT_PIXELS       TILE_COUNT_PIXELS
+#define TILE128_COUNT_COLOR        TILE_COUNT_COLOR
+#define TILE128_SIZE_LOG2          4
+#define TILE128_WIDTH_LOG2         (2 + (TILE_TYPE == TILE128_8x8))
+#define TILE128_HEIGHT_LOG2        (2 + (TILE_TYPE != TILE128_4x4))
+#define TILE128_COUNT_BITS_LOG2    7
+#define TILE128_COUNT_PIXELS_LOG2  TILE_COUNT_PIXELS_LOG2
+#define TILE128_COUNT_COLOR_LOG2   TILE_COUNT_COLOR_LOG2
+
+#define TILE256_SIZE               32
+#define TILE256_WIDTH              (4 << (TILE_TYPE != TILE256_4x8))
+#define TILE256_HEIGHT             (8 << (TILE_TYPE == TILE256_8x16))
+#define TILE256_COUNT_BITS         256
+#define TILE256_COUNT_PIXELS       TILE_COUNT_PIXELS
+#define TILE256_COUNT_COLOR        TILE_COUNT_COLOR
+#define TILE256_SIZE_LOG2          5
+#define TILE256_WIDTH_LOG2         (2 + (TILE_TYPE != TILE256_4x8))
+#define TILE256_HEIGHT_LOG2        (3 + (TILE_TYPE == TILE256_8x16))
+#define TILE256_COUNT_BITS_LOG2    8
+#define TILE256_COUNT_PIXELS_LOG2  TILE_COUNT_PIXELS_LOG2
+#define TILE256_COUNT_COLOR_LOG2   TILE_COUNT_COLOR_LOG2
+
 
 #endif //include guard

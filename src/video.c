@@ -1,6 +1,71 @@
 #include "video.h"
 #include "init.h"
 #include "rectangle.h"
+#include "printer.h"
+#include "pixel.h"
+
+// For Debugging purpose, display the video mode and related info on the Printer
+static void VideoModePrint(void)
+{
+   int sz8x8 = VideoMode_(VIDEO_MODE);
+   if (sz8x8 == 0) {
+      Printer("Invalid Video Mode: %3d\n", VIDEO_MODE);
+      return;
+   }
+   Printer("%3d   %2d   %3dx%-3d   %3d   ",
+      VIDEO_MODE, sz8x8, VIDEO_WIDTH, VIDEO_HEIGHT, 1 << ColorDepth());
+
+   enum VideoElementDimension elem_dimension = VideoModeDimension();
+   int low_nibble = VideoModeLowNibble();
+
+   // Attribute Modes ----------------------------------------------------------
+   if (VideoModeHasAttributes()) {
+      if (elem_dimension == PIXELS_Nx1) {
+         Printer("Strip8 (%dx%d", VIDEO_WIDTH_STRIP8, VIDEO_HEIGHT_STRIP);
+      } else {
+         Printer("Glyph%d (%dx%d", 8 << elem_dimension, VIDEO_WIDTH_GLYPH, VIDEO_HEIGHT_GLYPH);
+      }
+
+      const char *dimension_str[] = {"2x4","4x4","4x8","8x8","8x16","16x16"};
+      const char *attr_color_type_str[] = {"8", "8_PEN", "8_PAPER", "16"};
+      Printer(") + Attribute_%s_%s (%dx%d @ %d)\n",
+         dimension_str[ATTRIBUTE_DIMENSION],
+         attr_color_type_str[ATTRIBUTE_COLOR_TYPE],
+         VIDEO_WIDTH_ATTRIBUTE, VIDEO_HEIGHT_ATTRIBUTE,
+         VideoAttributeOffset());
+      return;
+   }
+
+   // Chunky Modes -------------------------------------------------------------
+   if (low_nibble > 8) {
+      int bpp = 1 << (low_nibble - 8);
+      if (elem_dimension == PIXELS_Nx1) {
+         Printer("Strip%d (%dx%d", bpp, VIDEO_WIDTH_STRIP, VIDEO_WIDTH_STRIP);
+      } else {
+         Printer("TileT-O-D-O (%dx%d",
+/*          chunk, 8 * bpp * (1 << elem_dimension),
+            dimension_str[elem_dimension], */
+            // TODO: we probably want VIDEO_WIDTH_TILE, VIDEO_HEIGHT_TILE
+            //       name. In any case, tile's width and height depends
+            //       on the same dimension indicator in the VIDEO_MODE,
+            //       so it's in fact same implementation as glyphs:
+            VIDEO_WIDTH_GLYPH, VIDEO_HEIGHT_GLYPH);
+      }
+      Printer(")\n");
+      return;
+   }
+
+   // Planar Modes -------------------------------------------------------------
+   if (elem_dimension == PIXELS_Nx1) {
+      Printer("Strip8 (%dx%d", VIDEO_WIDTH_STRIP8, VIDEO_HEIGHT_STRIP);
+   } else {
+      Printer("Glyph%d (%dx%d", 8 << elem_dimension, VIDEO_WIDTH_GLYPH, VIDEO_HEIGHT_GLYPH);
+   }
+   if (low_nibble > 1) {
+      Printer(") x %d Planes (@ n * %d", low_nibble, VIDEO_SIZE / low_nibble);
+   }
+   Printer(")\n");
+}
 
 // Initialize video
 // - assuming the glyph area is zero'ed out
@@ -17,7 +82,7 @@ static void video_init_(void)
 
    // needs to be set in the video mode function!!!
    Video.active_window = (Window){
-      .geometry = RECTANGLE_SCREEN,
+      .geometry = VIDEO_RECTANGLE,
       .pen = 15, // <-- TODO
    };
 
@@ -42,7 +107,7 @@ void VideoReset(void)
 {
    // Zero out the framebuffer area occupied by the Glyphs in the default mode
    VideoMode(VIDEO_MODE_DEFAULT);
-   memset(Video.frame, 0, VIDEO_SIZE_GLYPHS);
+   memset(Video.frame, 0, VIDEO_GLYPHS_SIZE);
    video_init_();
 }
 
@@ -56,7 +121,7 @@ int VideoMode_(int mode)
 
    // Glyph and Attribute mode
    if (attribute_bit) {
-      int attr_nbytes_log2  = (low_nibble & 3) == ATTRIBUTE_COLORS_256;
+      int attr_nbytes_log2  = (low_nibble & 3) == ATTRIBUTE16;
       int attr_npixels_log2 = low_nibble >> 2;
       return 8 + ((8 >> attr_npixels_log2) << attr_nbytes_log2);
    }
@@ -126,5 +191,6 @@ int VideoMode(int mode)
    *(int16_t*)&Video.height = 8 * Rom.resolution_8x8[index + 1];
 #pragma GCC diagnostic pop
 
+   Printer("Video Mode "); VideoModePrint();
    return res;
 }

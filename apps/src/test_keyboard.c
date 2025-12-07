@@ -20,7 +20,7 @@ static void keyboard_draw(void)
 
 int AppInit(void)
 {
-   VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph32, ATTRIBUTE_4x8_16));
+   VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(32, ATTRIBUTE8_4x8));
    VideoGlyphSetAll();
    VideoAttributeSetAll(0x24);
    Video.border = 255;

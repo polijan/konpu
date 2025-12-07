@@ -12,21 +12,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-/* TODO: delete, we don't need!
-// Assert that the given pointer indicates a location inside the framebuffer
-static inline void VideoAssertInFramebuffer(void *pointer)
-{
-   assert((uint8_t *)(pointer) >= Video.frame &&
-          (uint8_t *)(pointer) < (Video.frame + VIDEO_SIZE));
-   // Prevents the compiler to issue a "unused parameter" warning in case
-   // `assert()` expands to nothing.
-   (void)(pointer);
-}
-   */
-
-
-
-
 //------------------------------------------------------------------------------
 // Access to BitPlanes
 //------------------------------------------------------------------------------
@@ -85,7 +70,7 @@ static inline uint8_t *VideoPlane(int n)
 static inline uint8_t *VIDEO_ATTRIBUTE_AT_(int x, int y) {
    assert(x >= 0 && x < VIDEO_ATTRIBUTE_WIDTH);
    assert(y >= 0 && x < VIDEO_ATTRIBUTE_HEIGHT);
-   return VIDEO_ATTRIBUTE + ((x + (y << VIDEO_ATTRIBUTE_WIDTH_LOG2)) << AttributeHasTwoBytes());
+   return VIDEO_ATTRIBUTE + ((x + (y << VIDEO_ATTRIBUTE_WIDTH_LOG2)) << ATTRIBUTE_SIZE_LOG2);
 }
 */
 
@@ -119,7 +104,7 @@ static inline uint8_t *VideoAttribute_(int x, int y)
    assert(y >= 0 && y < VIDEO_HEIGHT_ATTRIBUTE);
 
    int index = x + y * VIDEO_WIDTH_ATTRIBUTE;
-   return Video.frame + VideoAttributeOffset() + (index << AttributeHasTwoBytes());
+   return Video.frame + VideoAttributeOffset() + (index << ATTRIBUTE_SIZE_LOG2);
 }
 
 // uint8_t *VideoAttribute(int x, int y);
@@ -140,8 +125,8 @@ static inline uint8_t *VideoAttributeAtPixel_(int x, int y)
 {
    assert(x >= 0 && x < VIDEO_WIDTH);
    assert(y >= 0 && y < VIDEO_HEIGHT);
-   return VideoAttribute_(x >> AttributeWidthLog2(),
-                          y >> AttributeHeightLog2());
+   return VideoAttribute_( x >> ATTRIBUTE_WIDTH_LOG2,
+                           y >> ATTRIBUTE_HEIGHT_LOG2);
 }
 
 // Return a pointer to the attribute located under the pixel (x,y). If the pixel
@@ -155,34 +140,42 @@ static inline uint8_t *VideoAttributeAtPixel(int x, int y)
 
 // void VideoAttributeSetAll();
 // void VideoAttributeSetAll(int attribute_byte);
-// void VideoAttributeSetAll(int fg, int bg);
+// void VideoAttributeSetAll(int pen, int paper);
 // Set all the attributes of the video framebuffer to a given value.
-// - no  argument: set to default fg and bg
+// - no  argument: set to default pen and paper
 // - one argument: set to the given byte (Attribute must point to a single byte)
-// - two arguments: set to the given fg and bg colors.
+// - two arguments: set to the given pen and paper colors.
 #define VideoAttributeSetAll(...) \
    UTIL_OVERLOAD(VideoAttributeSetAll, __VA_ARGS__)
    static inline void VideoAttributeSetAll_1_(int byte) {
       int start = VideoAttributeOffset();
       memset(Video.frame + start, byte, VIDEO_SIZE - start);
    }
-   static inline void VideoAttributeSetAll_2_(int fg, int bg) {
-      if (AttributeHasTwoBytes()) {
+   static inline void VideoAttributeSetAll_2_(int pen, int paper) {
+      if (ATTRIBUTE_SIZE_LOG2) { // Attribute16
          union {
-            uint16_t u8[8];
+            Attribute16 attr16[4];
             uint64_t u64;
-         } mem = {.u8 = {fg, bg, fg, bg, fg, bg, fg, bg}};
+         } mem = {
+            .attr16 = {
+               (Attribute16){ pen, paper },
+               (Attribute16){ pen, paper },
+               (Attribute16){ pen, paper },
+               (Attribute16){ pen, paper },
+            }
+         };
          int offset = VideoAttributeOffset();
          uint8_t *attributes = Video.frame + offset;
          int end = (VIDEO_SIZE - offset) >> 3;
          for (int i = 0; i < end; i++)
             ((uint64_t *)attributes)[i] = mem.u64;
       } else {
-      VideoAttributeSetAll_1_(fg << 4 | bg);
+      VideoAttributeSetAll_1_(pen << 4 | paper);
       }
    }
 #  define VideoAttributeSetAll_0_() \
-      VideoAttributeSetAll_2_(COLOR_DEFAULT_FG, COLOR_DEFAULT_BG)
+      VideoAttributeSetAll_2_(COLOR_DEFAULT_PEN, COLOR_DEFAULT_PAPER) // TODO: FIXME
+
 
 //------------------------------------------------------------------------------
 // Access to framebuffer's Glyphs: Get(), Set(), ...
@@ -404,29 +397,29 @@ static inline uint8_t *VideoAttributeAtPixel(int x, int y)
 #  define VideoGlyphSetAll_0_()   memset(Video.frame, 0, VideoAttributeOffset())
 #  define VideoGlyphSetAll_1_(glyph)        \
       _Generic((glyph)                    , \
-         uint8_t:  VideoGlyphSetAll_1_8_  , \
-         uint16_t: VideoGlyphSetAll_1_16_ , \
-         uint32_t: VideoGlyphSetAll_1_32_ , \
-         uint64_t: VideoGlyphSetAll_1_64_ , \
+         Glyph8:   VideoGlyphSetAll_1_8_  , \
+         Glyph16:  VideoGlyphSetAll_1_16_ , \
+         Glyph32:  VideoGlyphSetAll_1_32_ , \
+         Glyph64:  VideoGlyphSetAll_1_64_ , \
          Glyph128: VideoGlyphSetAll_1_128_, \
          Glyph256: VideoGlyphSetAll_1_256_  \
       )((glyph))
-   static inline void VideoGlyphSetAll_1_8_(uint8_t g) {
+   static inline void VideoGlyphSetAll_1_8_(Glyph8 g) {
       memset(Video.frame, g, VideoAttributeOffset());
    }
-   static inline void VideoGlyphSetAll_1_64_(uint64_t g) {
+   static inline void VideoGlyphSetAll_1_64_(Glyph64 g) {
       int end = VideoAttributeOffset() >> PIXELS_8x8;
       for (int i = 0; i < end; i++)
          Video.glyph64[i] = g;
    }
-   static inline void VideoGlyphSetAll_1_16_(uint16_t g) {
+   static inline void VideoGlyphSetAll_1_16_(Glyph16 g) {
       union {
          uint16_t u16[4];
          uint64_t u64;
       } mem = {.u16 = {g, g, g, g}};
       VideoGlyphSetAll_1_64_(mem.u64);
    }
-   static inline void VideoGlyphSetAll_1_32_(uint32_t g) {
+   static inline void VideoGlyphSetAll_1_32_(Glyph32 g) {
       union {
          uint16_t u32[2];
          uint64_t u64;
@@ -447,10 +440,10 @@ static inline uint8_t *VideoAttributeAtPixel(int x, int y)
    }
 #  define VideoGlyphSetAll_2_(glyph, plane) \
       _Generic((glyph)                    , \
-         uint8_t:  VideoGlyphSetAll_2_8_  , \
-         uint16_t: VideoGlyphSetAll_2_16_ , \
-         uint32_t: VideoGlyphSetAll_2_32_ , \
-         uint64_t: VideoGlyphSetAll_2_64_ , \
+         Glyph8:   VideoGlyphSetAll_2_8_  , \
+         Glyph16:  VideoGlyphSetAll_2_16_ , \
+         Glyph32:  VideoGlyphSetAll_2_32_ , \
+         Glyph64:  VideoGlyphSetAll_2_64_ , \
          Glyph128: VideoGlyphSetAll_2_128_, \
          Glyph256: VideoGlyphSetAll_2_256_  \
       )((glyph), (plane))

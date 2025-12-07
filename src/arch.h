@@ -18,47 +18,39 @@
 #define KONPU_VERSION_PATCH  1
 
 //------------------------------------------------------------------------------
-// Essential Types
+// Essential Types: Video Elements
 //------------------------------------------------------------------------------
 
-// Glyphs (see glyph.h for operations)
+struct GlyphOrTile128 { uint64_t top, bottom; };
+struct GlyphOrTile256 { uint64_t top_left,    top_right,
+                                 bottom_left, bottom_right; };
 
-typedef void      Glyph; // <-- TODO: remove?
-typedef uint8_t   Glyph8;
-typedef uint16_t  Glyph16;
-typedef uint32_t  Glyph32;
-typedef uint64_t  Glyph64;
-typedef struct    Glyph128 { Glyph64   top, bottom; } Glyph128;
-typedef struct    Glyph256 { Glyph64   top_left,    top_right,
-                                       bottom_left, bottom_right; } Glyph256;
+// Glyph types (2D bitmaps, see glyph.h)
+typedef void                  Glyph;    // <-- TODO: remove?
+typedef uint8_t               Glyph8;   // Glyph  2x4  (bit) pixels
+typedef uint16_t              Glyph16;  // Glyph  4x4  (bit) pixels
+typedef uint32_t              Glyph32;  // Glyph  4x8  (bit) pixels
+typedef uint64_t              Glyph64;  // Glyph  8x8  (bit) pixels
+typedef struct GlyphOrTile128 Glyph128; // Glyph  8x16 (bit) pixels
+typedef struct GlyphOrTile256 Glyph256; // Glyph 16x16 (bit) pixels
 
-/* TODO: Does it make sense to use C23's fixed-bits integers _BintInt() ?
+// Tile types ("chunky" Glyphs, see tile.h)
+typedef uint16_t              Tile16;  // Tile 2x4 4c
+typedef uint32_t              Tile32;  // Tile 2x4 16c  or 4x4 4c
+typedef uint64_t              Tile64;  // Tile 2x4 256c or 4x4 16c or 4x8 4c
+typedef struct GlyphOrTile128 Tile128; // Tile 4x4 256c or 4x8 16c or 8x8 4c
+typedef struct GlyphOrTile256 Tile256; // Tile 4x8 256c or 8x16 4c or 8x8 16c
 
-typedef union {
-   struct {
-      Glyph64  top,
-               bottom;
-   };
-#if BITINT_MAXWIDTH >= 128 // may or may not exist
-   unsigned _BitInt(128)  bits_;
-#ifdef __SIZEOF_INT128__   // may or may not exist
-   unsigned __int128      bits_;
-#endif
-} Glyph128;
 
-typedef union {
-   struct {
-      Glyph64  top_left,    top_right,
-               bottom_left, bottom_right;
-   };
-#if BITINT_MAXWIDTH >= 256 // may or may not exist
-   unsigned _BitInt(256)  bits_;
-#endif
-} Glyph256;
-*/
+// Strip type (packed pixels byte, see pixel.h)
+typedef uint8_t  Strip; // Strip = 1,2,4,or 8 pixels packed in a byte
+
+// Attribute types (hold pen and/or paper color(s), see attribute.h)
+typedef uint8_t  Attribute8;
+typedef struct { uint8_t pen, paper; } Attribute16;
+
 
 // Hold information (64-bits) about the Konpu 256 possible colors
-
 typedef struct ColorInfo {
    // Components in OkLab color space (transformed from [0,1] to 8-bits):
    uint8_t L_half;      //<  L = 2 * L_half        / 510
@@ -102,46 +94,57 @@ typedef struct Window {
 // Video card
 //------------------------------------------------------------------------------
 
-#define VIDEO_LCM_SZ_        2880 // 2^6 * 3^2 * 5
-#ifndef VIDEO_FACTOR_          // value may be can be changed in config.h
-#define VIDEO_FACTOR_        4 // <-- default (implemented values: 2,3,4,5,6,7)
+#define VIDEO_LCM_SZ_    2880 // 2^6 * 3^2 * 5
+#ifndef VIDEO_FACTOR_      // Factor value may be can be changed in config.h
+#define VIDEO_FACTOR_    4 // <-- default (implemented values: 2,3,4,5,6,7)
 #endif
-#define VIDEO_SIZE           (VIDEO_FACTOR_ * VIDEO_LCM_SZ_)
+#define VIDEO_SIZE       (VIDEO_FACTOR_ * VIDEO_LCM_SZ_)
 
 
 struct _VideoMemory {
 
    // Framebuffer
    union {
-      uint8_t   frame[VIDEO_SIZE];  // raw framebuffer
+      // Raw framebuffer
+      uint8_t     frame[VIDEO_SIZE];
 
-      // Names for convenient Glyph access in glyph modes
-      // The glyph<n> at (x,y) is located at:
-      // Video.glyph<n>[x + y * VIDEO_WIDTH_GLYPH<n>]
-      Glyph8    glyph8  [VIDEO_SIZE];
-      Glyph16   glyph16 [VIDEO_SIZE / 2];
-      Glyph32   glyph32 [VIDEO_SIZE / 4];
-      Glyph64   glyph64 [VIDEO_SIZE / 8];
-      Glyph128  glyph128[VIDEO_SIZE / 16];
-      Glyph256  glyph256[VIDEO_SIZE / 32];
+      // Names for convenient Glyph access:
+      // The Glyph<N> at (x,y) is located at: Video.glyph<N>[x + y * VIDEO_WIDTH_GLYPH<N>]
+      // (But, it is simpler tho use VIDEO_GLYPH(N)[y][x])
+      Glyph8      glyph8  [VIDEO_SIZE / 1];
+      Glyph16     glyph16 [VIDEO_SIZE / 2];
+      Glyph32     glyph32 [VIDEO_SIZE / 4];
+      Glyph64     glyph64 [VIDEO_SIZE / 8];
+      Glyph128    glyph128[VIDEO_SIZE / 16];
+      Glyph256    glyph256[VIDEO_SIZE / 32];
 
-      // Names for convenient Pixel(Strip) access in pixel modes:
-      uint8_t   pixel_strip [VIDEO_SIZE];
-      uint8_t   pixel_strip1[VIDEO_SIZE]; // byte full color pixels
-      uint8_t   pixel_strip2[VIDEO_SIZE]; // pixels are nibbles and 16 colors
-      uint8_t   pixel_strip4[VIDEO_SIZE]; // pixels are quarter and 4 colors
-      uint8_t   pixel_strip8[VIDEO_SIZE]; // bits pixels
-      // .pixel_strip1 is only used for the byte pixel mode (mode 123),
-      // Specifically for that mode you can access the pixel (x,y) with:
-      // Video.pixel[x + y * Vide.width]
-      uint8_t   pixel       [VIDEO_SIZE];
+      // Names for convenient Tile access
+      // The Tile<N> at (x,y) is located at: Video.tile<N>[x + y * VIDEO_WIDTH_TILE<N>]
+      // (But, it is simpler tho use VIDEO_TILE(N)[y][x])
+      Tile16      tile16 [VIDEO_SIZE / 2];
+      Tile32      tile32 [VIDEO_SIZE / 4];
+      Tile64      tile64 [VIDEO_SIZE / 8];
+      Tile128     tile128[VIDEO_SIZE / 16];
+      Tile256     tile256[VIDEO_SIZE / 32];
+
+      // Names for convenient Strip access
+      // (But, it is simpler tho use VIDEO_STRIP()[y][x])
+      Strip       strip[VIDEO_SIZE / 1];
+
+      // Name specifically for the full color pixel mode (mode 123)
+      // In that mode you can access the pixel (x,y) with: Video.pixel[x + y * Video.width]
+      uint8_t     pixel[VIDEO_SIZE];
+
+      // Just to make sure it can contain this type
+      Attribute8  DO_NOT_USE_THIS_FIELD_attr8_[VIDEO_SIZE / 1];
+      Attribute16 DO_NOT_USE_THIS_FIELD_attr16_[VIDEO_SIZE / 2];
 
       // Names for convenient access when the framebuffer is divided into planes
-      // (video elements are then either Glyphs or PixelStrip8 (aka bit pixels))
+      // (video elements are then either Glyphs or Strip8 (aka bit pixels))
 #     define VIDEO_DECLARE_PLANES_(N)              \
       union {                                      \
-         uint8_t   pixels8x1[VIDEO_SIZE      / N]; \
-         Glyph8    glyph8   [VIDEO_SIZE      / N]; \
+         Strip     strip8   [VIDEO_SIZE / 1  / N]; \
+         Glyph8    glyph8   [VIDEO_SIZE / 1  / N]; \
          Glyph16   glyph16  [VIDEO_SIZE / 2  / N]; \
          Glyph32   glyph32  [VIDEO_SIZE / 4  / N]; \
          Glyph64   glyph64  [VIDEO_SIZE / 8  / N]; \
@@ -191,8 +194,8 @@ struct _VideoMemory {
             uint8_t attr_default_paper;        // true color
          };
       };
-      union {  // stray Glyph, Tile, or PixelStrip
-         uint8_t   stray_pixel_strip;
+      union {  // stray Glyph, Tile, or Strip
+         Strip     stray_strip;
          Glyph8    stray_glyph8;
          Glyph16   stray_glyph16;
          Glyph32   stray_glyph32;

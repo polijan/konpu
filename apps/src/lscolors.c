@@ -27,7 +27,7 @@ int AppInit(void)
    // The closest Konpu color to that is:
    #define NEUTRAL 53
 
-   VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(Glyph64, ATTRIBUTE_8x8_256));
+   VideoMode(VIDEO_MODE_GLYPH_ATTRIBUTES(64, ATTRIBUTE16_8x8));
    VideoGlyphSetAll();
    VideoAttributeSetAll(NEUTRAL);
    Video.border = NEUTRAL;

@@ -2,7 +2,7 @@
 
 int AppInit(void)
 {
-   VideoMode(VIDEO_MODE_PIXEL(4));
+   VideoMode(VIDEO_MODE_STRIP(2));
 
    while (!KEY_IS_ANY_DOWN()) {
       int x      = UtilRandom32(VIDEO_WIDTH);

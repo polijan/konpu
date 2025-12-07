@@ -14,14 +14,17 @@
 //------------------------------------------------------------------------------
 
 // Return the current color depth, ie. the log2 of the max. number of colors
-// that can be in the framebuffer
-static inline int ColorDepth()
+// that can be displayed in the framebuffer
+static inline int ColorDepth(void)
 {
    // Attribute modes
    if (VideoModeHasAttributes())
-      return 4 << (AttributeColorType() != ATTRIBUTE_COLORS_16);
+      return ATTRIBUTE_COUNT_COLOR_LOG2;
+/*
+      return 4 << (AttributeColorType() != ATTRIBUTE8);
       //     ^--- 16 colors attributes => color depth is 4
       //          otherwise            => color depth is 8
+*/
 
    // Non-Attributes modes
    int n = VideoModeLowNibble();
@@ -41,13 +44,11 @@ static inline int ColorDepth()
 // Given a value, return it normalized between 0 and the current color count.
 #define ColorNormalize(color) \
    ((color) & ((1 << ColorDepth()) - 1))
-   // We want to return: color % current number of color.
-   // As the number of color is a power of 2 (i.e. it's 1 << ColorDepth()),
-   // we can optimize the modulo as: color & (current number of color - 1)
-   //
-   // In fact, the & technique makes the color normalization correct for
-   // negative numbers too (on two's complement systems, which Konpu [and C23]
-   // assumes)
+   // We want to return: `color % current number of color`.
+   // As the number of colors is power of 2, the modulo can be optimized as:
+   // `color & (current number of color - 1)`
+   // Furthermore, this makes the color normalization correct also for negative
+   // numbers too on two's complement systems, which Konpu (and C23) assumes.
 
 // ColorResetPalette([N])
 // If N is a *literal* <2|4|8|16|32|64|128>, reset that palette
@@ -89,24 +90,19 @@ static inline uint8_t *ColorPalette(void)
 // MAYBE DELETE as this file deals with "true" colors, not index
 //------------------------------------------------------------------------------
 
-#define COLOR16_TTY_BLACK          0
-#define COLOR16_TTY_RED            1
-#define COLOR16_TTY_GREEN          2
-#define COLOR16_TTY_YELLOW         3
-#define COLOR16_TTY_BLUE           4
-#define COLOR16_TTY_MAGENTA        5
-#define COLOR16_TTY_CYAN           6
-#define COLOR16_TTY_WHITE          7
-#define COLOR16_TTY_HIGH_BLACK     8
-#define COLOR16_TTY_HIGH_RED       9
-#define COLOR16_TTY_HIGH_GREEN    10
-#define COLOR16_TTY_HIGH_YELLOW   11
-#define COLOR16_TTY_HIGH_BLUE     12
-#define COLOR16_TTY_HIGH_MAGENTA  13
-#define COLOR16_TTY_HIGH_CYAN     14
-#define COLOR16_TTY_HIGH_WHITE    15
-
-
+// "Terminal ANSI Colors" - This requires a palette whose first 8 colors (or 16
+// if COLOR_TTY_BRIGHT is used) which follows a color scheme similar to an ANSI
+// Terminal, which is the case of the default 16-color palette)
+#define COLOR_TTY_BLACK                  0u
+#define COLOR_TTY_RED                    1u
+#define COLOR_TTY_GREEN                  2u
+#define COLOR_TTY_YELLOW                 3u
+#define COLOR_TTY_BLUE                   4u
+#define COLOR_TTY_MAGENTA                5u
+#define COLOR_TTY_CYAN                   6u
+#define COLOR_TTY_WHITE                  7u
+#define COLOR_TTY_BRIGHT(COLOR8_NAME)   (8u | UTIL_CAT(COLOR_TTY_, COLOR8_NAME))
+#define COLOR_TTY_GRAY                   8u // = COLOR_TTY_BRIGHT(BLACK)
 
 
 //------------------------------------------------------------------------------

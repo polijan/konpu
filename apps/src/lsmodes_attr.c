@@ -4,7 +4,7 @@
 //------------------------------------------------------------------------------
 #include "konpu.h"
 
-static const char *attr_color_type[] = {"16", "PEN256", "PAPER256", "256"};
+static const char *attr_color_type[] = {"8", "8_PEN", "8_PAPER", "16"};
 static const char *elem_size_str[] = {"2x4", "4x4", "4x8", "8x8", "8x16", "16x16"};
 
 int AppInit(void)
@@ -23,8 +23,7 @@ int AppInit(void)
          8 * (1 << elem_sz), (elem_sz == 0)? "  " : ((elem_sz < 4)? " " : ""),
          VideoAttributeOffset(),
          VIDEO_WIDTH_ATTRIBUTE, VIDEO_HEIGHT_ATTRIBUTE,
-         elem_size_str[AttributeDimension()],
-         attr_color_type[AttributeColorType()]
+         elem_size_str[ATTRIBUTE_DIMENSION], attr_color_type[ATTRIBUTE_COLOR_TYPE]
       );
 
       if ((VIDEO_WIDTH  % GLYPH_WIDTH) || (VIDEO_HEIGHT % GLYPH_HEIGHT))

@@ -5,9 +5,9 @@
 #  endif
 #endif
 
-// - Include "config.h" and "platform.h" headers
 // - Check for standard C11 (or later) compliance
-// - Check for "common" assumptions that Konpu relies upon
+// - Check for "common" assumptions that Konpu relies on
+// - Include "config.h" and "platform.h" headers
 //   Hint: `grep` Konpu's sources for the word "ASSUMEs" to list them all.
 // - Include the following "free-standing" C headers:
 //   <float.h>, <limits.h>, <stdarg.h>, <stddef.h>, <stdint.h>
@@ -32,6 +32,17 @@
 #ifndef  KONPU_C_H_
 #define  KONPU_C_H_
 
+// Check VLA support (specifically for C11/C17)
+// C supports Variable Length Arrays (VLAs) starting from the C99 standard, but
+// they are optional in C11 and mandatory again in C23. Therefore, whether VLAs
+// are accepted depends on the specific C standard being used and the compiler's
+// support for it.
+// Note: Konpu uses variable-sized types to simplify its public API, but never
+//       uses stack-based VLAs (as it is almost always a bad idea)
+#ifdef __STDC_NO_VLA__
+#  error "Konpu requires a C compiler with VLA support."
+#endif
+
 //TODO:
 // - maybe C23 standard attribute are C_ATTRIBUTE_* and others attributes
 //   (or similar things) should be C_HINT_*
@@ -40,9 +51,6 @@
 // Config and platform includes
 #include "config.h"
 #include "platform.h"
-
-
-
 
 
 // Control Test Macros to add/prevent extras when using various C libraries

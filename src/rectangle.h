@@ -7,19 +7,6 @@
 // Note: The rectangle type is defined in arch.h
 //------------------------------------------------------------------------------
 
-// A pixel rectangle filling the videoframe with elements being pixels
-#define RECTANGLE_PIXEL_SCREEN \
-   ((Rectangle){ 0,0, VIDEO_WIDTH, VIDEO_HEIGHT })
-
-// A rectangle filling the videoframe with elements being the one defined by the
-// video mode.
-#define RECTANGLE_SCREEN                                                       \
-   ((VideoModeDimension() == PIXELS_Nx1) ?                                     \
-      /*pixels     :*/ (Rectangle){0,0, VIDEO_WIDTH, VIDEO_HEIGHT } :          \
-      /*glyph/tiles:*/ (Rectangle){0,0, VIDEO_WIDTH_GLYPH, VIDEO_HEIGHT_GLYPH })
-      // ^ VIDEO_WIDTH_GLYPH and VIDEO_WIDTH_TILE macro are in fact the same,
-      //   and same for _HEIGHT_, so this cover both cases.
-
 // Creates a rectangle from a point and vector that translate that point.
 // (dx, dy) is similar to width and height but can be negative.
 static inline Rectangle
