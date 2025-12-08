@@ -123,14 +123,23 @@
 //  `__has_include` which is present in many compilers and is required by C23).
 #   if defined __has_include
 #      if __has_include ("SDL.h")
+#         pragma GCC diagnostic push
+#         pragma GCC diagnostic ignored "-Wswitch-default"
 #         include "SDL.h"
+#         pragma GCC diagnostic pop
 #      elif __has_include (<SDL2/SDL.h>)
+#         pragma GCC diagnostic push
+#         pragma GCC diagnostic ignored "-Wswitch-default"
 #         include <SDL2/SDL.h>
+#         pragma GCC diagnostic pop
 #      else
 #         error "Cannot find the header for SDL2"
 #      endif
 #   else
+#     pragma GCC diagnostic push
+#     pragma GCC diagnostic ignored "-Wswitch-default"
 #     include "SDL.h"
+#     pragma GCC diagnostic pop
 #   endif
 #elif KONPU_PLATFORM_SDL3
 #   define KONPU_PLATFORM_SDL_NAME "SDL3"

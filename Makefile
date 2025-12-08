@@ -20,6 +20,17 @@ CWARN = -Wall -Wextra -pedantic  \
         \
         -Wno-cast-align -Wno-unused-function  \
         \
+        -Wfloat-equal -Wstrict-prototypes \
+        \
+        -Wunreachable-code \
+        -Wswitch-default -Wswitch-enum \
+
+#       too strict?
+#       -Wstrict-overflow=5 \
+#       -Wconversion \
+
+
+#
 #        $(CWARN_EXTRA) \
 #        -fanalyzer -fsanitize=address,undefined \
         # -fanalyzer -fsanitize=address,undefined # -Werror
@@ -43,12 +54,13 @@ CWARN = -Wall -Wextra -pedantic  \
 # -ggdb3 produces extra info, for example including macro definitions.
 #
 # For a release build do: CFLAGS_DEBUG = -DNDEBUG
-CDEBUG = #-ggdb3 # -Werror #<-- don't build with warnings
+#CDEBUG =
+CDEBUG = -ggdb3 # -Werror #<-- don't build with warnings
 
 # Optimization:
 # + -O2 or `-O3 -march=native -mtune=native -fexpensive-optimizations` or ...
 # + -Wsuggest* warnings, search for -Wsuggest in: https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
-COPTIMIZE = -O2
+#COPTIMIZE = -DNDEBUG -O3 -march=native -mtune=native -fexpensive-optimizations
 #COPTIMIZE = -O2 \
 #        \
 #        -Wsuggest-attribute=pure -Wsuggest-attribute=const       \
@@ -74,7 +86,7 @@ MAKEFLAGS += -rR
 .PHONY: all      konpu tests apps tools                                     \
         clean    clean_konpu clean_apps clean_tools                         \
         cleanall cleanall_konpu cleanall_tests cleanall_apps cleanall_tools \
-        test cppcheck print-%                                               \
+        run test cppcheck print-%                                           \
 
 all: konpu tests apps
 
@@ -189,7 +201,8 @@ cleanall_apps: clean_apps
 apps/lib/%.so: apps/src/%.c include/konpu.h
 	@printf "\033[32mcreating application (shared lib %s):\033[m " $@
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -nostdlib -Iinclude -fPIC -shared -o $@ $<
+	$(CC) $(CFLAGS) -ffreestanding -nostdlib -Iinclude -fPIC -shared -o $@ $<
+# -ffreestanding ?
 #-nostdlib? -> to make it static
 
 
@@ -200,6 +213,10 @@ apps/lib/%.so: apps/src/%.c include/konpu.h
 # Use make print-<VARIABLE> to print out a variable from this Makefile
 print-%:
 	@echo '$(subst ','\'',$*=$($*))'
+
+# Run Konpu
+run: konpu
+	@konpu --stdout
 
 # Run the tests
 test: tests
