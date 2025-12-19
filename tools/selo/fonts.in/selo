@@ -3,7 +3,7 @@
    #define UTIL_CAT_(item, ...)    item##__VA_ARGS__
 
 #ifndef KONPU_GLYPH_H_
-   #define KONPU_GLYPH_H_  // Prevent inclusion of Konpu's "glyph.h"
+   #define KONPU_GLYPH_H_  DEFINED_BY_SELO_TO_PREVENT_INCLUSION_OF_GLYPH_H
    #define GLYPH8(x)   x
    #define GLYPH16(x)  x
    #define GLYPH32(x)  x
