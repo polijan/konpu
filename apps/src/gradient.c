@@ -19,10 +19,10 @@ static void gradient(uint32_t rgb_start, uint32_t rgb_end)
                                     .a = lerpf(lab1.a, lab2.a, t),
                                     .b = lerpf(lab1.b, lab2.b, t), };
       int color = ColorFromLABf(gradient);
-      for (int x = 0; x < VIDEO_WIDTH; x++) {
-         Video.pixel[x + y * VIDEO_WIDTH] = color;
-         // works too: PixelByteAt(x, y) = color;
-      }
+
+      // In 256 color pixel mode, strip = pixel. Paint horizontal lines.
+      VideoArray pixel = VIDEO_STRIP();
+      for (int x = 0; x < VIDEO_WIDTH; x++)  pixel[y][x] = color;
    }
 }
 
