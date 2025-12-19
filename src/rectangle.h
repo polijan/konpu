@@ -110,4 +110,88 @@ RectangleInflate(Rectangle r, int dw, int dh)
    return r;
 }
 
-#endif //include guard
+#if 0
+// Coerce argument into a Rectangle to work around the utter broken-ness of C's
+// _Generic statement.
+// WHY?: In C, _Generic selects an expression at compile-time based on the type
+// of its first argument. The problem is that every expression, even the ones
+// that will not be selected, must be semantically valid. This is needlessly
+// problematic and frankly annoying.
+// To understand more, read this article:
+// https://www.chiark.greenend.org.uk/~sgtatham/quasiblog/c11-generic/
+
+/* TODO: REMOVE THIS PART
+// Transform a surface into a Rectangle
+#define PRIVATE_RECTANGLE_(surface)                               \
+   _Generic(surface                                             , \
+      Rectangle: (surface)                                      , \
+      Window * : PRIVATE_ENSURE_WINDOW_PTR_(surface)->rectangle , \
+      VideoSurface_: Video.active                                 \
+   )
+#  define PRIVATE_ENSURE_WINDOW_PTR_(surface)      \
+      _Generic(surface,                            \
+         Window * : (surface)                      \
+         default  : PrivateWindowPtr_((surface)),  \
+      )
+*/
+
+
+
+// Transform a surface into a Rectangle
+#define PRIVATE_RECTANGLE_(surface)                                            \
+   _Generic((surface)                                                        , \
+      Rectangle    : (surface)                                               , \
+      VideoSurface_: Video.active                                            , \
+      Window*      :                                                           \
+         /* The following is necessary because every expression in _Generic */ \
+         /* (even the ones that won't be selected) must be semantically     */ \
+         /* valid. Thus we must ensure validity for non-Window* too.        */ \
+         _Generic((surface)                                                  , \
+            Window*: (surface)                                               , \
+            default: PrivateCoerceToWindowPtr_()                               \
+         )->rectangle                                                          \
+   )
+   Window* PrivateCoerceToWindowPtr_(void); // (no implementation needed)
+
+/* ^---  TODO MAYBE/LATER: Perhaps, it can be valuable to have a RECTANGLE macro
+         in rectangle.h which construct Rectangle from anything. In that case,
+         we could use that instead.
+*/
+#endif
+
+/*
+// Obtain a Rectangle from a Surface, or (an origin and) width/height
+//
+// Rectangle RECTANGLE(Video)                 // Video.active rectangle
+// Rectangle RECTANGLE(int window_number);    // from a window number ???
+// Rectangle RECTANGLE(const Window *window); // from a window
+// Rectangle RECTANGLE(Rectangle rectangle);  // copy from another rectangle
+// Rectangle RECTANGLE([int x0,y0 = 0,0], int width, height); // from parameters
+
+//#define RECTANGLE(...) UTIL_OVERLOAD(RECTANGLE, __VA_ARGS__)
+//#  define RECTANGLE_4_(x0,y0, w,h)     ((Rectangle){(x0),(y0), (w),(h)})
+//#  define RECTANGLE_2_(w, h)           ((Rectangle){0,0, (w),(h)})
+
+//#  define RECTANGLE_1_(surface)                                        \
+*/
+
+
+
+#  define RECTANGLE(surface)                                        \
+      _Generic((surface)                                                     , \
+         Rectangle    : (surface)                                            , \
+         VideoSurface_: Video.active                                         , \
+         Window*      :                                                        \
+            /* The following is necessary because every expression in  */      \
+            /* _Generic (even the ones that won't be selected) must be */      \
+            /* semantically valid. Thus we must ensure validity for    */      \
+            /* non-Window* types too.                                  */      \
+            _Generic((surface)                                               , \
+               Window*: (surface)                                            , \
+               default: PrivateCoerceToWindowPtr_()                            \
+            )->rectangle                                                       \
+      )
+   Window* PrivateCoerceToWindowPtr_(void); // (no implementation needed)
+
+
+   #endif //include guard

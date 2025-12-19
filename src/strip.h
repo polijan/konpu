@@ -8,45 +8,44 @@
 
 // A Strip is a byte representing a small horizontal line of N(=1|2|4|8) pixels.
 // see: [packed pixels](https://en.wikipedia.org/wiki/Packed_pixel)
+typedef Form8 Strip;
 
 // The type of Strip is represented by the number of packed pixels:
 //
 //        |   |  Pixels | Pixel    |  # of  |
 // Type   | N |  N x 1  | Chunk(s) | Colors | Video.mode's Low Nibble
 // -------|---|---------|----------|--------|-----------------------------------
-// Strip1 | 1 |  1 x 1  | Byte     |  256   | 11
-// Strip2 | 2 |  2 x 2  | Nibbles  |   16   | 10
-// Strip4 | 4 |  4 x 1  | Quarters |    4   |  9
+// Strip1 | 1 |  1 x 1  | Byte     |  256   | PIXEL_CHUNK_BYTE   (=11)
+// Strip2 | 2 |  2 x 2  | Nibbles  |   16   | PIXEL_CHUNK_NIBBLE (=10)
+// Strip4 | 4 |  4 x 1  | Quarters |    4   | PIXEL_CHUNK_QUARTER (=9)
 // Strip8 | 8 |  8 x 1  | Bits     |    2   | number of Planes OR Attribute Type
-
-
-enum StripVideoId_ {
-   STRIP1_VIDEO_ID_ = 11,
-   STRIP2_VIDEO_ID_ = 10,
-   STRIP4_VIDEO_ID_ =  9,
-   STRIP8_VIDEO_ID_ =  1, // Video.mode low nibble for a SINGLE Plane of Strip8
-};
 
 #define STRIP_DIMENSION   PIXELS_Nx1
 
-// True for bit Strips (Strip8), false for "chunky" Strips (Strip<1|2|4>)
-#define STRIP_HAS_BITS   (VideoModeHasAttributes() || VideoModeLowNibble() <= 8)
+// True for bit-Strips (Strip8), false for "chunky" Strips (Strip<1|2|4>)
+#define STRIP_HAS_BITS_          FORM_HAS_BITS_
+
+// log2 of the number of bits per pixels
+#define STRIP_BPP_LOG2_          (STRIP_HAS_BITS_ ? 0 : (VIDEO_MODE & 3))
 
 
+//------------------------------------------------------------------------------
+// Strip measurement macros
+//------------------------------------------------------------------------------
 
 #define STRIP_SIZE               1
-#define STRIP_WIDTH              (8 >> (STRIP_HAS_BITS ? 0 : (VIDEO_MODE & 3)))
+#define STRIP_WIDTH              (8 >> STRIP_BPP_LOG2_)
 #define STRIP_HEIGHT             1
 #define STRIP_COUNT_BITS         8
 #define STRIP_COUNT_PIXELS       STRIP_WIDTH
 #define STRIP_COUNT_COLOR        (1 << STRIP_COUNT_COLOR_LOG2)
 
 #define STRIP_SIZE_LOG2          0
-#define STRIP_WIDTH_LOG2         (3 - (STRIP_HAS_BITS ? 0 : (VIDEO_MODE & 3)))
+#define STRIP_WIDTH_LOG2         (3 - STRIP_BPP_LOG2_)
 #define STRIP_HEIGHT_LOG2        0
 #define STRIP_COUNT_BITS_LOG2    3
 #define STRIP_COUNT_PIXELS_LOG2  STRIP_WIDTH_LOG2
-#define STRIP_COUNT_COLOR_LOG2   (1 << (STRIP_HAS_BITS ? 0 : (VIDEO_MODE & 3)))
+#define STRIP_COUNT_COLOR_LOG2   (1 << STRIP_BPP_LOG2_)
 
 
 // Implementation Note: For "Chunky" Strips (Strip<1|2|4>), measure derive from
@@ -58,7 +57,9 @@ enum StripVideoId_ {
 //  width               =  4    2    1  =>  8 >> (MODE & 3)
 
 
-// v-- Measurements when one know the Strip are "chunky", Strip<1|2|4>
+//------------------------------------------------------------------------------
+// Strip measurement macros when the Strip are chunky (Strip<1|2|4>)
+//------------------------------------------------------------------------------
 
 #define STRIP_CHUNKY_SIZE               1
 #define STRIP_CHUNKY_WIDTH              (8 >> (VIDEO_MODE & 3))
@@ -75,7 +76,9 @@ enum StripVideoId_ {
 #define STRIP_CHUNKY_COUNT_COLOR_LOG2   (1 << (VIDEO_MODE & 3))
 
 
-// v-- Measurements are literal constants for different of Strip types.
+//------------------------------------------------------------------------------
+// Strip measurement macros as constants when the Strip<1|2|4|8> type is known
+//------------------------------------------------------------------------------
 
 #define STRIP1_SIZE                     1
 #define STRIP1_WIDTH                    1

@@ -126,8 +126,8 @@
 // whatever the framebuffer elements actually are.
 //------------------------------------------------------------------------------
 
-// Internal only - Use or PixelGet [or VideoGet_] instead.
-static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
+// Internal only - Use PixelGet [or PixelGet_] instead.
+static C_HINT_ALWAYS_INLINE int PrivatePixelGet_(int x, int y)
 {
    assert(x >= 0 && x < VIDEO_WIDTH);
    assert(y >= 0 && y < VIDEO_HEIGHT);
@@ -159,18 +159,19 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
    }
 
    //---------------------------------------------------------------------------
-   // Pixel modes (chunky or Bit planes)
+   // Strip modes, chunky or bit planes
    //---------------------------------------------------------------------------
    int low_nibble = VideoModeLowNibble();
    if (dimension == PIXELS_Nx1) {
       switch (low_nibble) {
-         // Chunky Strips or single-plane bit-Strip:
-         case STRIP1_VIDEO_ID_: return VIDEO_GET_PIXEL__STRIP1_(x,y);
-         case STRIP2_VIDEO_ID_: return VIDEO_GET_PIXEL__STRIP2_(x,y);
-         case STRIP4_VIDEO_ID_: return VIDEO_GET_PIXEL__STRIP4_(x,y);
-         case STRIP8_VIDEO_ID_: return VIDEO_GET_PIXEL__STRIP8_(x,y);
-               //  ^-- single-plane Strip8: we could just fallthrough, but let's
-               //      make sure it's optimized and doesn't go through a loop
+         // Chunky-pixel Strips
+         case PIXEL_CHUNK_BYTE:    return VIDEO_GET_PIXEL__STRIP1_(x,y);
+         case PIXEL_CHUNK_NIBBLE:  return VIDEO_GET_PIXEL__STRIP2_(x,y);
+         case PIXEL_CHUNK_QUARTER: return VIDEO_GET_PIXEL__STRIP4_(x,y);
+
+         // Single bit-Strip plane: we could just fallthrough, but let's make
+         // sure it's optimized and doesn't go through a loop
+         case 1: return VIDEO_GET_PIXEL__STRIP8_(x,y);
 
          // Several Strip8 Planes: iterate through every plane and reconstruct
          //                        the pixel color bit by bit.
@@ -196,17 +197,17 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
    }
 
    //---------------------------------------------------------------------------
-   // Tile modes (low_nibble = 9/10/11) or Glyph Planes modes
+   // Tile modes or Glyph Planes modes
    //---------------------------------------------------------------------------
    switch (low_nibble) {
       default: unreachable();
 
-      // Tiles (low_nibble = 9/10/11 is the TileColorType)
-      case TILE_BYTE:    return 0; // TODO: 8bpp tiles
-      case TILE_NIBBLE:  return 0; // TODO: 4bpp tiles
-      case TILE_QUARTER: return 0; // TODO: 2bpp tiles
+      // Tiles (low_nibble indicates what pixel chunk is used)
+      case PIXEL_CHUNK_BYTE:    return 0; // TODO: 8bpp tiles
+      case PIXEL_CHUNK_NIBBLE:  return 0; // TODO: 4bpp tiles
+      case PIXEL_CHUNK_QUARTER: return 0; // TODO: 2bpp tiles
 
-      // Glyphs Planes (low_nibble is the number of planes)
+      // Glyphs Plane(s) (low_nibble is the number of planes)
       case  1: // fallthrough  // <-- single-plane Glyphs
 
       case  2: // fallthrough  // <-- several glyph bit planes
@@ -236,8 +237,8 @@ static C_HINT_ALWAYS_INLINE int PixelGet_internal_(int x, int y)
 }
 
 
-// Internal only - Use or PixelSetPixel [or PixelSet_] instead.
-static C_HINT_ALWAYS_INLINE void PixelSet_internal_(int x, int y, uint8_t color)
+// Internal only - Use PixelSet (or PixelSet_) instead.
+static C_HINT_ALWAYS_INLINE void PrivatePixelSet_(int x, int y, uint8_t color)
 {
    assert(x >= 0 && x < VIDEO_WIDTH);
    assert(y >= 0 && y < VIDEO_HEIGHT);
@@ -281,16 +282,18 @@ static C_HINT_ALWAYS_INLINE void PixelSet_internal_(int x, int y, uint8_t color)
    int low_nibble = VideoModeLowNibble();
    if (dimension == PIXELS_Nx1) {
       switch (low_nibble) {
-         // Chunky Strips or single-plane bit-Strip:
-         case STRIP1_VIDEO_ID_: VIDEO_SET_PIXEL__STRIP1_(x,y, color); return;
-         case STRIP2_VIDEO_ID_: VIDEO_SET_PIXEL__STRIP2_(x,y, color); return;
-         case STRIP4_VIDEO_ID_: VIDEO_SET_PIXEL__STRIP4_(x,y, color); return;
-         case STRIP8_VIDEO_ID_: VIDEO_SET_PIXEL__STRIP8_(x,y, color); return;
+         // Chunky-pixel Strips
+         case PIXEL_CHUNK_BYTE:    VIDEO_SET_PIXEL__STRIP1_(x,y, color); return;
+         case PIXEL_CHUNK_NIBBLE:  VIDEO_SET_PIXEL__STRIP2_(x,y, color); return;
+         case PIXEL_CHUNK_QUARTER: VIDEO_SET_PIXEL__STRIP4_(x,y, color); return;
+
+         // Single bit-Strip plane: we could just fallthrough, but let's make
+         // sure it's optimized and doesn't go through a loop
+         case 1: VIDEO_SET_PIXEL__STRIP8_(x,y, color); return;
                // ^-- single plane Strip8 mode could just fallthrough, but let
                //     make sure it's optimized and doesn't go through a loop
 
-         // Several Strip8 Planes: iterate through every plane and
-         //                        reconstruct the pixel color bit by bit.
+         // Several Strip8 Planes: set pixel bit by bit through every plane.
          case  2: // fallthrough
          case  3: // fallthrough
          case  4: // fallthrough
@@ -315,12 +318,12 @@ static C_HINT_ALWAYS_INLINE void PixelSet_internal_(int x, int y, uint8_t color)
    switch (low_nibble) {
       default: unreachable();
 
-      // Tiles (low_nibble = 9/10/11 is the TileColorType)
-      case TILE_BYTE:    return; // TODO: 8bpp tiles
-      case TILE_NIBBLE:  return; // TODO: 4bpp tiles
-      case TILE_QUARTER: return; // TODO: 2bpp tiles
+      // Tiles (low_nibble indicates what pixel chunk is used)
+      case PIXEL_CHUNK_BYTE:    return; // TODO: 8bpp tiles
+      case PIXEL_CHUNK_NIBBLE:  return; // TODO: 4bpp tiles
+      case PIXEL_CHUNK_QUARTER: return; // TODO: 2bpp tiles
 
-      // Glyphs Planes (low_nibble is the number of planes)
+      // Glyphs Plane(s) (low_nibble is the number of planes)
       case  1: // fallthrough  // <-- single-plane Glyphs
 
       case  2: // fallthrough  // <-- several glyph bit planes
@@ -349,7 +352,7 @@ static C_HINT_ALWAYS_INLINE void PixelSet_internal_(int x, int y, uint8_t color)
 }
 
 // Internal only - Use or PixelGetAtPlane instead.
-static C_HINT_ALWAYS_INLINE int PixelGetAtPlane_internal_(int x, int y, int plane)
+static C_HINT_ALWAYS_INLINE int PrivatePixelGetAtPlane_(int x, int y, int plane)
 {
    assert(x >= 0 && x < VIDEO_WIDTH);
    assert(y >= 0 && y < VIDEO_HEIGHT);
@@ -369,7 +372,7 @@ static C_HINT_ALWAYS_INLINE int PixelGetAtPlane_internal_(int x, int y, int plan
    }
    return 0;
 }
-static C_HINT_ALWAYS_INLINE void PixelSetAtPlane_internal_(int x, int y, int plane, int bit)
+static C_HINT_ALWAYS_INLINE void PrivatePixelSetAtPlane_(int x, int y, int plane, int bit)
 {
    assert(x >= 0 && x < VIDEO_WIDTH);
    assert(y >= 0 && y < VIDEO_HEIGHT);
@@ -391,15 +394,13 @@ static C_HINT_ALWAYS_INLINE void PixelSetAtPlane_internal_(int x, int y, int pla
 
 #ifdef KONPU_OPTION_OPTIMIZE_VIDEO_MODE
    // Same as function `PixelGet`, but no bounds checking.
-#  define PixelGet_(x, y)          PixelGet_internal_((x), (y))
+#  define PixelGet_(x,y)                     PrivatePixelGet_((x),(y))
    // Same as function `PixelSet`, but no bounds checking.
-#  define PixelSet_(x, y, color)   PixelSet_internal_((x), (y), (color))
+#  define PixelSet_(x,y, color)              PrivatePixelSet_((x),(y), (color))
    // Same as function `PixelGetAtPlane`, but no bounds checking.
-#  define PixelGetAtPlane_(x, y, plane) \
-      PixelGetAtPlane_internal_((x), (y), (plane))
+#  define PixelGetAtPlane_(x,y, plane)       PrivatePixelGetAtPlane_((x),(y), (plane))
    // Same as function `PixelSetAtPlane`, but no bounds checking.
-#  define PixelSetAtPlane_(x, y, plane, bit) \
-      PixelSet_internal_((x), (y), (plane), (bit))
+#  define PixelSetAtPlane_(x,y, plane, bit)  PrivatePixelSetAtPlane_((x),(y), (plane), (bit))
 #else
    // Same as function `PixelGet()`, but no bounds checking.
    int PixelGet_(int x, int y);

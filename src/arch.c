@@ -12,14 +12,15 @@ alignas(max_align_t) struct RAM_ Ram;
 // Checks for assertion about ROM
 static_assert(alignof(struct ROM_) == alignof(char));
 
-// Constants glyph definition (but prevent inclusion of glyph.h)
-#define KONPU_GLYPH_H_
-#define GLYPH8(hex)   ((uint8_t)0x##hex##U)
-#define GLYPH16(hex)  ((uint16_t)0x##hex##U)
-#define GLYPH32(hex)  ((uint32_t)0x##hex##U)
-#define GLYPH64(hex)  ((uint64_t)0x##hex##U)
+// Constants glyph definition
+#define GLYPH8(hex)     ((uint8_t)0x##hex##U)
+#define GLYPH16(hex)    ((uint16_t)0x##hex##U)
+#define GLYPH32(hex)    ((uint32_t)0x##hex##U)
+#define GLYPH64(hex)    ((uint64_t)0x##hex##U)
+#define KONPU_GLYPH_H_  DEFINED_TO_PREVENT_INCLUSION_OF_GLYPH_H
 #include "glyph_constants/glyph_ascii.h"
 #include "glyph_constants/glyph_tokipona.h"
+
 
 struct ROM_ Rom = {
    .version = {

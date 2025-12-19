@@ -1,76 +1,60 @@
 #ifndef  KONPU_TILE_H_
 #define  KONPU_TILE_H_
-#include "glyph.h"
+#include "video_mode.h"
 
 //------------------------------------------------------------------------------
-// Tiles' Chunk/Color Type, and (full) Type
+// Tiles: C Types, Chunk/Color, and (full) Type
 //------------------------------------------------------------------------------
 
-// The chunk used by a Tile, which gives the number of color(s)
-// In tile modes, that number is used as the low nibble of the Video.mode
+// This table summarizes the relationships between a Tile's Pixels Chunk,
+// its Tile<N> C type, its Dimension:
 //
-//                           Tile   |  # of  |Video.mode's
-//                          Chunks  | Colors |Low Nibble
-enum TileColorType {    //----------|--------|-------------
-   TILE_QUARTER =  9,   // Quarters |    4   |    9
-   TILE_NIBBLE  = 10,   // Nibbles  |   16   |   10
-   TILE_BYTE    = 11,   // Byte     |  256   |   11
+// Dimension|  Tile16    Tile32    Tile64    Tile128   Tile256
+// ---------+-------------------------------------------------
+//   2x4    |  Quarter   Nibble    Byte
+//   4x4    |            Quarter   Nibble    Byte
+//   4x8    |                      Quarter   Nibble    Byte
+//   8x8    |                                Quarter   Nibble
+//   8x16   |                                          Quarter
 
-   // Note: We can observe that log2(#Colors) = 1 << (Tile's ColorType - 8)
-   //       or it can also be:  log2(#Colors) = 1 << (Tile's ColorType & 3)
-   //       '--> ... which also happens to be = 1 << (Video.mode & 3)
-};
+// C Types
+typedef Form16  Tile16;
+typedef Form32  Tile32;
+typedef Form64  Tile64;
+typedef Form128 Tile128;
+typedef Form256 Tile256;
 
-
-// The (full) type of a Tile, combining
-// * its dimension (can be PIXELS_<2x4|4x4|4x8|8x8|8x16>)
-// * and its color/chunk type
+// The (full) type of a Tile
+// It is in fact the Video.mode when using such a tile, thus combining:
+// * its dimension (which can be PIXELS_<2x4|4x4|4x8|8x8|8x16>)
+// * and its pixels' chunk id
+//
 // It is used to pass to the VIDEO_MODE_TILE(...) macro to give a Video mode
 enum TileType {
-   TILE16_2x4   = (PIXELS_2x4  << 4) | TILE_QUARTER,  //   4 colors
-   TILE32_2x4   = (PIXELS_2x4  << 4) | TILE_NIBBLE,   //  16 colors
-   TILE32_4x4   = (PIXELS_4x4  << 4) | TILE_QUARTER,  //   4 colors
-   TILE64_2x4   = (PIXELS_2x4  << 4) | TILE_BYTE,     // 256 colors
-   TILE64_4x4   = (PIXELS_4x4  << 4) | TILE_NIBBLE,   //  16 colors
-   TILE64_4x8   = (PIXELS_4x8  << 4) | TILE_QUARTER,  //   4 colors
-   TILE128_4x4  = (PIXELS_4x4  << 4) | TILE_BYTE,     // 256 colors
-   TILE128_4x8  = (PIXELS_4x8  << 4) | TILE_NIBBLE,   //  16 colors
-   TILE128_8x8  = (PIXELS_8x8  << 4) | TILE_QUARTER,  //   4 colors
-   TILE256_4x8  = (PIXELS_4x8  << 4) | TILE_BYTE,     // 256 colors
-   TILE256_8x8  = (PIXELS_8x8  << 4) | TILE_NIBBLE,   //  16 colors
-   TILE256_8x16 = (PIXELS_8x16 << 4) | TILE_QUARTER,  //   4 colors
-
-   // Note: In fact, this TileType exactly IS the video mode when using the
-   //       specified tiles.
-   //       .-- Has Attributes
-   //       |  .--- Dimension  (enum VideoElementDimension)
-   //       |  |   .--- TileColorType
-   //       v  v   v
-   //      |0|...|....|
+   TILE16_2x4   = (PIXELS_2x4  << 4) | PIXEL_CHUNK_QUARTER,  //   4 colors
+   TILE32_2x4   = (PIXELS_2x4  << 4) | PIXEL_CHUNK_NIBBLE,   //  16 colors
+   TILE32_4x4   = (PIXELS_4x4  << 4) | PIXEL_CHUNK_QUARTER,  //   4 colors
+   TILE64_2x4   = (PIXELS_2x4  << 4) | PIXEL_CHUNK_BYTE,     // 256 colors
+   TILE64_4x4   = (PIXELS_4x4  << 4) | PIXEL_CHUNK_NIBBLE,   //  16 colors
+   TILE64_4x8   = (PIXELS_4x8  << 4) | PIXEL_CHUNK_QUARTER,  //   4 colors
+   TILE128_4x4  = (PIXELS_4x4  << 4) | PIXEL_CHUNK_BYTE,     // 256 colors
+   TILE128_4x8  = (PIXELS_4x8  << 4) | PIXEL_CHUNK_NIBBLE,   //  16 colors
+   TILE128_8x8  = (PIXELS_8x8  << 4) | PIXEL_CHUNK_QUARTER,  //   4 colors
+   TILE256_4x8  = (PIXELS_4x8  << 4) | PIXEL_CHUNK_BYTE,     // 256 colors
+   TILE256_8x8  = (PIXELS_8x8  << 4) | PIXEL_CHUNK_NIBBLE,   //  16 colors
+   TILE256_8x16 = (PIXELS_8x16 << 4) | PIXEL_CHUNK_QUARTER,  //   4 colors
 };
-
-
-
-// This table summarize the relationship between the Tile<N> c type,
-// the Chunk/Color, and the Dimension:
-//
-//  C Type --> Tile16    Tile32    Tile64   Tile128   Tile256
-// Dimension|
-//   2x4    |  Quarter   Nibble    Byte
-//   4x4    |  (glyph)   Quarter   Nibble    Byte
-//   4x8    |            (glyph)   Quarter   Nibble    Byte
-//   8x8    |                      (glyph)   Quarter   Nibble
-//   8x16   |                                          Quarter
 
 // Tiles' full type (value is as `enum TileType`)
 #define TILE_TYPE          VIDEO_MODE
 
-// Tiles' color/chunk type (value is as `enum TileColorType`)
-#define TILE_COLOR_TYPE    (TILE_TYPE & 0xF)
+// Tiles' pixels chunck id (value as `enum PixelChunk`)
+#define TILE_PIXEL_CHUNK   (TILE_TYPE & 0xF)
 
 // Tiles' dimensions (value as `enum VideoElementDimension`).
 // Possible values are PIXELS_<2x4|4x4|4x8|8x8|8x16>
 #define TILE_DIMENSION     (TILE_TYPE >> 4)
+
 
 //------------------------------------------------------------------------------
 // Tile measurements: Simple macros giving their Width and Height (pixels),
@@ -104,7 +88,10 @@ enum TileType {
 // - log2(size) = log2(#bits) - 3
 
 
-// v-- Measurements (possibly) optimized for the Tile<16|32|64|128|256> C types:
+//------------------------------------------------------------------------------
+// Tile measurement macros optimized for when the Tile<16|32|64|128|256> C type
+// is known.
+//------------------------------------------------------------------------------
 
 #define TILE16_SIZE                2
 #define TILE16_WIDTH               2
@@ -171,5 +158,22 @@ enum TileType {
 #define TILE256_COUNT_PIXELS_LOG2  TILE_COUNT_PIXELS_LOG2
 #define TILE256_COUNT_COLOR_LOG2   TILE_COUNT_COLOR_LOG2
 
+
+//------------------------------------------------------------------------------
+
+/*
+// _Generic statement for Tiles
+// It selects `F<N>_` based on which Tile<N> type `tile` really is.
+// Extra code may be be inserted in the _Generic via the ... parameter(s).
+#define TILE_Generic(tile, F, ...)    \
+   _Generic((tile)                 ,  \
+      Tile16:  F##16_              ,  \
+      Tile32:  F##32_              ,  \
+      Tile64:  F##64_              ,  \
+      Tile128: F##128_             ,  \
+      Tile256: F##256_  __VA_OPT__(,) \
+      __VA_ARGS__                     \
+   )
+*/
 
 #endif //include guard

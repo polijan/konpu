@@ -1,29 +1,33 @@
 #ifndef  KONPU_GLYPH_H_
 #define  KONPU_GLYPH_H_
-#include "arch.h"
-#include "bits.h"
 #include "video_mode.h"
+#include "rectangle.h" //TODO: probably add this include into video_mode.h
+#include "bits.h"
+
 
 //------------------------------------------------------------------------------
-// Glyphs Types (Glyph<N> C types are defined in arch.h)
+// Glyphs Types
 //------------------------------------------------------------------------------
 
-//  Glyph terminology:        Glyph8      Glyph32         Glyph64
-//  ------------------          . .       . . . .     . . . . . . . .
-// .----------.---------.       . .       . . . .     . . . . . . . .
-// | C TYPE   |Dimension|       . .       . . . .     . . . . . . . .
-// |----------|---------|       . .       . . . .     . . . . . . . .
-// | Glyph8   |  2 x 4  |                 . . . .     . . . . . . . .
-// | Glyph16  |  4 x 4  |     . . . .     . . . .     . . . . . . . .
-// | Glyph32  |  4 x 8  |     . . . .     . . . .     . . . . . . . .
-// | Glyph64  |  8 x 8  |     . . . .     . . . .     . . . . . . . .
-// | Glyph128 |  8 x 16 |     . . . .
-// | Glyph256 | 16 x 16 |     Glyph16     Glyph128 and Glyph256 are
-// '----------'---------'                 structs made of Glyph64s:
+//  Glyph terminology:                   Glyph8      Glyph32         Glyph64
+//  ------------------                     . .       . . . .     . . . . . . . .
+//-------------------------.---------.     . .       . . . .     . . . . . . . .
+//              C Type     |Dimension|     . .       . . . .     . . . . . . . .
+//-------------------------|---------|     . .       . . . .     . . . . . . . .
+typedef Form8   Glyph8;   //  2 x 4  |               . . . .     . . . . . . . .
+typedef Form16  Glyph16;  //  4 x 4  |   . . . .     . . . .     . . . . . . . .
+typedef Form32  Glyph32;  //  4 x 8  |   . . . .     . . . .     . . . . . . . .
+typedef Form64  Glyph64;  //  8 x 8  |   . . . .     . . . .     . . . . . . . .
+typedef Form128 Glyph128; //  8 x 16 |   . . . .
+typedef Form256 Glyph256; // 16 x 16 |   Glyph16     Glyph128 and Glyph256 are
+//-------------------------'---------'               structs made of Glyph64s:
 //
-//                                 .top        .top_left | .top_right
-//                                 ------    ------------|-------------
-//                                .bottom   .bottom_left | .bottom_right
+//                                         .top        .top_left | .top_right
+//                                         ------    ------------|-------------
+//                                        .bottom   .bottom_left | .bottom_right
+
+// Generic Glyph, TODO: remove, or support, etc.
+typedef void Glyph;
 
 // Glyphs' Dimension can be PIXEL_<2x4|4x4|4x8|8x8|8x16|16x16>
 #define GLYPH_DIMENSION   VideoModeDimension()
@@ -38,6 +42,12 @@
 //
 // // Measurement macros: pixels Width and Height, byte Size, and more
 // #define GLYPH[N]_<WIDTH|HEIGHT|SIZE|COUNT_...>[_LOG2]    ...
+//
+// // Get/Set Glyphs from/to Surface (Surface can be a Rectangle, Video, or can
+// // be omitted (in which case it refers to the Video.active rectangle)
+// void GlyphClear([Surface s]);
+// void GlyphSetAll([Surface s], Glyph g);
+// GlyphGet(N, [Surface s], int x,y, [int plane])
 //
 // // Construct Glyph<N> from literals
 // #define GLYPH<N>(...)
@@ -85,7 +95,7 @@
 // glyph GlyphFromHalves(glyph left_or_top, glyph right_or_bottom)
 // glyph GlyphUpscale(glyph)
 //
-// // Access to SubGlyphs:
+// // Access to SubGlyphs ???
 // Glyph  GlyphGetGlyph(Glyph dst_glyph, int x,y, GlyphType);
 // Glyph  GlyphSetGlyph(Glyph dst_glyph, int x,y, Glyph smaller_glyph);
 //
@@ -119,7 +129,11 @@
 // Height := 4 << (Dimension>>1) and log2(Height) := 2 + (Dimension>>1)
 // For Glyphs, Dimension is the VIDEO_MODE bits 5/6/7, thus we simplified.
 
-// v-- Measurements are literal constants for Glyph<8|16|32|64|128|256> C types:
+
+//------------------------------------------------------------------------------
+// Glyph measurement macros become constants when the Glyph type is known
+// Glyph<8|16|32|64|128|256>
+//------------------------------------------------------------------------------
 
 #define GLYPH8_SIZE                 1
 #define GLYPH8_WIDTH                2
@@ -201,6 +215,84 @@
 
 
 //------------------------------------------------------------------------------
+
+// _Generic statement taylored for Glyphs
+// It selects `F<N>_` based on which Glyph<N> type a `glyph` really is.
+// Extra code may also be inserted in the _Generic via the ... parameter(s).
+/* RE-ENABLE THIS
+#define GLYPH_Generic(glyph, F, ...)   \
+   _Generic((glyph)                 ,  \
+      Glyph8:   F##8_               ,  \
+      Glyph16:  F##16_              ,  \
+      Glyph32:  F##32_              ,  \
+      Glyph64:  F##64_              ,  \
+      Glyph128: F##128_             ,  \
+      Glyph256: F##256_  __VA_OPT__(,) \
+      __VA_ARGS__                      \
+   )
+*/
+#define GLYPH_Generic(glyph, F)   \
+   _Generic((glyph)            ,  \
+      Glyph8:   F##8_          ,  \
+      Glyph16:  F##16_         ,  \
+      Glyph32:  F##32_         ,  \
+      Glyph64:  F##64_         ,  \
+      Glyph128: F##128_        ,  \
+      Glyph256: F##256_           \
+   )
+
+
+// void GlyphSetAll([Video|Rectangle r], Glyph<N> glyph);
+// TODO: void GlyphSetAll([Video|Rectangle r], Glyph<N> glyph, [int plane]);
+
+// Set all the Glyph in the given or active surface to the given ones
+#define GlyphSetAll(...) \
+   UTIL_OVERLOAD(PrivateGlyphSetAll, __VA_ARGS__)
+#  define PrivateGlyphSetAll_1_(g) \
+      GLYPH_Generic((g), PrivateGlyphSetAll_Rectangle_)(Video.active, (g))
+#  define PrivateGlyphSetAll_2_(surface, glyph)                                \
+      _Generic((surface)                                                     , \
+         VideoSurface_: GLYPH_Generic((glyph), PrivateGlyphSetAll_Video_) ((glyph)) , \
+         default:       GLYPH_Generic((glyph), PrivateGlyphSetAll_Rectangle_) (RECTANGLE((surface)), (glyph)) \
+      )
+#  define PRIVATE_IMPLEMENTATION_(N)                                           \
+      static inline void PrivateGlyphSetAll_Video_##N##_(Glyph##N g) {         \
+         for (int i = 0; i < VIDEO_COUNT_GLYPH##N; i++)                        \
+            Video.glyph##N[i] = g;                                             \
+      }                                                                        \
+      static inline void                                                       \
+      PrivateGlyphSetAll_Rectangle_##N##_(Rectangle r, Glyph##N g) {           \
+         r =   RectangleIntersection(r, (Rectangle){                           \
+                  0,0 , VIDEO_WIDTH_GLYPH##N, VIDEO_HEIGHT_GLYPH##N            \
+               });                                                             \
+         VideoArray glyph = VIDEO_GLYPH(N, r.x0, r.y0);                        \
+         for (int y = 0; y < r.height; y++)                                    \
+            for (int x = 0; x < r.width; x++)                                  \
+               glyph[y][x] = g;                                                \
+      }
+      PRIVATE_IMPLEMENTATION_(8)
+      PRIVATE_IMPLEMENTATION_(16)
+      PRIVATE_IMPLEMENTATION_(32)
+      PRIVATE_IMPLEMENTATION_(64)
+      PRIVATE_IMPLEMENTATION_(128)
+      PRIVATE_IMPLEMENTATION_(256)
+#  undef PRIVATE_IMPLEMENTATION_
+
+
+// void GlyphClear([Video|Rectangle]);
+// Set all the Glyph to 0 in the given or active surface
+// TODO: void GlyphClear([Video|Rectangle r], [int plane]);
+#define GlyphClear(...)            UTIL_OVERLOAD(PrivateGlyphClear, __VA_ARGS__)
+#  define PrivateGlyphClear_0_()   PrivateGlyphClear_1_(Video.active)
+#  define PrivateGlyphClear_1_(surface)                                        \
+      _Generic((surface)                                                     , \
+         VideoSurface_: memset(Video.frame, 0, VIDEO_GLYPHS_SIZE)            , \
+         Rectangle:     PrivateGlyphClear_Rectangle_(RECTANGLE((surface)))     \
+      )
+   void PrivateGlyphClear_Rectangle_(Rectangle r);
+
+
+//------------------------------------------------------------------------------
 // GLYPH<N>(...): Construct a Glyph<N> from literals
 //
 // GLYPH<N> for N in {8,16,32,64}
@@ -275,20 +367,14 @@
 
 // Return true iff glyph1 and glyph2 are the same glyph.
 // Note: if the glyphs are not of the same type, the comparison returns false.
-#define GlyphIsEqual(glyph1, glyph2)   ( \
-   (sizeof(glyph1) == sizeof(glyph2)) && \
-   _Generic((glyph1)                   , \
-      Glyph8:   GlyphIsEqual_8_        , \
-      Glyph16:  GlyphIsEqual_16_       , \
-      Glyph32:  GlyphIsEqual_32_       , \
-      Glyph64:  GlyphIsEqual_64_       , \
-      Glyph128: GlyphIsEqual_128_      , \
-      Glyph256: GlyphIsEqual_256_        \
-   )((glyph1), (glyph2))                 )
-   static inline bool GlyphIsEqual_8_( uint8_t  g, uint8_t  f)  {return g == f;}
-   static inline bool GlyphIsEqual_16_(uint16_t g, uint16_t f)  {return g == f;}
-   static inline bool GlyphIsEqual_32_(uint32_t g, uint64_t f)  {return g == f;}
-   static inline bool GlyphIsEqual_64_(uint64_t g, uint64_t f)  {return g == f;}
+#define GlyphIsEqual(glyph1, glyph2)                              \
+   (  (sizeof(glyph1) == sizeof(glyph2)) &&                       \
+      GLYPH_Generic((glyph1), GlyphIsEqual_)((glyph1), (glyph2))  \
+   )
+   static inline bool GlyphIsEqual_8_(Glyph8 g, Glyph8  f)    {return g == f;}
+   static inline bool GlyphIsEqual_16_(Glyph16 g, Glyph16 f)  {return g == f;}
+   static inline bool GlyphIsEqual_32_(Glyph32 g, Glyph32 f)  {return g == f;}
+   static inline bool GlyphIsEqual_64_(Glyph64 g, Glyph64 f)  {return g == f;}
    static inline bool GlyphIsEqual_128_(Glyph128 g, Glyph128 f)
    { return (g.top == f.top) && (g.bottom == f.bottom); }
    static inline bool GlyphIsEqual_256_(Glyph256 g, Glyph256 f) {
@@ -297,19 +383,11 @@
    }
 
 // Bitwise Not (i.e. inverse) of a glyph
-#define GlyphNot(glyph)        \
-   _Generic((glyph)          , \
-      Glyph8:   GlyphNot_8_  , \
-      Glyph16:  GlyphNot_16_ , \
-      Glyph32:  GlyphNot_32_ , \
-      Glyph64:  GlyphNot_64_ , \
-      Glyph128: GlyphNot_128_, \
-      Glyph256: GlyphNot_256_  \
-   )((glyph))
-   static inline uint8_t  GlyphNot_8_( uint8_t  g)  { return ~g; }
-   static inline uint16_t GlyphNot_16_(uint16_t g)  { return ~g; }
-   static inline uint32_t GlyphNot_32_(uint32_t g)  { return ~g; }
-   static inline uint64_t GlyphNot_64_(uint64_t g)  { return ~g; }
+#define GlyphNot(glyph)   GLYPH_Generic((glyph), GlyphNot_)((glyph))
+   static inline Glyph8   GlyphNot_8_(Glyph8  g)   { return ~g; }
+   static inline Glyph16  GlyphNot_16_(Glyph16 g)  { return ~g; }
+   static inline Glyph32  GlyphNot_32_(Glyph32 g)  { return ~g; }
+   static inline Glyph64  GlyphNot_64_(Glyph64 g)  { return ~g; }
    static inline Glyph128 GlyphNot_128_(Glyph128 g)
    { return (Glyph128){ ~g.top, ~g.bottom }; }
    static inline Glyph256 GlyphNot_256_(Glyph256 g)
@@ -318,18 +396,11 @@
 
 // Bitwise And between two glyphs
 #define GlyphAnd(glyph1, glyph2) \
-   _Generic((glyph1)           , \
-      Glyph8:   GlyphAnd_8_    , \
-      Glyph16:  GlyphAnd_16_   , \
-      Glyph32:  GlyphAnd_32_   , \
-      Glyph64:  GlyphAnd_64_   , \
-      Glyph128: GlyphAnd_128_  , \
-      Glyph256: GlyphAnd_256_    \
-   )((glyph1), (glyph2) )
-   static inline uint8_t  GlyphAnd_8_( uint8_t  g, uint8_t  f)  { return g&f; }
-   static inline uint16_t GlyphAnd_16_(uint16_t g, uint16_t f)  { return g&f; }
-   static inline uint32_t GlyphAnd_32_(uint32_t g, uint32_t f)  { return g&f; }
-   static inline uint64_t GlyphAnd_64_(uint64_t g, uint64_t f)  { return g&f; }
+   GLYPH_Generic((glyph1), GlyphAnd_)((glyph1), (glyph2))
+   static inline Glyph8  GlyphAnd_8_( Glyph8  g, Glyph8  f)  { return g&f; }
+   static inline Glyph16 GlyphAnd_16_(Glyph16 g, Glyph16 f)  { return g&f; }
+   static inline Glyph32 GlyphAnd_32_(Glyph32 g, Glyph32 f)  { return g&f; }
+   static inline Glyph64 GlyphAnd_64_(Glyph64 g, Glyph64 f)  { return g&f; }
    static inline Glyph128 GlyphAnd_128_(Glyph128 g, Glyph128 f)
    { return (Glyph128){ g.top&f.top, g.bottom&f.bottom }; }
    static inline Glyph256 GlyphAnd_256_(Glyph256 g, Glyph256 f)
@@ -338,18 +409,11 @@
 
 // Bitwise Or (i.e. union) of two glyphs
 #define GlyphOr(glyph1, glyph2) \
-   _Generic((glyph1)          , \
-      Glyph8:   GlyphOr_8_    , \
-      Glyph16:  GlyphOr_16_   , \
-      Glyph32:  GlyphOr_32_   , \
-      Glyph64:  GlyphOr_64_   , \
-      Glyph128: GlyphOr_128_  , \
-      Glyph256: GlyphOr_256_    \
-   )((glyph1), (glyph2))
-   static inline uint8_t  GlyphOr_8_( uint8_t  g, uint8_t  f)  { return g|f; }
-   static inline uint16_t GlyphOr_16_(uint16_t g, uint16_t f)  { return g|f; }
-   static inline uint32_t GlyphOr_32_(uint32_t g, uint32_t f)  { return g|f; }
-   static inline uint64_t GlyphOr_64_(uint64_t g, uint64_t f)  { return g|f; }
+   GLYPH_Generic((glyph1), GlyphOr_)((glyph1), (glyph2))
+   static inline Glyph8  GlyphOr_8_( Glyph8  g, Glyph8  f)  { return g|f; }
+   static inline Glyph16 GlyphOr_16_(Glyph16 g, Glyph16 f)  { return g|f; }
+   static inline Glyph32 GlyphOr_32_(Glyph32 g, Glyph32 f)  { return g|f; }
+   static inline Glyph64 GlyphOr_64_(Glyph64 g, Glyph64 f)  { return g|f; }
    static inline Glyph128 GlyphOr_128_(Glyph128 g, Glyph128 f)
    { return (Glyph128){ g.top|f.top, g.bottom|f.bottom }; }
    static inline Glyph256 GlyphOr_256_(Glyph256 g, Glyph256 f)
@@ -358,18 +422,11 @@
 
 // Bitwise Xor between two glyphs
 #define GlyphXor(glyph1, glyph2) \
-   _Generic((glyph1)           , \
-      Glyph8:   GlyphXor_8_    , \
-      Glyph16:  GlyphXor_16_   , \
-      Glyph32:  GlyphXor_32_   , \
-      Glyph64:  GlyphXor_64_   , \
-      Glyph128: GlyphXor_128_  , \
-      Glyph256: GlyphXor_256_    \
-   )((glyph1), (glyph2))
-   static inline uint8_t  GlyphXor_8_( uint8_t  g, uint8_t  f) { return g^f; }
-   static inline uint16_t GlyphXor_16_(uint16_t g, uint16_t f) { return g^f; }
-   static inline uint32_t GlyphXor_32_(uint32_t g, uint32_t f) { return g^f; }
-   static inline uint64_t GlyphXor_64_(uint64_t g, uint64_t f) { return g^f; }
+   GLYPH_Generic((glyph1), GlyphXor_)((glyph1), (glyph2))
+   static inline Glyph8  GlyphXor_8_( Glyph8  g, Glyph8  f)  { return g^f; }
+   static inline Glyph16 GlyphXor_16_(Glyph16 g, Glyph16 f)  { return g^f; }
+   static inline Glyph32 GlyphXor_32_(Glyph32 g, Glyph32 f)  { return g^f; }
+   static inline Glyph64 GlyphXor_64_(Glyph64 g, Glyph64 f)  { return g^f; }
    static inline Glyph128 GlyphXor_128_(Glyph128 g, Glyph128 f)
    { return (Glyph128){ g.top^f.top, g.bottom^f.bottom }; }
    static inline Glyph256 GlyphXor_256_(Glyph256 g, Glyph256 f)
@@ -381,23 +438,16 @@
 // Functions dealing with lines
 //------------------------------------------------------------------------------
 
-// Return an unsigned value representing the n-th horiztonal line of the glyph
-#define GlyphGetLine(glyph, n)     \
-   _Generic((glyph)              , \
-      Glyph8:   GlyphGetLine_8_  , \
-      Glyph16:  GlyphGetLine_16_ , \
-      Glyph32:  GlyphGetLine_32_ , \
-      Glyph64:  GlyphGetLine_64_ , \
-      Glyph128: GlyphGetLine_128_, \
-      Glyph256: GlyphGetLine_256_  \
-   )((glyph), (n))
-   static inline unsigned GlyphGetLine_8_(uint8_t  g, int n)
+// Return an unsigned value representing the n-th horizontal line of a Glyph
+#define GlyphGetLine(glyph, n) \
+   GLYPH_Generic((glyph), GlyphGetLine_)((glyph), (n))
+   static inline unsigned GlyphGetLine_8_(Glyph8  g, int n)
    { assert(n >= 0 && n < GLYPH8_HEIGHT);  return BITS_GET_QUARTER(g, n); }
-   static inline unsigned GlyphGetLine_16_(uint16_t g, int n)
+   static inline unsigned GlyphGetLine_16_(Glyph16 g, int n)
    { assert(n >= 0 && n < GLYPH16_HEIGHT); return BITS_GET_NIBBLE(g, n); }
-   static inline unsigned GlyphGetLine_32_(uint32_t g, int n)
+   static inline unsigned GlyphGetLine_32_(Glyph32 g, int n)
    { assert(n >= 0 && n < GLYPH32_HEIGHT); return BITS_GET_NIBBLE(g, n); }
-   static inline unsigned GlyphGetLine_64_(uint64_t g, int n)
+   static inline unsigned GlyphGetLine_64_(Glyph64 g, int n)
    { assert(n >= 0 && n < GLYPH64_HEIGHT); return BITS_GET_BYTE(g, n); }
    static inline unsigned GlyphGetLine_128_(Glyph128 g, int n) {
       assert(n >= 0 && n < GLYPH128_HEIGHT);
@@ -416,32 +466,24 @@
 // Glyph GlyphSetLine(Glyph glyph, int8_t nth, unsigned line);
 // Return the glyph but with the n-th horizontal line changed to the given value
 #define GlyphSetLine(glyph, n, line) \
-   _Generic((glyph)                , \
-      Glyph8:   GlyphSetLine_8_    , \
-      Glyph16:  GlyphSetLine_16_   , \
-      Glyph32:  GlyphSetLine_32_   , \
-      Glyph64:  GlyphSetLine_64_   , \
-      Glyph128: GlyphSetLine_128_  , \
-      Glyph256: GlyphSetLine_256_    \
-   )((glyph), (n), (line))
-
+   GLYPH_Generic((glyph), GlyphSetLine_)((glyph), (n), (line))
    static inline C_ATTRIBUTE_NODISCARD
-   Glyph8 GlyphSetLine_8_(uint8_t  g, int n, unsigned quarter) {
+   Glyph8 GlyphSetLine_8_(Glyph8  g, int n, unsigned quarter) {
       assert(n >= 0 && n < GLYPH8_HEIGHT);
       return BITS_SET_QUARTER(g, n, quarter);
    }
    static inline C_ATTRIBUTE_NODISCARD
-   Glyph16 GlyphSetLine_16_(uint16_t g, int n, unsigned nibble) {
+   Glyph16 GlyphSetLine_16_(Glyph16 g, int n, unsigned nibble) {
       assert(n >= 0 && n < GLYPH16_HEIGHT);
       return BITS_SET_NIBBLE(g, n, nibble);
    }
    static inline C_ATTRIBUTE_NODISCARD
-   Glyph32 GlyphSetLine_32_(uint32_t g, int n, unsigned nibble) {
+   Glyph32 GlyphSetLine_32_(Glyph32 g, int n, unsigned nibble) {
       assert(n >= 0 && n < GLYPH32_HEIGHT);
       return BITS_SET_NIBBLE(g, n, nibble);
    }
    static inline C_ATTRIBUTE_NODISCARD
-   Glyph64 GlyphSetLine_64_(uint64_t g, int n, unsigned byte) {
+   Glyph64 GlyphSetLine_64_(Glyph64 g, int n, unsigned byte) {
       assert(n >= 0 && n < GLYPH64_HEIGHT);
       return BITS_SET_BYTE(g, n, byte);
    }
@@ -470,32 +512,25 @@
    }
 
 // Combine all the lines of the glyph into a single value using a binary-or
-#define GlyphFlatten(glyph)        \
-   _Generic((glyph)              , \
-      Glyph8:   GlyphFlatten_8_  , \
-      Glyph16:  GlyphFlatten_16_ , \
-      Glyph32:  GlyphFlatten_32_ , \
-      Glyph64:  GlyphFlatten_64_ , \
-      Glyph128: GlyphFlatten_128_, \
-      Glyph256: GlyphFlatten_256_  \
-   )((glyph))
-   static inline unsigned GlyphFlatten_8_(uint8_t g) {
+#define GlyphFlatten(glyph) \
+   GLYPH_Generic((glyph), GlyphFlatten_)((glyph))
+   static inline unsigned GlyphFlatten_8_(Glyph8 g) {
       g |= g >> 4;
       g |= g >> 2;
       return g & 3u;
    }
-   static inline unsigned GlyphFlatten_16_(uint16_t g) {
+   static inline unsigned GlyphFlatten_16_(Glyph16 g) {
       g |= g >> 8;
       g |= g >> 4;
       return g & 0xFu;
    }
-   static inline unsigned GlyphFlatten_32_(uint32_t g) {
+   static inline unsigned GlyphFlatten_32_(Glyph32 g) {
       g |= g >> 16;
       g |= g >>  8;
       g |= g >>  4;
       return g & 0xFu;
    }
-   static inline unsigned GlyphFlatten_64_(uint64_t g) {
+   static inline unsigned GlyphFlatten_64_(Glyph64 g) {
       g |= g >> 32;
       g |= g >> 16;
       g |= g >>  8;
@@ -512,33 +547,33 @@
 // Return a GlyphN (N in 8|16|32|64|128) made of n lines on the left.
 // n must be in [0, width of the glyph type].
 #define GlyphLinesLeft(N, n)  GlyphLinesLeft_##N##_((n))
-   static inline uint8_t GlyphLinesLeft_8_(int n) {
+   static inline Glyph8 GlyphLinesLeft_8_(int n) {
       assert(n >= 0 && n <= GLYPH8_WIDTH);
       return ((1u << n) - 1) * GLYPH8(55);
    }
-   static inline uint16_t GlyphLinesLeft_16_(int n) {
+   static inline Glyph16 GlyphLinesLeft_16_(int n) {
       assert(n >= 0 && n <= GLYPH32_WIDTH);
       return ((1u << n) - 1) * GLYPH16(1111);
    }
-   static inline uint32_t GlyphLinesLeft_32_(int n) {
+   static inline Glyph32 GlyphLinesLeft_32_(int n) {
       assert(n >= 0 && n <= GLYPH32_WIDTH);
       return ((1u << n) - 1) * GLYPH32(11111111);
    }
-   static inline uint64_t GlyphLinesLeft_64_(int n) {
+   static inline Glyph64 GlyphLinesLeft_64_(int n) {
       assert(n >= 0 && n <= GLYPH64_WIDTH);
       return ((1u << n) - 1) * GLYPH64(0101010101010101);
    }
    static inline Glyph128 GlyphLinesLeft_128_(int n) {
-      uint64_t g = GlyphLinesLeft_64_(n);
+      Glyph64 g = GlyphLinesLeft_64_(n);
       return (Glyph128){ g, g };
    }
    static inline Glyph256 GlyphLinesLeft_256_(int n) {
       assert(n >= 0 && n <= GLYPH256_WIDTH);
       if (n < 8) {
-         uint64_t g = GlyphLinesLeft_64_(n);
+         Glyph64 g = GlyphLinesLeft_64_(n);
          return (Glyph256){ .top_left = g, .bottom_left = g };
       } else {
-         uint64_t g = GlyphLinesLeft_64_(n - 8);
+         Glyph64 g = GlyphLinesLeft_64_(n - 8);
          return (Glyph256){
             .top_left    = GLYPH64(ffffffffffffffff), .top_right = g,
             .bottom_left = GLYPH64(ffffffffffffffff), .bottom_right = g
@@ -561,28 +596,21 @@
 //------------------------------------------------------------------------------
 
 // Return the glyph shifted n pixels upward (n must be in [0..GLYPH_HEIGHT[)
-#define GlyphShiftUp(glyph, n)     \
-   _Generic((glyph)              , \
-      Glyph8:   GlyphShiftUp_8_  , \
-      Glyph16:  GlyphShiftUp_16_ , \
-      Glyph32:  GlyphShiftUp_32_ , \
-      Glyph64:  GlyphShiftUp_64_ , \
-      Glyph128: GlyphShiftUp_128_, \
-      Glyph256: GlyphShiftUp_256_  \
-   )((glyph), (n))
-   static inline uint8_t  GlyphShiftUp_8_(uint8_t g, int n) {
+#define GlyphShiftUp(glyph, n) \
+   GLYPH_Generic((glyph), GlyphShiftUp_)((glyph), (n))
+   static inline Glyph8  GlyphShiftUp_8_(Glyph8 g, int n) {
       assert(n >= 0 && n < GLYPH8_HEIGHT);
       return g >> (n << GLYPH8_WIDTH_LOG2);
    }
-   static inline uint16_t GlyphShiftUp_16_(uint16_t g, int n) {
+   static inline Glyph16 GlyphShiftUp_16_(Glyph16 g, int n) {
       assert(n >= 0 && n < GLYPH16_HEIGHT);
       return g >> (n << GLYPH16_WIDTH_LOG2);
    }
-   static inline uint32_t GlyphShiftUp_32_(uint32_t g, int n) {
+   static inline Glyph32 GlyphShiftUp_32_(Glyph32 g, int n) {
       assert(n >= 0 && n < GLYPH32_HEIGHT);
       return g >> (n << GLYPH32_WIDTH_LOG2);
    }
-   static inline uint64_t GlyphShiftUp_64_(uint64_t g, int n) {
+   static inline Glyph64 GlyphShiftUp_64_(Glyph64 g, int n) {
       assert(n >= 0 && n < GLYPH64_HEIGHT);
       return g >> (n << GLYPH64_WIDTH_LOG2);
    }
@@ -624,28 +652,21 @@
    }
 
 // Return the glyph shifted n pixels downward (n must be in [0..GLYPH_HEIGHT[)
-#define GlyphShiftDown(glyph, n)     \
-   _Generic((glyph)                , \
-      Glyph8:   GlyphShiftDown_8_  , \
-      Glyph16:  GlyphShiftDown_16_ , \
-      Glyph32:  GlyphShiftDown_32_ , \
-      Glyph64:  GlyphShiftDown_64_ , \
-      Glyph128: GlyphShiftDown_128_, \
-      Glyph256: GlyphShiftDown_256_  \
-   )((glyph), (n))
-   static inline uint8_t  GlyphShiftDown_8_(uint8_t g, int n) {
+#define GlyphShiftDown(glyph, n) \
+   GLYPH_Generic((glyph), GlyphShiftDown_)((glyph), (n))
+   static inline Glyph8  GlyphShiftDown_8_(Glyph8 g, int n) {
       assert(n >= 0 && n < GLYPH8_HEIGHT);
       return g << (n << GLYPH8_WIDTH_LOG2);
    }
-   static inline uint16_t GlyphShiftDown_16_(uint16_t g, int n) {
+   static inline Glyph16 GlyphShiftDown_16_(Glyph16 g, int n) {
       assert(n >= 0 && n < GLYPH16_HEIGHT);
       return g << (n << GLYPH16_WIDTH_LOG2);
    }
-   static inline uint32_t GlyphShiftDown_32_(uint32_t g, int n) {
+   static inline Glyph32 GlyphShiftDown_32_(Glyph32 g, int n) {
       assert(n >= 0 && n < GLYPH32_HEIGHT);
       return g << (n << GLYPH32_WIDTH_LOG2);
    }
-   static inline uint64_t GlyphShiftDown_64_(uint64_t g, int n) {
+   static inline Glyph64 GlyphShiftDown_64_(Glyph64 g, int n) {
       assert(n >= 0 && n < GLYPH64_HEIGHT);
       return g << (n << GLYPH64_WIDTH_LOG2);
    }
@@ -688,27 +709,20 @@
    }
 
 #define GlyphShiftLeft(glyph, n)     \
-   _Generic((glyph)                , \
-      Glyph8:   GlyphShiftLeft_8_  , \
-      Glyph16:  GlyphShiftLeft_16_ , \
-      Glyph32:  GlyphShiftLeft_32_ , \
-      Glyph64:  GlyphShiftLeft_64_ , \
-      Glyph128: GlyphShiftLeft_128_, \
-      Glyph256: GlyphShiftLeft_256_  \
-   )((glyph), (n))
-   static inline uint8_t GlyphShiftLeft_8_(uint8_t g, int n) {
+   GLYPH_Generic((glyph), GlyphShiftLeft_)((glyph), (n))
+   static inline Glyph8 GlyphShiftLeft_8_(Glyph8 g, int n) {
       assert(n >= 0 && n < GLYPH8_WIDTH);
       return (g >> n) & GlyphLinesLeft(8, GLYPH8_WIDTH - n);
    }
-   static inline uint16_t GlyphShiftLeft_16_(uint16_t g, int n) {
+   static inline Glyph16 GlyphShiftLeft_16_(Glyph16 g, int n) {
       assert(n >= 0 && n < GLYPH16_WIDTH);
       return (g >> n) & GlyphLinesLeft(16, GLYPH16_WIDTH - n);
    }
-   static inline uint32_t GlyphShiftLeft_32_(uint32_t g, int n) {
+   static inline Glyph32 GlyphShiftLeft_32_(Glyph32 g, int n) {
       assert(n >= 0 && n < GLYPH32_WIDTH);
       return (g >> n) & GlyphLinesLeft(32, GLYPH32_WIDTH - n);
    }
-   static inline uint64_t GlyphShiftLeft_64_(uint64_t g, int n) {
+   static inline Glyph64 GlyphShiftLeft_64_(Glyph64 g, int n) {
       assert(n >= 0 && n < GLYPH64_WIDTH);
       return (g >> n) & GlyphLinesLeft(64, GLYPH64_WIDTH - n);
    }
@@ -735,27 +749,20 @@
    }
 
 #define GlyphShiftRight(glyph, n)     \
-   _Generic((glyph)                 , \
-      Glyph8:   GlyphShiftRight_8_  , \
-      Glyph16:  GlyphShiftRight_16_ , \
-      Glyph32:  GlyphShiftRight_32_ , \
-      Glyph64:  GlyphShiftRight_64_ , \
-      Glyph128: GlyphShiftRight_128_, \
-      Glyph256: GlyphShiftRight_256_  \
-   )((glyph), (n))
-   static inline uint8_t GlyphShiftRight_8_(uint8_t g, int n) {
+   GLYPH_Generic((glyph), GlyphShiftRight_)((glyph), (n))
+   static inline Glyph8 GlyphShiftRight_8_(Glyph8 g, int n) {
       assert(n >= 0 && n < GLYPH8_WIDTH);
       return (g << n) & GlyphLinesRight(8, GLYPH8_WIDTH - n);
    }
-   static inline uint16_t GlyphShiftRight_16_(uint16_t g, int n) {
+   static inline Glyph16 GlyphShiftRight_16_(Glyph16 g, int n) {
       assert(n >= 0 && n < GLYPH16_WIDTH);
       return (g << n) & GlyphLinesRight(16, GLYPH16_WIDTH - n);
    }
-   static inline uint32_t GlyphShiftRight_32_(uint32_t g, int n) {
+   static inline Glyph32 GlyphShiftRight_32_(Glyph32 g, int n) {
       assert(n >= 0 && n < GLYPH32_WIDTH);
       return (g << n) & GlyphLinesRight(32, GLYPH32_WIDTH - n);
    }
-   static inline uint64_t GlyphShiftRight_64_(uint64_t g, int n) {
+   static inline Glyph64 GlyphShiftRight_64_(Glyph64 g, int n) {
       assert(n >= 0 && n < GLYPH64_WIDTH);
       return (g << n) & GlyphLinesRight(64, GLYPH64_WIDTH - n);
    }
@@ -782,34 +789,27 @@
    }
 
 // Return the glyph cycled n pixels upward (n must be in [0..GLYPH_HEIGHT[)
-#define GlyphCycleUp(glyph, n)     \
-   _Generic((glyph)              , \
-      Glyph8:   GlyphCycleUp_8_  , \
-      Glyph16:  GlyphCycleUp_16_ , \
-      Glyph32:  GlyphCycleUp_32_ , \
-      Glyph64:  GlyphCycleUp_64_ , \
-      Glyph128: GlyphCycleUp_128_, \
-      Glyph256: GlyphCycleUp_256_  \
-   )((glyph), (n))
-   static inline uint8_t  GlyphCycleUp_8_(uint8_t g, int n) {
+#define GlyphCycleUp(glyph, n) \
+   GLYPH_Generic((glyph), GlyphCycleUp_)((glyph), (n))
+   static inline Glyph8  GlyphCycleUp_8_(Glyph8 g, int n) {
      assert(n >= 0 && n < GLYPH8_HEIGHT);
       if (n == 0) return g; // because otherwise we get g<<8 which is UB
       n <<= GLYPH8_WIDTH_LOG2;
       return (g >> n) | (g << (8 - n));
    }
-   static inline uint16_t GlyphCycleUp_16_(uint16_t g, int n) {
+   static inline Glyph16 GlyphCycleUp_16_(Glyph16 g, int n) {
       assert(n >= 0 && n < GLYPH16_HEIGHT);
       if (n == 0) return g;
       n <<= GLYPH16_WIDTH_LOG2;
       return (g >> n) | (g << (16 - n));
    }
-   static inline uint32_t GlyphCycleUp_32_(uint32_t g, int n) {
+   static inline Glyph32 GlyphCycleUp_32_(Glyph32 g, int n) {
       assert(n >= 0 && n < GLYPH32_HEIGHT);
       if (n == 0) return g;
       n <<= GLYPH32_WIDTH_LOG2;
       return (g >> n) | (g << (32 - n));
    }
-   static inline uint64_t GlyphCycleUp_64_(uint64_t g, int n) {
+   static inline Glyph64 GlyphCycleUp_64_(Glyph64 g, int n) {
       assert(n >= 0 && n < GLYPH64_HEIGHT);
       if (n == 0) return g;
       n <<= GLYPH64_WIDTH_LOG2;
@@ -826,34 +826,27 @@
    }
 
 // Return the glyph cycled n pixels downward (n must be in [0..GLYPH_HEIGHT[)
-#define GlyphCycleDown(glyph, n)     \
-   _Generic((glyph)                , \
-      Glyph8:   GlyphCycleDown_8_  , \
-      Glyph16:  GlyphCycleDown_16_ , \
-      Glyph32:  GlyphCycleDown_32_ , \
-      Glyph64:  GlyphCycleDown_64_ , \
-      Glyph128: GlyphCycleDown_128_, \
-      Glyph256: GlyphCycleDown_256_  \
-   )((glyph), (n))
-   static inline uint8_t  GlyphCycleDown_8_(uint8_t g, int n) {
+#define GlyphCycleDown(glyph, n) \
+   GLYPH_Generic((glyph), GlyphCycleDown_)((glyph), (n))
+   static inline Glyph8  GlyphCycleDown_8_(Glyph8 g, int n) {
       assert(n >= 0 && n < GLYPH8_HEIGHT);
       if (n == 0) return g;
       n <<= GLYPH8_WIDTH_LOG2;
       return (g << n) | (g >> (8 - n));
    }
-   static inline uint16_t GlyphCycleDown_16_(uint16_t g, int n) {
+   static inline Glyph16 GlyphCycleDown_16_(Glyph16 g, int n) {
       assert(n >= 0 && n < GLYPH16_HEIGHT);
       if (n == 0) return g;
       n <<= GLYPH16_WIDTH_LOG2;
       return (g << n) | (g >> (16 - n));
    }
-   static inline uint32_t GlyphCycleDown_32_(uint32_t g, int n) {
+   static inline Glyph32 GlyphCycleDown_32_(Glyph32 g, int n) {
       assert(n >= 0 && n < GLYPH32_HEIGHT);
       if (n == 0) return g;
       n <<= GLYPH32_WIDTH_LOG2;
       return (g << n) | (g >> (32 - n));
    }
-   static inline uint64_t GlyphCycleDown_64_(uint64_t g, int n) {
+   static inline Glyph64 GlyphCycleDown_64_(Glyph64 g, int n) {
       assert(n >= 0 && n < GLYPH64_HEIGHT);
       if (n == 0) return g;
       n <<= GLYPH64_WIDTH_LOG2;
@@ -868,95 +861,38 @@
       (void)g; return (Glyph256){0}; // TODO
    }
 
-#define GlyphCycleLeft(glyph, n)                                   \
-   /* It would be UNSAFE to evaluate `glyph` and `n`            */ \
-   /* in a macro, but otherwise we could just write:            */ \
-   /* ((n == 0)? glyph :                                        */ \
-   /*            GlyphOr(GlyphShiftLeft(glyph, n),              */ \
-   /*            GlyphShiftRight(glyph, GlyphWidth(glyph) - n)) */ \
-   _Generic((glyph)                , \
-      Glyph8:   GlyphCycleLeft_8_  , \
-      Glyph16:  GlyphCycleLeft_16_ , \
-      Glyph32:  GlyphCycleLeft_32_ , \
-      Glyph64:  GlyphCycleLeft_64_ , \
-      Glyph128: GlyphCycleLeft_128_, \
-      Glyph256: GlyphCycleLeft_256_  \
-   )((glyph), (n))
-   static inline uint8_t GlyphCycleLeft_8_(uint8_t g, int n) {
-      assert(n >= 0 && n < GLYPH8_WIDTH);
-      if (n == 0) return g;
-      return GlyphShiftLeft(g, n) | GlyphShiftRight(g, GLYPH8_WIDTH - n);
+#define GlyphCycleLeft(glyph, n) \
+   GLYPH_Generic((glyph), GlyphCycleLeft_)((glyph), (n))
+#  define PRIVATE_IMPLEMENTATION_(N)                                           \
+   static inline Glyph##N GlyphCycleLeft_##N##_(Glyph##N g, int n) {           \
+      assert(n >= 0 && n < GLYPH##N##_WIDTH);                                  \
+      if (n == 0) return g;                                                    \
+      return GlyphOr(GlyphShiftLeft(g, n), GlyphShiftRight(g, GLYPH##N##_WIDTH - n));  \
    }
-   static inline uint16_t GlyphCycleLeft_16_(uint16_t g, int n) {
-      assert(n >= 0 && n < GLYPH16_WIDTH);
-      if (n == 0) return g;
-      return GlyphShiftLeft(g, n) | GlyphShiftRight(g, GLYPH16_WIDTH - n);
-   }
-   static inline uint32_t GlyphCycleLeft_32_(uint32_t g, int n) {
-      assert(n >= 0 && n < GLYPH32_WIDTH);
-      if (n == 0) return g;
-      return GlyphShiftLeft(g, n) | GlyphShiftRight(g, GLYPH32_WIDTH - n);
-   }
-   static inline uint64_t GlyphCycleLeft_64_(uint64_t g, int n) {
-      assert(n >= 0 && n < GLYPH64_WIDTH);
-      if (n == 0) return g;
-      return GlyphShiftLeft(g, n) | GlyphShiftRight(g, GLYPH64_WIDTH - n);
-   }
-   static inline Glyph128 GlyphCycleLeft_128_(Glyph128 g, int n) {
-      assert(n >= 0 && n < GLYPH128_WIDTH);
-      if (n == 0) return g;
-      return GlyphOr(GlyphShiftLeft(g, n), GlyphShiftRight(g, GLYPH128_WIDTH - n));
-   }
-   static inline Glyph256 GlyphCycleLeft_256_(Glyph256 g, int n) {
-      assert(n >= 0 && n < GLYPH256_WIDTH);
-      if (n == 0) return g;
-      return GlyphOr(GlyphShiftLeft(g, n), GlyphShiftRight(g, GLYPH256_WIDTH - n));
-   }
+   PRIVATE_IMPLEMENTATION_(8)
+   PRIVATE_IMPLEMENTATION_(16)
+   PRIVATE_IMPLEMENTATION_(32)
+   PRIVATE_IMPLEMENTATION_(64)
+   PRIVATE_IMPLEMENTATION_(128)
+   PRIVATE_IMPLEMENTATION_(256)
+#  undef PRIVATE_IMPLEMENTATION_
 
-#define GlyphCycleRight(glyph, n)                                 \
-   /* It would be UNSAFE to evaluate `glyph` and `n`           */ \
-   /* in a macro, but otherwise we could just write:           */ \
-   /* ((n == 0)? glyph :                                       */ \
-   /*            GlyphOr(GlyphShiftRight(glyph, n),            */ \
-   /*            GlyphShiftLeft(glyph, GlyphWidth(glyph) - n)) */ \
-   _Generic((glyph)                 , \
-      Glyph8:   GlyphCycleRight_8_  , \
-      Glyph16:  GlyphCycleRight_16_ , \
-      Glyph32:  GlyphCycleRight_32_ , \
-      Glyph64:  GlyphCycleRight_64_ , \
-      Glyph128: GlyphCycleRight_128_, \
-      Glyph256: GlyphCycleRight_256_  \
-   )((glyph), (n))
-   static inline uint8_t GlyphCycleRight_8_(uint8_t g, int n) {
-      assert(n >= 0 && n < GLYPH8_WIDTH);
-      if (n == 0) return g;
-      return GlyphShiftRight(g, n) | GlyphShiftLeft(g, GLYPH8_WIDTH - n);
+#define GlyphCycleRight(glyph, n) \
+   GLYPH_Generic((glyph), GlyphCycleRight_)((glyph), (n))
+#  define PRIVATE_IMPLEMENTATION_(N)                                           \
+   static inline Glyph##N GlyphCycleRight_##N##_(Glyph##N g, int n) {          \
+      assert(n >= 0 && n < GLYPH##N##_WIDTH);                                  \
+      if (n == 0) return g;                                                    \
+      return GlyphOr(GlyphShiftRight(g, n), GlyphShiftLeft(g, GLYPH##N##_WIDTH - n)); \
    }
-   static inline uint16_t GlyphCycleRight_16_(uint16_t g, int n) {
-      assert(n >= 0 && n < GLYPH16_WIDTH);
-      if (n == 0) return g;
-      return GlyphShiftRight(g, n) | GlyphShiftLeft(g, GLYPH16_WIDTH - n);
-   }
-   static inline uint32_t GlyphCycleRight_32_(uint32_t g, int n) {
-      assert(n >= 0 && n < GLYPH32_WIDTH);
-      if (n == 0) return g;
-      return GlyphShiftRight(g, n) | GlyphShiftLeft(g, GLYPH32_WIDTH - n);
-   }
-   static inline uint64_t GlyphCycleRight_64_(uint64_t g, int n) {
-      assert(n >= 0 && n < GLYPH64_WIDTH);
-      if (n == 0) return g;
-      return GlyphShiftRight(g, n) | GlyphShiftLeft(g, GLYPH64_WIDTH - n);
-   }
-   static inline Glyph128 GlyphCycleRight_128_(Glyph128 g, int n) {
-      assert(n >= 0 && n < GLYPH128_WIDTH);
-      if (n == 0) return g;
-      return GlyphOr(GlyphShiftRight(g, n), GlyphShiftLeft(g, GLYPH128_WIDTH - n));
-   }
-   static inline Glyph256 GlyphCycleRight_256_(Glyph256 g, int n) {
-      assert(n >= 0 && n < GLYPH256_WIDTH);
-      if (n == 0) return g;
-      return GlyphOr(GlyphShiftRight(g, n), GlyphShiftLeft(g, GLYPH256_WIDTH - n));
-   }
+   PRIVATE_IMPLEMENTATION_(8)
+   PRIVATE_IMPLEMENTATION_(16)
+   PRIVATE_IMPLEMENTATION_(32)
+   PRIVATE_IMPLEMENTATION_(64)
+   PRIVATE_IMPLEMENTATION_(128)
+   PRIVATE_IMPLEMENTATION_(256)
+#  undef PRIVATE_IMPLEMENTATION_
+
 
 //------------------------------------------------------------------------------
 // Flip, Mirror, Rotate, Transpose glyphs
@@ -966,35 +902,29 @@
 //------------------------------------------------------------------------------
 
 // Return the given glyph flipped along the horizontal vertical axis (|)
-#define GlyphFlip(glyph)        \
-   _Generic((glyph)           , \
-      Glyph8:   GlyphFlip_8_  , \
-      Glyph16:  GlyphFlip_16_ , \
-      Glyph32:  GlyphFlip_32_ , \
-      Glyph64:  GlyphFlip_64_ , \
-      Glyph128: GlyphFlip_128_, \
-      Glyph256: GlyphFlip_256_  \
-   )((glyph))
-   static inline uint8_t  GlyphFlip_8_(uint8_t g) {
+
+#define GlyphFlip(glyph) \
+   GLYPH_Generic((glyph), GlyphFlip_)((glyph))
+   static inline Glyph8  GlyphFlip_8_(Glyph8 g) {
       // Reverse the ordering of 2bits
       g = ((g & 0xf0U) >>  4) | ((g & 0x0fU) <<  4);
       g = ((g & 0xccU) >>  2) | ((g & 0x33U) <<  2);
       return g;
    }
-   static inline uint16_t GlyphFlip_16_(uint16_t g) {
+   static inline Glyph16 GlyphFlip_16_(Glyph16 g) {
       // Reverse the ordering of nibbles
       g = ((g & 0xff00U) >>  8) | ((g & 0x00ffU) <<  8);
       g = ((g & 0xf0f0U) >>  4) | ((g & 0x0f0fU) <<  4);
       return g;
    }
-   static inline uint32_t GlyphFlip_32_(uint32_t g) {
+   static inline Glyph32 GlyphFlip_32_(Glyph32 g) {
       // Reverse the ordering of nibbles
       g = ((g & 0xffff0000U) >> 16) | ((g & 0x0000ffffU) << 16);
       g = ((g & 0xff00ff00U) >>  8) | ((g & 0x00ff00ffU) <<  8);
       g = ((g & 0xf0f0f0f0U) >>  4) | ((g & 0x0f0f0f0fU) <<  4);
       return g;
    }
-   static inline uint64_t GlyphFlip_64_(uint64_t g)
+   static inline Glyph64 GlyphFlip_64_(Glyph64 g)
    { // Reverse the ordering of bytes
 #  ifdef __GNUC__
       return __builtin_bswap64(g);
@@ -1015,32 +945,25 @@
    }
 
 // Return the given glyph flipped along the vertical axis (|)
-#define GlyphMirror(glyph)        \
-   _Generic((glyph)             , \
-      Glyph8 :  GlyphMirror_8_  , \
-      Glyph16:  GlyphMirror_16_ , \
-      Glyph32:  GlyphMirror_32_ , \
-      Glyph64:  GlyphMirror_64_ , \
-      Glyph128: GlyphMirror_128_, \
-      Glyph256: GlyphMirror_256_  \
-   )((glyph))
-   static inline uint8_t GlyphMirror_8_(uint8_t g) {
+#define GlyphMirror(glyph) \
+   GLYPH_Generic((glyph), GlyphMirror_)((glyph))
+   static inline Glyph8 GlyphMirror_8_(Glyph8 g) {
       // Reverse the bits order of every 2bit in the glyph
       return ((g & 0xaaU) >> 1) | ((g & 0x55U) << 1);
    }
-   static inline uint16_t GlyphMirror_16_(uint16_t g) {
+   static inline Glyph16 GlyphMirror_16_(Glyph16 g) {
       // Reverse the bits order of every nibble in the glyph
       g = ((g & 0xccccU) >> 2) | ((g & 0x3333U) << 2);
       g = ((g & 0xaaaaU) >> 1) | ((g & 0x5555U) << 1);
       return g;
    }
-   static inline uint32_t GlyphMirror_32_(uint32_t g) {
+   static inline Glyph32 GlyphMirror_32_(Glyph32 g) {
       // Reverse the bits order of every nibble in the glyph
       g = ((g & 0xccccccccU) >> 2) | ((g & 0x33333333U) << 2);
       g = ((g & 0xaaaaaaaaU) >> 1) | ((g & 0x55555555U) << 1);
       return g;
    }
-   static inline uint64_t GlyphMirror_64_(uint64_t g) {
+   static inline Glyph64 GlyphMirror_64_(Glyph64 g) {
       // Reverse the bits order of every byte in the glyph
       g = ((g & 0xf0f0f0f0f0f0f0f0U) >> 4) | ((g & 0x0f0f0f0f0f0f0f0fU) << 4);
       g = ((g & 0xccccccccccccccccU) >> 2) | ((g & 0x3333333333333333U) << 2);
@@ -1059,17 +982,17 @@
 // Return the given squared-size (16|64|256) glyph flipped along the \ diagonal.
 #define GlyphTranspose(square_glyph) \
    _Generic((square_glyph)         , \
-      Glyph16: GlyphTranspose_16_ , \
-      Glyph64: GlyphTranspose_64_ , \
+      Glyph16:  GlyphTranspose_16_ , \
+      Glyph64:  GlyphTranspose_64_ , \
       Glyph256: GlyphTranspose_256_  \
    )((square_glyph))
-   static inline uint16_t GlyphTranspose_16_(uint16_t g) {
+   static inline Glyph16 GlyphTranspose_16_(Glyph16 g) {
       // inspired by https://stackoverflow.com/questions/65612229/flip-4x4-bit-grid-horizontally-vertically-diagonally
       return (g & 0x8421U) | // main diagonal
             ((g & 0x4210U) >> 3) | ((g & 0x2100U) >> 6) | ((g & 0x1000U) >> 9) |  // <- upper diagonals.
             ((g & 0x0842U) << 3) | ((g & 0x0084U) << 6) | ((g & 0x0008U) << 9) ;  // <- lower diagonals
    }
-   static inline uint64_t GlyphTranspose_64_(uint64_t g) {
+   static inline Glyph64 GlyphTranspose_64_(Glyph64 g) {
       // Based on "Hacker's Delight" (second edition) by Henry S. Warren, Jr.
       // https://web.archive.org/web/20190915025154/http://www.hackersdelight.org/
       // https://en.wikipedia.org/wiki/Hacker%27s_Delight
@@ -1095,10 +1018,10 @@
 #define GlyphRotate90(square_glyph)    GlyphTranspose(GlyphMirror(square_glyph))
 
 // Return the given Glyph rotated 180 degrees
-#define GlyphRotate180(square_glyph)        GlyphMirror(GlyphFlip(square_glyph))
+#define GlyphRotate180(glyph)          GlyphMirror(GlyphFlip(glyph))
 
 // Return the given Glyph rotated 270 degrees (= 90 degrees clockwise)
-#define GlyphRotate270(square_glyph)     GlyphTranspose(GlyphFlip(square_glyph))
+#define GlyphRotate270(square_glyph)   GlyphTranspose(GlyphFlip(square_glyph))
 
 
 //------------------------------------------------------------------------------
@@ -1150,7 +1073,7 @@
          (Glyph128){.top    = GlyphFromPixel(64, x, y)} :
          (Glyph128){.bottom = GlyphFromPixel(64, x, y - GLYPH64_HEIGHT)} ;
    }
-   static inline Glyph256 Glyph256FromPixel(int x, int y) {
+   static inline Glyph256 GlyphFromPixel_256_(int x, int y) {
       assert(x >= 0 && x < GLYPH256_WIDTH);
       assert(y >= 0 && y < GLYPH256_HEIGHT);
       if (x < GLYPH64_WIDTH) {
@@ -1176,28 +1099,24 @@
       Glyph256: GlyphGetPixel_256_   , \
       default : GlyphGetPixel_dynamic_ \
    )((glyph), (x), (y))
-   static inline unsigned GlyphGetPixel_8_(uint8_t g, int x, int y) {
+   static inline unsigned GlyphGetPixel_8_(Glyph8 g, int x, int y) {
       assert(x >= 0 && x < GLYPH8_WIDTH);
       assert(y >= 0 && y < GLYPH8_HEIGHT);
-      //return (g >> GLYPH8_INDEX(x,y)) & 1U;
       return BITS_GET_BIT(g, GLYPH8_INDEX(x,y));
    }
-   static inline unsigned GlyphGetPixel_16_(uint16_t g, int x, int y)
+   static inline unsigned GlyphGetPixel_16_(Glyph16 g, int x, int y)
    {  assert(x >= 0 && x < GLYPH16_WIDTH);
       assert(y >= 0 && y < GLYPH16_HEIGHT);
-      //return (g >> GLYPH16_INDEX(x,y)) & 1U;
       return BITS_GET_BIT(g, GLYPH16_INDEX(x,y));
    }
-   static inline uint32_t GlyphGetPixel_32_(uint32_t g, int x, int y) {
+   static inline uint32_t GlyphGetPixel_32_(Glyph32 g, int x, int y) {
       assert(x >= 0 && x < GLYPH32_WIDTH);
       assert(y >= 0 && y < GLYPH32_HEIGHT);
-      //return (g >> GLYPH32_INDEX(x,y)) & 1U;
       return BITS_GET_BIT(g, GLYPH32_INDEX(x,y));
    }
-   static inline uint64_t GlyphGetPixel_64_(uint64_t g, int x, int y) {
+   static inline uint64_t GlyphGetPixel_64_(Glyph64 g, int x, int y) {
       assert(x >= 0 && x < GLYPH64_WIDTH);
       assert(y >= 0 && y < GLYPH64_HEIGHT);
-      //return (g >> GLYPH64_INDEX(x,y)) & 1U;
       return BITS_GET_BIT(g, GLYPH64_INDEX(x,y));
    }
    static inline uint64_t GlyphGetPixel_128_(Glyph128 g, int x, int y) {
@@ -1226,10 +1145,10 @@
    static inline uint64_t GlyphGetPixel_dynamic_(const void *g, int x, int y) {
       assert(g != NULL);
       switch (VideoModeDimension()) {
-         case PIXELS_2x4  : return GlyphGetPixel(*(const uint8_t *)g, x, y);
-         case PIXELS_4x4  : return GlyphGetPixel(*(const uint16_t*)g, x, y);
-         case PIXELS_4x8  : return GlyphGetPixel(*(const uint32_t*)g, x, y);
-         case PIXELS_8x8  : return GlyphGetPixel(*(const uint64_t*)g, x, y);
+         case PIXELS_2x4  : return GlyphGetPixel(*(const Glyph8 *)g, x, y);
+         case PIXELS_4x4  : return GlyphGetPixel(*(const Glyph16*)g, x, y);
+         case PIXELS_4x8  : return GlyphGetPixel(*(const Glyph32*)g, x, y);
+         case PIXELS_8x8  : return GlyphGetPixel(*(const Glyph64*)g, x, y);
          case PIXELS_8x16 : return GlyphGetPixel(*(const Glyph128*)g, x, y);
          case PIXELS_16x16: return GlyphGetPixel(*(const Glyph256*)g, x, y);
          default: unreachable();
@@ -1249,28 +1168,28 @@
       default : GlyphSetPixel_dynamic_ \
    )((glyph), (x), (y), (bit))
    static inline C_ATTRIBUTE_NODISCARD
-   uint8_t  GlyphSetPixel_8_(uint8_t g, int x, int y, int bit) {
+   Glyph8  GlyphSetPixel_8_(Glyph8 g, int x, int y, int bit) {
       assert(x >= 0 && x < GLYPH8_WIDTH);
       assert(y >= 0 && y < GLYPH8_HEIGHT);
       assert(bit == 0 || bit == 1);
       return BITS_SET_BIT(g, GLYPH8_INDEX(x,y), bit);
    }
    static inline C_ATTRIBUTE_NODISCARD
-   uint16_t  GlyphSetPixel_16_(uint16_t g, int x, int y, int bit) {
+   Glyph16  GlyphSetPixel_16_(Glyph16 g, int x, int y, int bit) {
       assert(x >= 0 && x < GLYPH16_WIDTH);
       assert(y >= 0 && y < GLYPH16_HEIGHT);
       assert(bit == 0 || bit == 1);
       return BITS_SET_BIT(g, GLYPH16_INDEX(x,y), bit);
    }
    static inline C_ATTRIBUTE_NODISCARD
-   uint32_t  GlyphSetPixel_32_(uint32_t g, int x, int y, int bit) {
+   Glyph32  GlyphSetPixel_32_(Glyph32 g, int x, int y, int bit) {
       assert(x >= 0 && x < GLYPH32_WIDTH);
       assert(y >= 0 && y < GLYPH32_HEIGHT);
       assert(bit == 0 || bit == 1);
       return BITS_SET_BIT(g, GLYPH32_INDEX(x,y), bit);
    }
    static inline C_ATTRIBUTE_NODISCARD
-   uint64_t  GlyphSetPixel_64_(uint64_t g, int x, int y, int bit) {
+   Glyph64  GlyphSetPixel_64_(Glyph64 g, int x, int y, int bit) {
       assert(x >= 0 && x < GLYPH64_WIDTH);
       assert(y >= 0 && y < GLYPH64_HEIGHT);
       assert(bit == 0 || bit == 1);
@@ -1331,10 +1250,10 @@
    void GlyphSetPixel_dynamic_(void *g, int x, int y, int bit) {
       assert(g != NULL);
       switch (VideoModeDimension()) {
-         case PIXELS_2x4  : *(uint8_t *)g = GlyphSetPixel(*(uint8_t *)g, x, y, bit);  break;
-         case PIXELS_4x4  : *(uint16_t*)g = GlyphSetPixel(*(uint16_t*)g, x, y, bit);  break;
-         case PIXELS_4x8  : *(uint32_t*)g = GlyphSetPixel(*(uint32_t*)g, x, y, bit);  break;
-         case PIXELS_8x8  : *(uint64_t*)g = GlyphSetPixel(*(uint64_t*)g, x, y, bit);  break;
+         case PIXELS_2x4  : *(Glyph8 *)g = GlyphSetPixel(*(Glyph8 *)g, x, y, bit);  break;
+         case PIXELS_4x4  : *(Glyph16*)g = GlyphSetPixel(*(Glyph16*)g, x, y, bit);  break;
+         case PIXELS_4x8  : *(Glyph32*)g = GlyphSetPixel(*(Glyph32*)g, x, y, bit);  break;
+         case PIXELS_8x8  : *(Glyph64*)g = GlyphSetPixel(*(Glyph64*)g, x, y, bit);  break;
          case PIXELS_8x16 : *(Glyph128*)g = GlyphSetPixel(*(Glyph128*)g, x, y, bit);  break;
          case PIXELS_16x16: *(Glyph256*)g = GlyphSetPixel(*(Glyph256*)g, x, y, bit);  break;
          default: unreachable();
@@ -1354,22 +1273,22 @@
       Glyph128: GlyphPixelIsSet_128_, \
       Glyph256: GlyphPixelIsSet_256_  \
    )((glyph), (x), (y))
-   static inline uint8_t  GlyphPixelIsSet_8_(uint8_t g, int x, int y) {
+   static inline uint8_t  GlyphPixelIsSet_8_(Glyph8 g, int x, int y) {
       assert(x >= 0 && x < GLYPH8_WIDTH);
       assert(y >= 0 && y < GLYPH8_HEIGHT);
       return g & (1U << GLYPH8_INDEX(x,y));
    }
-   static inline uint16_t GlyphPixelIsSet_16_(uint16_t g, int x, int y) {
+   static inline uint16_t GlyphPixelIsSet_16_(Glyph16 g, int x, int y) {
       assert(x >= 0 && x < GLYPH16_WIDTH);
       assert(y >= 0 && y < GLYPH16_HEIGHT);
       return g & (1U << GLYPH16_INDEX(x,y));
    }
-   static inline uint32_t GlyphPixelIsSet_32_(uint32_t g, int x, int y) {
+   static inline uint32_t GlyphPixelIsSet_32_(Glyph32 g, int x, int y) {
       assert(x >= 0 && x < GLYPH32_WIDTH);
       assert(y >= 0 && y < GLYPH32_HEIGHT);
       return g & (UINT32_C(1) << GLYPH32_INDEX(x,y));
    }
-   static inline uint64_t GlyphPixelIsSet_64_(uint64_t g, int x, int y) {
+   static inline uint64_t GlyphPixelIsSet_64_(Glyph64 g, int x, int y) {
       assert(x >= 0 && x < GLYPH64_WIDTH);
       assert(y >= 0 && y < GLYPH64_HEIGHT);
       return g & (UINT64_C(1) << GLYPH64_INDEX(x,y));
@@ -1415,7 +1334,7 @@
       Glyph128: GlyphHalf_128_ , \
       Glyph256: GlyphHalf_256_   \
    )((glyph), (offset))
-   static inline uint8_t  GlyphHalf_16_(uint16_t glyph, int offset) {
+   static inline uint8_t  GlyphHalf_16_(Glyph16 glyph, int offset) {
       assert(offset >= 0 && offset <= (GLYPH16_WIDTH / 2));
       unsigned half = 0;
       // Extract every second 2bit chunck from the glyph
@@ -1426,11 +1345,11 @@
       }
       return half;
    }
-   static inline uint16_t GlyphHalf_32_(uint32_t glyph, int offset) {
+   static inline Glyph16 GlyphHalf_32_(Glyph32 glyph, int offset) {
       assert(offset >= 0 && offset <= (GLYPH32_HEIGHT / 2));
       return (uint16_t) GlyphShiftUp_32_(glyph, offset);
    }
-   static inline uint32_t GlyphHalf_64_(uint64_t glyph, int offset) {
+   static inline Glyph32 GlyphHalf_64_(Glyph64 glyph, int offset) {
       assert(offset >= 0 && offset <= (GLYPH64_WIDTH / 2));
       uint32_t half = 0;
       // Extract every second nibble from the glyph
@@ -1444,7 +1363,7 @@
       }
       return half;
    }
-   static inline uint64_t GlyphHalf_128_(Glyph128 glyph, int offset) {
+   static inline Glyph64 GlyphHalf_128_(Glyph128 glyph, int offset) {
       assert(offset >= 0 && offset <= (GLYPH128_HEIGHT / 2));
       return GlyphShiftUp_128_(glyph, offset).top;
    }
@@ -1464,13 +1383,13 @@
       Glyph128: GlyphSwapHalves_128_ , \
       Glyph256: GlyphSwapHalves_256_   \
    )((glyph))
-   static inline uint8_t GlyphSwapHalves_8_(uint8_t g)
+   static inline Glyph8 GlyphSwapHalves_8_(Glyph8 g)
    { return (g << 4) | (g >> 4); }
-   static inline uint16_t GlyphSwapHalves_16_(uint16_t g)
+   static inline Glyph16 GlyphSwapHalves_16_(Glyph16 g)
    { return ((g & 0xccccU) >> 2) | ((g & 0x3333U) << 2); }
-   static inline uint32_t GlyphSwapHalves_32_(uint32_t g)
+   static inline Glyph32 GlyphSwapHalves_32_(Glyph32 g)
    { return (g << 16) | (g >> 16); }
-   static inline uint64_t GlyphSwapHalves_64_(uint64_t g)
+   static inline Glyph64 GlyphSwapHalves_64_(Glyph64 g)
    { return ((g & 0xf0f0f0f0f0f0f0f0U) >> 4) | ((g & 0x0f0f0f0f0f0f0f0fU) << 4); }
    static inline Glyph128 GlyphSwapHalves_128_(Glyph128 g)
    { return (Glyph128){ g.bottom, g.top }; }
@@ -1489,7 +1408,7 @@
       Glyph64:  GlyphFromHalves_64_                 , \
       Glyph128: GlyphFromHalves_128_                  \
    )((left_or_top), (right_or_bottom))
-   static inline uint16_t GlyphFromHalves_8_1_(uint8_t half) {
+   static inline Glyph16 GlyphFromHalves_8_1_(Glyph8 half) {
       // Return a glyph16 from a glyph8 placed on the left side.
       // (Hint: << 2 to place it on the right instead)
 
@@ -1498,11 +1417,11 @@
       g  =   (g | (g << 4)) & 0x0F0Fu;
       return (g | (g << 2)) & 0x3333u;
    }
-   static inline uint16_t GlyphFromHalves_8_(uint8_t l, uint8_t r)
+   static inline Glyph16 GlyphFromHalves_8_(Glyph8 l, Glyph8 r)
    { return GlyphFromHalves_8_1_(l) | (GlyphFromHalves_8_1_(r) << 2); }
-   static inline uint32_t GlyphFromHalves_16_(uint16_t t, uint16_t b)
+   static inline Glyph32 GlyphFromHalves_16_(Glyph16 t, Glyph16 b)
    { return (uint32_t)t | ((uint32_t)b << 16); }
-   static inline uint64_t GlyphFromHalves_32_1_(uint32_t half) {
+   static inline Glyph64 GlyphFromHalves_32_1_(Glyph32 half) {
       // Return a glyph64 from a glyp32 placed on the left side.
       // (Hint: << 4 to place it on the right instead)
 
@@ -1512,9 +1431,9 @@
       g  =   (g | (g <<  8)) & 0x00FF00FF00FF00FFu;
       return (g | (g <<  4)) & 0x0F0F0F0F0F0F0F0Fu;
    }
-   static inline uint64_t GlyphFromHalves_32_(uint32_t l, uint32_t r)
+   static inline Glyph64 GlyphFromHalves_32_(Glyph32 l, Glyph32 r)
    { return GlyphFromHalves_32_1_(l) | (GlyphFromHalves_32_1_(r) << 4); }
-   static inline Glyph128 GlyphFromHalves_64_(uint64_t t, uint64_t b)
+   static inline Glyph128 GlyphFromHalves_64_(Glyph64 t, Glyph64 b)
    { return (Glyph128){ t, b }; }
    static inline Glyph256 GlyphFromHalves_128_(Glyph128 l, Glyph128 r)
    { return (Glyph256){ l.top, r.top, l.bottom, r.bottom }; }
@@ -1532,14 +1451,14 @@
       Glyph64:  GlyphUpscale_64_ , \
       Glyph128: GlyphUpscale_128_  \
    )((glyph))
-   static inline uint16_t GlyphUpscale_8_(uint8_t g) {
+   static inline Glyph16 GlyphUpscale_8_(Glyph8 g) {
       // interleave bits of g with itself, use the 64-bit multiplication
       // technique described at:
       // https://graphics.stanford.edu/~seander/bithacks.html#Interleave64bitOps
       uint64_t t = (g * 0x0101010101010101u & 0x8040201008040201u) * 0x0102040810204081u;
       return ((t >> 49) & 0x5555u) | ((t >> 48) & 0xAAAAu);
    }
-   static inline uint32_t GlyphUpscale_16_(uint16_t g) {
+   static inline Glyph32 GlyphUpscale_16_(Glyph16 g) {
       // Extract each line (nibble) from the glyph
       uint32_t i = (g >> 12) & 0xF;
       uint32_t j = (g >> 8)  & 0xF;
@@ -1549,7 +1468,7 @@
       return (i<<28)|(i<<24) | (j<<20)|(j<<16) | (k<<12)|(k<<8) | (l<<4)|l;
    }
 /* nope
-        static inline uint64_t GlyphUpscale_32_(uint32_t g)
+        static inline Glyph64 GlyphUpscale_32_(Glyph32 g)
         {
            // Interleave the glyph bytes with itself using this technique:
            // https://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN
@@ -1560,7 +1479,7 @@
            return g | (g << 1);
         }
 */
-   static inline uint64_t GlyphUpscale_32_(uint32_t g) {
+   static inline Glyph64 GlyphUpscale_32_(Glyph32 g) {
 /* No?:
            uint64_t z = 0;
            for (int i = 0; i < 32; i++) {
@@ -1580,7 +1499,7 @@
       }
       return g64;
    }
-   static inline Glyph128 GlyphUpscale_64_(uint64_t g) {
+   static inline Glyph128 GlyphUpscale_64_(Glyph64 g) {
       // Extract each line (byte) from half of the glyph and start to
       // construct the Glyph128
       Glyph128 g128;

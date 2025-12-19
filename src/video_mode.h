@@ -1,6 +1,13 @@
 #ifndef  KONPU_VIDEO_MODE_H_
 #define  KONPU_VIDEO_MODE_H_
-#include "arch.h"
+#include "util.h"
+#include "form.h"
+
+// Konpu's Video Graphics Card whose memory and register are accessible via
+// memory-mapped I/O. In Konpu API, `Video` can be passed everywhere a surface
+// is expected.
+#define Video  Ram.video
+
 
 //------------------------------------------------------------------------------
 // Possible Optimization options
@@ -8,16 +15,13 @@
 
 /* "OPTIMIZED" mode (TODO)
 
-// The default Video Mode
-#define VIDEO_MODE_DEFAULT   168
-
 // Current Video Mode
 #ifdef KONPU_OPTION_OPTIMIZE_VIDEO_MODE
    // Normalize (to default mode) if the symbol is defined but has no value
 #  if ~(~KONPU_OPTION_OPTIMIZE_VIDEO_MODE + 0) == 0 && \
       ~(~KONPU_OPTION_OPTIMIZE_VIDEO_MODE + 1) == 1
 #     undef  KONPU_OPTION_OPTIMIZE_VIDEO_MODE
-#     define KONPU_OPTION_OPTIMIZE_VIDEO_MODE  VIDEO_MODE_DEFAULT
+#     define KONPU_OPTION_OPTIMIZE_VIDEO_MODE  168 // = VIDEO_MODE_DEFAULT
 #  endif
 #  undef  VIDEO_MODE
 #  define VIDEO_MODE  KONPU_OPTION_OPTIMIZE_VIDEO_MODE
@@ -32,11 +36,24 @@
 // Element dimensions (in terms of pixels)
 //------------------------------------------------------------------------------
 
-// Encodes dimensions in pixels of a Video framebuffer Element
-// (Elements can be: Glyphs, Tiles, Strips, or Attributes)
+// Value for "chunky" pixels when pixels aren't bits
+enum PixelChunk {
+   PIXEL_CHUNK_BYTE    = 11, // pixel is a byte representing a full color
+   PIXEL_CHUNK_NIBBLE  = 10, // pixel is a nibble  and can have 16 colors
+   PIXEL_CHUNK_QUARTER =  9, // pixel is a quarter and can have  4 colors
+
+   // Note: We can observe that log2(#Colors) = 1 << (px_chunk - 8)
+   //       or it can also be:  log2(#Colors) = 1 << (px_chunk & 3)
+   //       |
+   //       '--> and when the framebuffer contains contains chunky Forms, we can
+   //            thus get Forms' bits-per-pixels with: 1 << (Video.mode & 3)
+};
+
+// Video framebuffer element dimensions in Pixels
+// (Elements can be Forms (Glyphs, Tiles, Strips) or Attributes)
 //
-// When one knows the element is a Glyph, Tile, or Attribute, this enum can
-// describe the dimension exactly; otherwise, it can only indicate if the
+// When one knows an element is a Glyph, Tile, or Attribute, this enum can
+// describe its dimensions exactly; otherwise, it can only indicate if the
 // element is a Strip.
 enum VideoElementDimension {
    PIXELS_2x4   = 0,
@@ -113,32 +130,22 @@ enum VideoElementDimension {
 #define VIDEO_ELEMENT_Nx1_HEIGHT_LOG2          0
 
 //------------------------------------------------------------------------------
-// Measurements of the Video framebuffer (in terms of the elements in it)
+// Measurements of the Video framebuffer
 //
 // VIDEO_WIDTH_<ELEMENT>   width  of the framebuffer in terms of that element
 // VIDEO_HEIGHT_<ELEMENT>  height of the framebuffer in terms of that element
 // VIDEO_COUNT_<ELEMENT>   number of such elements in the framebuffer
 //
+// Video mode must be such that the framebuffer contains this given ELEMENT.
+//
 // VIDEO_WIDTH, VIDEO_HEIGHT
 // Width/Height of the video framebuffer in pixels (This same as Video.width
 // and Video.height unless some optimization option is on.
-//
-// VIDEO_WIDTH_<element>, VIDEO_HEIGHT_<element>
-// Width/Height of the video framebuffer but in other "units" than pixels
-// (Video mode must be such that the framebuffer contains this type of element)
-//
-// VIDEO_COUNT_<element>
-// The number of such elements in the framebuffer
-// (Video mode must be such that the framebuffer contains this type of element)
-
-// Total number of given element in the framebuffer
-// (The framebuffer must contain this type of element)
-
 //------------------------------------------------------------------------------
 
-#ifndef VIDEO_MODE
-#define VIDEO_MODE    Video.mode
-#endif
+// TODO: Maybe we want to add the suffix _PIXEL. This makes the name longer, but
+//       also but more logical and consistent with the VIDEO_*_<ELEMENT>
+//       convention. And when using VIDEO_WIDTH, we're foced to
 #ifndef VIDEO_WIDTH
 #define VIDEO_WIDTH   Video.width
 #endif
@@ -146,6 +153,23 @@ enum VideoElementDimension {
 #define VIDEO_HEIGHT  Video.height
 #endif
 
+#ifndef VIDEO_WIDTH_PIXEL
+#define VIDEO_WIDTH_PIXEL           Video.width
+#endif
+#define VIDEO_WIDTH_FORM            (VIDEO_WIDTH >> FORM_WIDTH_LOG2)
+#define VIDEO_WIDTH_FORM8           (VIDEO_WIDTH >> FORM8_WIDTH_LOG2)
+#define VIDEO_WIDTH_FORM16          (VIDEO_WIDTH >> FORM16_WIDTH_LOG2)
+#define VIDEO_WIDTH_FORM32          (VIDEO_WIDTH >> FORM32_WIDTH_LOG2)
+#define VIDEO_WIDTH_FORM64          (VIDEO_WIDTH >> FORM64_WIDTH_LOG2)
+#define VIDEO_WIDTH_FORM128         (VIDEO_WIDTH >> FORM128_WIDTH_LOG2)
+#define VIDEO_WIDTH_FORM256         (VIDEO_WIDTH >> FORM256_WIDTH_LOG2)
+#define VIDEO_WIDTH_FORM_2x4        (VIDEO_WIDTH >> VIDEO_ELEMENT_2x4_WIDTH_LOG2)
+#define VIDEO_WIDTH_FORM_4x4        (VIDEO_WIDTH >> VIDEO_ELEMENT_4x4_WIDTH_LOG2)
+#define VIDEO_WIDTH_FORM_4x8        (VIDEO_WIDTH >> VIDEO_ELEMENT_4x8_WIDTH_LOG2)
+#define VIDEO_WIDTH_FORM_8x8        (VIDEO_WIDTH >> VIDEO_ELEMENT_8x8_WIDTH_LOG2)
+#define VIDEO_WIDTH_FORM_8x16       (VIDEO_WIDTH >> VIDEO_ELEMENT_8x16_WIDTH_LOG2)
+#define VIDEO_WIDTH_FORM_16x16      (VIDEO_WIDTH >> VIDEO_ELEMENT_16x16_WIDTH_LOG2)
+#define VIDEO_WIDTH_FORM_Nx1        (VIDEO_WIDTH >> STRIP_WIDTH_LOG2)
 #define VIDEO_WIDTH_GLYPH           (VIDEO_WIDTH >> GLYPH_WIDTH_LOG2)
 #define VIDEO_WIDTH_GLYPH8          (VIDEO_WIDTH >> GLYPH8_WIDTH_LOG2)
 #define VIDEO_WIDTH_GLYPH16         (VIDEO_WIDTH >> GLYPH16_WIDTH_LOG2)
@@ -171,13 +195,30 @@ enum VideoElementDimension {
 #define VIDEO_WIDTH_STRIP8          (VIDEO_WIDTH >> STRIP8_WIDTH_LOG2)
 #define VIDEO_WIDTH_STRIP_CHUNKY    (VIDEO_WIDTH >> STRIP_WIDTH_CHUNKY_LOG2)
 #define VIDEO_WIDTH_ATTRIBUTE       (VIDEO_WIDTH >> ATTRIBUTE_WIDTH_LOG2)
+#define VIDEO_WIDTH_ATTRIBUTE8      (VIDEO_WIDTH >> ATTRIBUTE8_WIDTH_LOG2)
+#define VIDEO_WIDTH_ATTRIBUTE16     (VIDEO_WIDTH >> ATTRIBUTE16_WIDTH_LOG2)
 #define VIDEO_WIDTH_ATTRIBUTE_2x4   (VIDEO_WIDTH >> VIDEO_ELEMENT_2x4_WIDTH_LOG2)
 #define VIDEO_WIDTH_ATTRIBUTE_4x4   (VIDEO_WIDTH >> VIDEO_ELEMENT_4x4_WIDTH_LOG2)
 #define VIDEO_WIDTH_ATTRIBUTE_4x8   (VIDEO_WIDTH >> VIDEO_ELEMENT_4x8_WIDTH_LOG2)
 #define VIDEO_WIDTH_ATTRIBUTE_8x8   (VIDEO_WIDTH >> VIDEO_ELEMENT_8x8_WIDTH_LOG2)
-#define VIDEO_WIDTH_ATTRIBUTE8      (VIDEO_WIDTH >> ATTRIBUTE8_WIDTH_LOG2)
-#define VIDEO_WIDTH_ATTRIBUTE16     (VIDEO_WIDTH >> ATTRIBUTE16_WIDTH_LOG2)
 
+#ifndef VIDEO_HEIGHT_PIXEL
+#define VIDEO_HEIGHT_PIXEL          Video.height
+#endif
+#define VIDEO_HEIGHT_FORM           (VIDEO_HEIGHT >> FORM_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_FORM8          (VIDEO_HEIGHT >> FORM8_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_FORM16         (VIDEO_HEIGHT >> FORM16_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_FORM32         (VIDEO_HEIGHT >> FORM32_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_FORM64         (VIDEO_HEIGHT >> FORM64_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_FORM128        (VIDEO_HEIGHT >> FORM128_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_FORM256        (VIDEO_HEIGHT >> FORM256_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_FORM_2x4       (VIDEO_HEIGHT >> VIDEO_ELEMENT_2x4_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_FORM_4x4       (VIDEO_HEIGHT >> VIDEO_ELEMENT_4x4_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_FORM_4x8       (VIDEO_HEIGHT >> VIDEO_ELEMENT_4x8_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_FORM_8x8       (VIDEO_HEIGHT >> VIDEO_ELEMENT_8x8_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_FORM_8x16      (VIDEO_HEIGHT >> VIDEO_ELEMENT_8x16_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_FORM_16x16     (VIDEO_HEIGHT >> VIDEO_ELEMENT_16x16_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_FORM_Nx1       VIDEO_HEIGHT
 #define VIDEO_HEIGHT_GLYPH          (VIDEO_HEIGHT >> GLYPH_HEIGHT_LOG2)
 #define VIDEO_HEIGHT_GLYPH8         (VIDEO_HEIGHT >> GLYPH8_HEIGHT_LOG2)
 #define VIDEO_HEIGHT_GLYPH16        (VIDEO_HEIGHT >> GLYPH16_HEIGHT_LOG2)
@@ -203,12 +244,13 @@ enum VideoElementDimension {
 #define VIDEO_HEIGHT_STRIP8         (VIDEO_HEIGHT >> STRIP8_HEIGHT_LOG2)
 #define VIDEO_HEIGHT_STRIP_CHUNKY   (VIDEO_HEIGHT >> STRIP_HEIGHT_CHUNKY_LOG2)
 #define VIDEO_HEIGHT_ATTRIBUTE      (VIDEO_HEIGHT >> ATTRIBUTE_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_ATTRIBUTE8     (VIDEO_HEIGHT >> ATTRIBUTE8_HEIGHT_LOG2)
+#define VIDEO_HEIGHT_ATTRIBUTE16    (VIDEO_HEIGHT >> ATTRIBUTE16_HEIGHT_LOG2)
 #define VIDEO_HEIGHT_ATTRIBUTE_2x4  (VIDEO_HEIGHT >> VIDEO_ELEMENT_2x4_HEIGHT_LOG2)
 #define VIDEO_HEIGHT_ATTRIBUTE_4x4  (VIDEO_HEIGHT >> VIDEO_ELEMENT_4x4_HEIGHT_LOG2)
 #define VIDEO_HEIGHT_ATTRIBUTE_4x8  (VIDEO_HEIGHT >> VIDEO_ELEMENT_4x8_HEIGHT_LOG2)
 #define VIDEO_HEIGHT_ATTRIBUTE_8x8  (VIDEO_HEIGHT >> VIDEO_ELEMENT_8x8_HEIGHT_LOG2)
-#define VIDEO_HEIGHT_ATTRIBUTE8     (VIDEO_HEIGHT >> ATTRIBUTE8_HEIGHT_LOG2)
-#define VIDEO_HEIGHT_ATTRIBUTE16    (VIDEO_HEIGHT >> ATTRIBUTE16_HEIGHT_LOG2)
+
 
 #if (INT_WIDTH >= 32) || (VIDEO_FACTOR_ == 1)
 #   define VIDEO_COUNT_PIXELS       (VIDEO_WIDTH * VIDEO_HEIGHT)
@@ -216,6 +258,9 @@ enum VideoElementDimension {
 #   define VIDEO_COUNT_PIXELS       ((int32_t)VIDEO_WIDTH * (int32_t)VIDEO_HEIGHT)
 #endif
 #define VIDEO_COUNT_PLANE           VideoModeLowNibble()
+#define VIDEO_COUNT_BITS            (8 * VIDEO_SIZE)
+#define VIDEO_COUNT_COLOR           (1 << VIDEO_COUNT_COLOR_LOG2)
+#define VIDEO_COUNT_COLOR_LOG2      ColorDepth()
 
 #define VIDEO_COUNT_GLYPH           (VIDEO_COUNT_PIXELS >> GLYPH_COUNT_PIXELS_LOG2)
 #define VIDEO_COUNT_GLYPH8          (VIDEO_COUNT_PIXELS >> GLYPH8_COUNT_PIXELS_LOG2)
@@ -259,10 +304,18 @@ enum VideoElementDimension {
 // attributes, then VIDEO_SIZE_PLANE and VIDEO_SIZE_ATTRIBUTES aren't 0)
 //------------------------------------------------------------------------------
 
-#define VIDEO_GLYPHS_SIZE           (VIDEO_COUNT_PIXELS >> 3)
-#define VIDEO_TILES_SIZE            VIDEO_SIZE /*(tiles never have attributes)*/
-#define VIDEO_STRIPS_SIZE           (VIDEO_COUNT_PIXELS >> 3)
-#define VIDEO_ATTRIBUTES_SIZE       (VIDEO_SIZE - (VIDEO_COUNT_PIXELS >> 3))
+#define VIDEO_FORMS_SIZE            (VIDEO_COUNT_PIXELS >> 3)
+#define VIDEO_GLYPHS_SIZE           VIDEO_FORMS_SIZE
+#define VIDEO_TILES_SIZE            VIDEO_SIZE // tiles never have attributes
+#define VIDEO_STRIPS_SIZE           VIDEO_FORMS_SIZE
+
+#define VIDEO_ATTRIBUTES_SIZE       (VIDEO_SIZE - VIDEO_FORMS_SIZE)
+
+// Start of the Attributes in the Video framebuffer
+// (only make sense if the framebuffer has attributes)
+#define VIDEO_ATTRIBUTE_START_    (Video.frame + VIDEO_FORMS_SIZE)
+#define VIDEO_ATTRIBUTE8_START_   VIDEO_ATTRIBUTE_START_
+#define VIDEO_ATTRIBUTE16_START_  ((Attribute16 *)VIDEO_ATTRIBUTE_START_)
 
 #define VIDEO_SIZE_PLANE            (VIDEO_SIZE / VIDEO_COUNT_PLANE)
    // WARNING: In video modes with AttributeType `0` (aka ATTRIBUTE8_2x4), the
@@ -272,6 +325,7 @@ enum VideoElementDimension {
    //          particularly nasty case.
 
 
+
 //------------------------------------------------------------------------------
 // Views to Video elements of the framebuffer as 2D variably sized arrays.
 //
@@ -279,25 +333,63 @@ enum VideoElementDimension {
 // the Element at position (x,y) is accessed as: VIDEO_<ELEMENT>(...)[y][x].
 //------------------------------------------------------------------------------
 
+
+// VideoArray  VIDEO_FORM(N, [int plane], [int x0, y0]);
+// Return a 2D array of Form<N> giving an UNCHECKED access to the Forms elements
+//  in the video framebuffer.
+// - N: a literal <8|16|32|64|128|256> to specify the type of Form
+// - plane: specify a plane (planar modes only)
+// - x0,y0: specify an origin where the array starts
+#define VIDEO_FORM(...) \
+   UTIL_OVERLOAD(PRIVATE_VIDEO_FORM, __VA_ARGS__)
+#  define PRIVATE_VIDEO_FORM_1_(N) \
+      ((Form##N (*)[VIDEO_WIDTH_FORM##N])(Video.frame))
+#  define PRIVATE_VIDEO_FORM_2_(N, plane)  (                                   \
+      (Form##N (*)[VIDEO_WIDTH_FORM##N])                                       \
+         (Video.frame + (plane) * VIDEO_SIZE_PLANE)                            \
+   )
+#  define PRIVATE_VIDEO_FORM_3_(N, x0,y0)  (                                   \
+      (Form##N (*)[VIDEO_WIDTH_FORM##N])                                       \
+         ( Video.frame                                                         \
+         + ((x0) + (y0) * VIDEO_WIDTH_FORM##N) * sizeof(Form##N)               \
+         )                                                                     \
+   )
+#  define PRIVATE_VIDEO_FORM_4_(N, plane, x0,y0)  (                            \
+      (Form##N (*)[VIDEO_WIDTH_FORM##N])                                       \
+         ( Video.frame                                                         \
+         + (plane) * VIDEO_SIZE_PLANE                                          \
+         + ((x0) + (y0) * VIDEO_WIDTH_FORM##N) * sizeof(Form##N)               \
+         )                                                                     \
+   )
+   // Implementation note: one could have thought to only define VIDEO_FORM_4_
+   // and do:   #define VIDEO_FORM_1_(N)          VIDEO_FORM_4_(N, 0, 0,0)
+   //           #define VIDEO_FORM_2_(N, plane)   VIDEO_FORM_4_(N, plane, 0,0)
+   //           #define VIDEO_FORM_3_(N, x0,y0)   VIDEO_FORM_4_(N, 0, x0,y0)
+   // but we would risk potential division by 0 by invoking VIDEO_SIZE_PLANE in
+   // a non-plane mode. Also expended macros are easier to understand.
+
+
 // VideoArray  VIDEO_GLYPH(N, [int plane], [int x0, y0]);
 // Return a 2D array of Glyph<N> giving an UNCHECKED access to the Glyphs in the
 // video framebuffer.
 // - N: a literal <8|16|32|64|128|256> to specify the type of Glyphs
 // - plane: specify a plane (planar modes only)
 // - x0,y0: specify an origin where the array starts
-#define VIDEO_GLYPH(...)     UTIL_OVERLOAD(VIDEO_GLYPH, __VA_ARGS__)
-#  define VIDEO_GLYPH_1_(N)  ((Glyph##N (*)[VIDEO_WIDTH_GLYPH##N])(Video.frame))
-#  define VIDEO_GLYPH_2_(N, plane)  (                                          \
+#define VIDEO_GLYPH(...) \
+   UTIL_OVERLOAD(PRIVATE_VIDEO_GLYPH, __VA_ARGS__)
+#  define PRIVATE_VIDEO_GLYPH_1_(N) \
+      ((Glyph##N (*)[VIDEO_WIDTH_GLYPH##N])(Video.frame))
+#  define PRIVATE_VIDEO_GLYPH_2_(N, plane)  (                                  \
       (Glyph##N (*)[VIDEO_WIDTH_GLYPH##N])                                     \
          (Video.frame + (plane) * VIDEO_SIZE_PLANE)                            \
    )
-#  define VIDEO_GLYPH_3_(N, x0,y0)  (                                          \
+#  define PRIVATE_VIDEO_GLYPH_3_(N, x0,y0)  (                                  \
       (Glyph##N (*)[VIDEO_WIDTH_GLYPH##N])                                     \
          (  Video.frame                                                        \
          + ((x0) + (y0) * VIDEO_WIDTH_GLYPH##N) * sizeof(Glyph##N)             \
          )                                                                     \
    )
-#  define VIDEO_GLYPH_4_(N, plane, x0,y0)  (                                   \
+#  define PRIVATE_VIDEO_GLYPH_4_(N, plane, x0,y0)  (                           \
       (Glyph##N (*)[VIDEO_WIDTH_GLYPH##N])                                     \
          (  Video.frame                                                        \
          + (plane) * VIDEO_SIZE_PLANE                                          \
@@ -316,9 +408,11 @@ enum VideoElementDimension {
 // video framebuffer.
 // - N: a literal <16|32|64|128|256> to specify the C type of Tiles
 // - x0,y0: specify an origin where the array starts
-#define VIDEO_TILE(...)     UTIL_OVERLOAD(VIDEO_TILE, __VA_ARGS__)
-#  define VIDEO_TILE_1_(N)  ((Tile##N (*)[VIDEO_WIDTH_TILE##N])(Video.frame))
-#  define VIDEO_TILE_3_(N, x0,y0)  (                                           \
+#define VIDEO_TILE(...) \
+   UTIL_OVERLOAD(PRIVATE_VIDEO_TILE, __VA_ARGS__)
+#  define PRIVATE_VIDEO_TILE_1_(N) \
+      ((Tile##N (*)[VIDEO_WIDTH_TILE##N])(Video.frame))
+#  define PRIVATE_VIDEO_TILE_3_(N, x0,y0)  (                                   \
       (Tile##N (*)[VIDEO_WIDTH_TILE##N])                                       \
          (Video.frame + ((x0) + (y0) * VIDEO_WIDTH_TILE##N) * sizeof(Tile##N)) \
    )
@@ -328,18 +422,19 @@ enum VideoElementDimension {
 // framebuffer.
 // - plane: specify a plane (only for Strip8 (aka bit Strips) in planar mode)
 // - x0,y0: specify an origin where the array starts
-#define VIDEO_STRIP(...)       UTIL_OVERLOAD(VIDEO_STRIP, __VA_ARGS__)
-#  define VIDEO_STRIP_0_()                                                     \
+#define VIDEO_STRIP(...) \
+   UTIL_OVERLOAD(PRIVATE_VIDEO_STRIP, __VA_ARGS__)
+#  define PRIVATE_VIDEO_STRIP_0_() \
       ((Strip (*)[VIDEO_WIDTH_STRIP]) (Video.strip))
-#  define VIDEO_STRIP_2_(x0, y0)  (                                            \
+#  define PRIVATE_VIDEO_STRIP_2_(x0, y0)  (                                    \
       (Strip (*)[VIDEO_WIDTH_STRIP])                                           \
          (Video.strip + (x0) + (y0) * VIDEO_WIDTH_STRIP)                       \
    )
-#  define VIDEO_STRIP_1_(plane)   (                                            \
+#  define PRIVATE_VIDEO_STRIP_1_(plane)   (                                    \
       (Strip (*)[VIDEO_WIDTH_STRIP8])   /* Using planes, thus assume STRIP8 */ \
          (Video.strip + (plane) * VIDEO_SIZE_PLANE)                            \
    )
-#  define VIDEO_STRIP_3_(plane, x0, y0)  (                                     \
+#  define PRIVATE_VIDEO_STRIP_3_(plane, x0, y0)  (                             \
       (Strip (*)[VIDEO_WIDTH_STRIP8])   /* Using planes, thus assume STRIP8 */ \
          ( Video.strip                                                         \
          + (plane) * VIDEO_SIZE_PLANE                                          \
@@ -348,18 +443,17 @@ enum VideoElementDimension {
    )
 
 // auto VIDEO_ATTRIBUTE(N, [int x0, y0])
-// Return a 2D array of Attribute<Narrow|Wide> giving an UNCHECKED access to the
+// Return a 2D array of Attribute<N> giving an UNCHECKED access to the
 // Attributes in the video framebuffer.
 // - N: a literal <8|16> to specify the type of Attribute
 // - x0,y0: specify an origin where the array starts
-#define VIDEO_ATTRIBUTE(...)         UTIL_OVERLOAD(VIDEO_ATTRIBUTE, __VA_ARGS__)
-#  define VIDEO_ATTRIBUTE_1_(N)  (                                             \
+#define VIDEO_ATTRIBUTE(...) \
+   UTIL_OVERLOAD(PRIVATE_VIDEO_ATTRIBUTE, __VA_ARGS__)
+#  define PRIVATE_VIDEO_ATTRIBUTE_1_(N) \
+      ((Attribute##N (*)[VIDEO_WIDTH_ATTRIBUTE]) VIDEO_ATTRIBUTE_START_)
+#  define PRIVATE_VIDEO_ATTRIBUTE_3_(N, x0,y0)  (                              \
       (Attribute##N (*)[VIDEO_WIDTH_ATTRIBUTE])                                \
-         (Video.frame + (VIDEO_COUNT_PIXELS >> 3))                             \
-   )
-#  define VIDEO_ATTRIBUTE_3_(N, x0,y0)  (                                      \
-      (Attribute##N (*)[VIDEO_WIDTH_ATTRIBUTE])                                \
-         (Video.frame + (VIDEO_COUNT_PIXELS >> 3)                              \
+         ( VIDEO_ATTRIBUTE_START_                                              \
          + ((x0) + (y0) * VIDEO_WIDTH_ATTRIBUTE) * sizeof(Attribute##N)        \
          )                                                                     \
    )
@@ -373,6 +467,8 @@ enum VideoElementDimension {
 #  define VideoArray  __auto_type
 #endif
 
+// TODO LATER: If/When Konpu moves to C23, Remove this whole thing!
+//
 // When using the above functions to store a 2D array into a variable, it is
 // easier to declare that variable as `VideoArray`. But this is only available
 // in C23 or above; prior to C23, one can use the more specific VideoArray...
@@ -380,6 +476,13 @@ enum VideoElementDimension {
 // can use the VIDEO_USE_ARRAY_TYPES macro for this. Also make sure not to
 // change the video mode in that scope.
 #define VIDEO_USE_ARRAY_TYPES                                                  \
+   /* Forms */                                                                 \
+   typedef Form8    (*VideoArrayGlyph8) [VIDEO_WIDTH_FORM8];                   \
+   typedef Form16   (*VideoArrayGlyph16)[VIDEO_WIDTH_FORM16];                  \
+   typedef Form32   (*VideoArrayGlyph32)[VIDEO_WIDTH_FORM32];                  \
+   typedef Form64   (*VideoArrayGlyph64)[VIDEO_WIDTH_FORM64];                  \
+   typedef Form128  (*VideoArrayGlyph128)[VIDEO_WIDTH_FORM128];                \
+   typedef Form256  (*VideoArrayGlyph256)[VIDEO_WIDTH_FORM256];                \
    /* Glyphs */                                                                \
    typedef Glyph8   (*VideoArrayGlyph8) [VIDEO_WIDTH_GLYPH8];                  \
    typedef Glyph16  (*VideoArrayGlyph16)[VIDEO_WIDTH_GLYPH16];                 \
@@ -426,9 +529,9 @@ enum VideoElementDimension {
 //
 // * HasAttributes: if this bit is set, the framebuffer also contains Attributes
 //
-// * Dimension: an `enum VideoElementDimension` which describes the exact pixel
-//   dimensions of non-Attributes elements in the framebuffer (Glyphs, Tiles) or
-//   indicates the presence of Strips.
+// * Dimension: describes (as an `enum VideoElementDimension`) the dimensions of
+//   the Form elements (ie non-Attributes) of the framebuffer. It gives the
+//   exact size in pixels of Glyphs or Tiles or indicates the presence of Strips
 //
 // * Low Nibble:
 //
@@ -451,7 +554,7 @@ enum VideoElementDimension {
 //                           10 -> nibble:  Strip2 or Tiles (16 colors)
 //                           11 -> byte:    Strip1 or Tiles (256 colors)
 //               Note: In that case, the bits-per-pixels can be expressed as
-//                     1 << (low_nibble - 8)  or  1 << (low nibble & 3)
+//                     1 << (low_nibble - 8)  or  1 << (low_nibble & 3)
 //                                 which is also  1 << (Video.mode & 3)
 //
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -459,15 +562,19 @@ enum VideoElementDimension {
 //       would have simplified the code, but bit-fields are a bit "broken" in C
 //       as alignment, field orders, and packing are implementation dependent.
 //
-//       // Works in GCC, CLANG, and some other compilers, but is not standard:
+//       // Works in GCC, CLANG, and many other compilers, but is not standard:
 //       typedef struct alignas(uint8_t) __attribute__((packed)) {
 //          uint8_t  has_attribute  : 1;
-//          uint8_t  elem_dimension : 3;
+//          uint8_t  form_dimension : 3;
 //          uint8_t  low_nibble     : 4;
 //       } VideoMode;
 //       static_assert( sizeof(struct VideoMode) ==  sizeof(uint8_t));
 //       static_assert(alignof(struct VideoMode) == alignof(uint8_t));
 //------------------------------------------------------------------------------
+
+#ifndef   VIDEO_MODE
+#  define VIDEO_MODE  Video.mode
+#endif
 
 // Return the Video Mode's HasAttribute bit.
 // (ie. whether the framebuffer also contains Attributes)
@@ -477,29 +584,10 @@ enum VideoElementDimension {
 // framebuffer's non-Attribute elements) as an `enum VideoElementDimension`.
 #define VideoModeDimension()                   ((VIDEO_MODE >> 4) & 7)
 
-// Return the Video Mode's low nibble
+// Return the Video Mode's low nibble. It may represent the Attributes' type or
+// the number of bit planes, or indicate the type of chunky pixels used by Form
+// elements. (see video mode description)
 #define VideoModeLowNibble()                   (VIDEO_MODE & 0xF)
-
-//------------------------------------------------------------------------------
-// Functions
-//------------------------------------------------------------------------------
-
-// Same as the VideoMode() function, but do NOT change the video mode.
-// It can be used for example to test if mode would be a valid video mode.
-int VideoMode_(int mode);
-
-#ifndef KONPU_OPTION_OPTIMIZE_VIDEO_MODE
-   // Set the Video mode to the given mode (if valid)
-   // Return Value:
-   // - If the mode is invalid, return 0.
-   // - Otherwise a non-zero return value (which is the number of bytes required
-   //   to encode an 8x8 pixel area in the given mode).
-   int VideoMode(int mode);
-#else
-   static inline int VideoMode(int mode)
-   { return (mode == VIDEO_MODE) ? VideoMode_(mode) : 0; }
-   // When optimized, the video mode must not be changed.
-#endif
 
 
 //------------------------------------------------------------------------------
@@ -507,17 +595,18 @@ int VideoMode_(int mode);
 // video mode.
 //------------.-----------------------------------------------------------------
 //            |                 Method used for coloring:
-// Framebuffer|-------------------.-------------------.-------------------------
-// Elements   |    Bit Planes     | "Chunky" Elements |       Attributes
+//    Bare    |-------------------.-------------------.-------------------------
+//  Elements  |    Bit Planes     | "Chunky" Elements |       Attributes
 //------------|-------------------|-------------------|-------------------------
-// Glyph/Tile | Glyph Planes      | Tiles             | Glyphs + Attributes
+// Glyph/Tile |  Glyph Planes     | Tiles             | Glyphs + Attributes
 //------------|-------------------|-------------------|-------------------------
-//   Strip    | Strip8 Planes     | Strip<1|2|4>      | Strip8 (bit strips)
-//            | (bit strips)      | (chunky strips)   | + Attributes
+//   Strip    |  Strip8 Planes    | Strip<1|2|4>      | Strip8 (bit strips)
+//            |  (bit strips)     | (chunky strips)   | + Attributes
 //------------'-------------------'-------------------'-------------------------
 
 //------------------------------------------------------------------------------
-// VIDEO_MODE_*: macros/functions to construct valid video mode values
+// VIDEO_MODE_*: functions/macros to construct that could be assigned to the
+// video mode.
 //------------------------------------------------------------------------------
 // // The default Video mode
 // #define VIDEO_MODE_DEFAULT  ...
@@ -525,7 +614,7 @@ int VideoMode_(int mode);
 // // Return a mode number for Glyph<N> video modes
 // uint8_t VIDEO_MODE_GLYPH(literal N);
 // uint8_t VIDEO_MODE_GLYPH_PLANES(literal N, int number_of_planes);
-// uint8_t VIDEO_MODE_GLYPH_ATTRIBUTES(literal N, [enum AttributeType attr_type]);
+// uint8_t VIDEO_MODE_GLYPH_ATTRIBUTES(lit. N, [enum AttributeType attr_type]);
 //
 // // Return a mode number for Tile video modes
 // uint8_t VIDEO_MODE_TILE(enum TileType tile_type);
@@ -540,11 +629,11 @@ int VideoMode_(int mode);
 #define VIDEO_MODE_DEFAULT   168
 
 // Return a video mode based on its three parts (as explained in the doc):
-// - the attribute bit (0 or 1),
-// - the dimension     (value as in `enum VideoElementDimension`)
-// - the low_nibble
-#define VIDEO_MODE_FROM_PARTS_(attribute_bit, dimension, low_nibble)           \
-   ((uint8_t)((attribute_bit) << 7 | (dimension) << 4 | (low_nibble)))
+// - the Attribute Bit  (0 or 1),
+// - the Form Dimension (value as in `enum VideoElementDimension`)
+// - the Low Nibble (Attributes type, # of Planes, or Forms' chunck ID)
+#define VIDEO_MODE_FROM_PARTS_(attribute_bit, form_dimension, low_nibble)      \
+   ((uint8_t)((attribute_bit) << 7 | (form_dimension) << 4 | (low_nibble)))
 
 // uint8_t VIDEO_MODE_GLYPH(literal N);
 // Return a video mode number based on a Glyph<N> type with a single bit plane
@@ -557,7 +646,7 @@ int VideoMode_(int mode);
 #define VIDEO_MODE_GLYPH_PLANES(N, number_of_planes)                           \
    VIDEO_MODE_FROM_PARTS_(                                                     \
       0,                                                                       \
-      _Generic((Glyph##N){0} ,                                                 \
+      _Generic((Glyph##N){0}   ,                                               \
          Glyph8:   PIXELS_2x4  ,                                               \
          Glyph16:  PIXELS_4x4  ,                                               \
          Glyph32:  PIXELS_4x8  ,                                               \
@@ -573,8 +662,8 @@ int VideoMode_(int mode);
 // If the Attribute type is left unspecified, it will default to 16-color
 // attributes whose size in pixels is either same as the glyphs or at max 8x8.
 #define VIDEO_MODE_GLYPH_ATTRIBUTES(...)                                       \
-   UTIL_OVERLOAD(VIDEO_MODE_GLYPH_ATTRIBUTES, __VA_ARGS__)
-   #define VIDEO_MODE_GLYPH_ATTRIBUTES_2_(N, enum_attribute_type)              \
+   UTIL_OVERLOAD(PRIVATE_VIDEO_MODE_GLYPH_ATTRIBUTES, __VA_ARGS__)
+   #define PRIVATE_VIDEO_MODE_GLYPH_ATTRIBUTES_2_(N, enum_attribute_type)      \
       VIDEO_MODE_FROM_PARTS_(                                                  \
          1,                                                                    \
          _Generic((Glyph##N){0},                                               \
@@ -587,8 +676,8 @@ int VideoMode_(int mode);
          ),                                                                    \
          (enum_attribute_type)                                                 \
       )
-   #define VIDEO_MODE_GLYPH_ATTRIBUTES_1_(N)                                   \
-      VIDEO_MODE_GLYPH_ATTRIBUTES_2_(N, ATTRIBUTE8 |                           \
+   #define PRIVATE_VIDEO_MODE_GLYPH_ATTRIBUTES_1_(N)                           \
+      PRIVATE_VIDEO_MODE_GLYPH_ATTRIBUTES_2_(N, ATTRIBUTE8_COLOR |             \
          _Generic((Glyph##N){0},                                               \
             Glyph8:   PIXELS_2x4,                                              \
             Glyph16:  PIXELS_4x4,                                              \
@@ -606,8 +695,10 @@ int VideoMode_(int mode);
 
 // uint8_t VIDEO_MODE_STRIP(literal N);
 // Return a Strip<N> mode, N should be <1|2|4|8>
-#define VIDEO_MODE_STRIP(N) \
-   VIDEO_MODE_FROM_PARTS_(0, PIXELS_Nx1, STRIP##N##_VIDEO_ID_)
+#define VIDEO_MODE_STRIP(N)                                                    \
+   VIDEO_MODE_FROM_PARTS_(0, PIXELS_Nx1, UTIL_ARG_AT(N,                        \
+      1, PIXEL_CHUNK_BYTE, PIXEL_CHUNK_NIBBLE, 1, PIXEL_CHUNK_QUARTER, 1,1,1,1 ,1)
+      // 1:byte, 2:nibble, 4:quarter, 0|3|5-8: single plane of bit-Strip (=1)
 
 // uint8_t VIDEO_MODE_STRIP8_PLANES(int number_of_planes);
 // Return a mode number for Strip8 (aka bit strips) arranged in planes
@@ -620,45 +711,112 @@ int VideoMode_(int mode);
 #define VIDEO_MODE_STRIP8_ATTRIBUTES(enum_AttributeType) \
    VIDEO_MODE_FROM_PARTS_(1, PIXELS_Nx1, (enum_AttributeType))
 
-
 //------------------------------------------------------------------------------
 // Misc. Video functions
 //------------------------------------------------------------------------------
+
+// Rectangles filling the whole screen
 
 #define VIDEO_RECTANGLE_PIXEL \
-   ((Rectangle){ 0,0, VIDEO_WIDTH, VIDEO_HEIGHT })
+   ((Rectangle){ 0,0 , VIDEO_WIDTH, VIDEO_HEIGHT })
+#define VIDEO_RECTANGLE_FORM \
+   ((Rectangle){ 0,0 , VIDEO_WIDTH_FORM, VIDEO_HEIGHT_FORM })
 #define VIDEO_RECTANGLE_GLYPH \
-   ((Rectangle){ 0,0, VIDEO_WIDTH_GLYPH, VIDEO_HEIGHT_GLYPH })
+   ((Rectangle){ 0,0 , VIDEO_WIDTH_GLYPH, VIDEO_HEIGHT_GLYPH })
 #define VIDEO_RECTANGLE_TILE  \
-   ((Rectangle){ 0,0, VIDEO_WIDTH_TILE, VIDEO_HEIGHT_TILE })
+   ((Rectangle){ 0,0 , VIDEO_WIDTH_TILE, VIDEO_HEIGHT_TILE })
 #define VIDEO_RECTANGLE_STRIP \
-   ((Rectangle){ 0,0, VIDEO_WIDTH_STRIP, VIDEO_HEIGHT_STRIP })
+   ((Rectangle){ 0,0 , VIDEO_WIDTH_STRIP, VIDEO_HEIGHT_STRIP })
 #define VIDEO_RECTANGLE_ATTRIBUTE \
-   ((Rectangle){ 0,0, VIDEO_WIDTH_ATTRIBUTE, VIDEO_HEIGHT_ATTRIBUTE })
-
-
-// TODO: doesn't make sense
-// A rectangle filling the videoframe with elements being the one defined by the
-// video mode.
-#define VIDEO_RECTANGLE                                                        \
-   ((VideoModeDimension() == PIXELS_Nx1) ?                                     \
-      /*pixels     :*/ (Rectangle){0,0, VIDEO_WIDTH, VIDEO_HEIGHT } :          \
-      /*glyph/tiles:*/ (Rectangle){0,0, VIDEO_WIDTH_GLYPH, VIDEO_HEIGHT_GLYPH })
-      // ^ VIDEO_WIDTH_GLYPH and VIDEO_WIDTH_TILE macro are in fact the same,
-      //   and same for _HEIGHT_, so this cover both cases.
+   ((Rectangle){ 0,0 , VIDEO_WIDTH_ATTRIBUTE, VIDEO_HEIGHT_ATTRIBUTE })
 
 
 //------------------------------------------------------------------------------
 // Misc. Video functions
 //------------------------------------------------------------------------------
 
-// Reset color, mode, empty framebuffer, etc.
+//------------------------------------------------------------------------------
+// Functions
+//
+// // Set the Video mode. (Return: 0 if mode is invalid, or the number of bytes
+// //                      required to encode an 8x8 pixel area in the new mode)
+// int VideoMode(int mode);             // Also clear the framebuffer
+// int VideoMode_DoNotClear_(int mode); // Do not clear the framebuffer
+// int VideoMode_DryRun_(int mode);     // Do nothing except return a value
+//
+// // Clear the frambuffer (or some elements of it):
+// void VideoClear();
+// void VideoClearGlyphs();
+// void VideoClearTiles();
+// void VideoClearStrips();
+// void VideoClearAttributes();
+// void VideoClearPlane(int plane);
+//
+// void VideoReset();
+// void VideoRender();
+
+//------------------------------------------------------------------------------
+
+// Zero-out all Tiles of the Video framebuffer
+static inline void VideoClearTiles(void)
+{ memset(Video.frame, 0, VIDEO_TILES_SIZE); }
+
+// TODO: Delete as this should be same as GlyphClear(Video);
+// Zero-out all Glyphs of the Video framebuffer
+static inline void VoidClearGlyphs(void)
+{ memset(Video.frame, 0, VIDEO_GLYPHS_SIZE); }
+
+// Zero-out all Strips of the Video framebuffer
+static inline void VideoClearStrips(void)
+{ memset(Video.frame, 0, VIDEO_STRIPS_SIZE); }
+
+// Zero-out the given plane
+static inline void VideoClearPlane(int plane) {
+   if (plane >= 0 && plane < VIDEO_COUNT_PLANE)
+      memset(Video.frame + plane * VIDEO_SIZE_PLANE, 0, VIDEO_SIZE_PLANE);
+}
+
+// Set all Attributes of the Video framebuffer to default pen and/or paper
+void VideoClearAttributes(void);
+
+// Clear out the framebuffer: Set non-Attributes elements to zero and all
+// Attributes to the default pen and/or paper
+void VideoClear(void);
+
+
+// Reset color palette, the default mode, empty the framebuffer, etc.
 void VideoReset(void);
 
 // Render the video framebuffer on screen.
 // Return value may be non-zero on error (in which case VIDEO_RENDER_ERRRORS
 // counter will also be increased by one).
 int VideoRender(void);
+
+// Same as the VideoMode() but DO NOT actually change the Video mode nor clear
+// the screen. It still is useful to get the return value. For example, it may
+// be used to test if a given value would make a valid video mode.
+int VideoMode_DryRun_(int mode);
+
+#ifndef KONPU_OPTION_OPTIMIZE_VIDEO_MODE
+   // Same as VideoMode(), but do NOT clear the framebuffer.
+   int VideoMode_DoNotClear_(int mode);
+#else
+   static inline int VideoMode_DoNotClear_(int mode)
+   { return (mode == VIDEO_MODE) ? VideoMode_DryRun_(mode) : 0; }
+   // When optimized, the video mode must not be changed.
+#endif
+
+// Set the Video mode to the given mode (if valid) and clear the framebuffer.
+// Return Value:
+// - If the mode is invalid, return 0.
+// - Otherwise a non-zero return value (which is the number of bytes required
+//   to encode an 8x8 pixel area in the given mode).
+static inline int VideoMode(int mode)
+{
+   int return_value = VideoMode_DoNotClear_(mode);
+   VideoClear();
+   return return_value;
+}
 
 
 #endif //include guard

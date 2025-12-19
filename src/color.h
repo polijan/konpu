@@ -21,7 +21,7 @@ static inline int ColorDepth(void)
    if (VideoModeHasAttributes())
       return ATTRIBUTE_COUNT_COLOR_LOG2;
 /*
-      return 4 << (AttributeColorType() != ATTRIBUTE8);
+      return 4 << (AttributeColorType() != ATTRIBUTE8_COLOR);
       //     ^--- 16 colors attributes => color depth is 4
       //          otherwise            => color depth is 8
 */

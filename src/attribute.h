@@ -2,6 +2,7 @@
 #define  KONPU_ATTRIBUTE_H_
 #include "video_mode.h"
 #include "bits.h"
+#include "rectangle.h" // TODO: move to vide_mode.h or even to arch.h?
 
 //------------------------------------------------------------------------------
 // Attributes' Dimension, Color Type, and (full) Type
@@ -17,14 +18,23 @@
 // pair of bytes (Attribute16: carrying two true color values).
 
 
+// ATTRIBUTE8(value) or ATTRIBUTE8(pen, paper) - construct an Attribute8
+#define ATTRIBUTE8(...) \
+   UTIL_OVERLOAD(PRIVATE_ATTRIBUTE8, __VA_ARGS__)
+#  define PRIVATE_ATTRIBUTE8_1_(value)       ((Attribute8)(value))
+#  define PRIVATE_ATTRIBUTE8_2_(pen, paper)  ((Attribute8)(((pen) << 4) | (paper)))
+
+// ATTRIBUTE16(pen, paper) - construct an Attribute16
+#define ATTRIBUTE16(pen, paper)      ((Attribute16){ (pen), (paper) })
+
 // The type of color(s) encoded by Attributes
-// ATTRIBUTE8  attributes are stored with the C type Attribute8 (= uint8_t)
-// ATTRIBUTE16 attributes are stored with the C type Attribute16
+// ATTRIBUTE8_COLOR  attributes are stored with the C type Attribute8 (=uint8_t)
+// ATTRIBUTE16_COLOR attributes are stored with the C type Attribute16
 enum AttributeColorType {
-   ATTRIBUTE8       = 0,  // 1 byte, nibbles specify two 16-colors for pen/paper
-   ATTRIBUTE8_PEN   = 1,  // 1 byte, specifies a full color only for the pen
-   ATTRIBUTE8_PAPER = 2,  // 1 byte, specifies a full color only for the paper
-   ATTRIBUTE16      = 3,  // 2 bytes, specify two full colors for pen and paper
+   ATTRIBUTE8_COLOR       = 0,  // 1 byte, nibbles specify two 16-colors (pen/paper)
+   ATTRIBUTE8_COLOR_PEN   = 1,  // 1 byte, specifies one full color  (pen)
+   ATTRIBUTE8_COLOR_PAPER = 2,  // 1 byte, specifies one full color  (paper)
+   ATTRIBUTE16_COLOR      = 3,  // 2 bytes, specify  two full colors (pen/paper)
 };
 
 // The (full) type of an Attribute, combining its dimension and its color type
@@ -44,22 +54,22 @@ enum AttributeColorType {
 //   macro/functions
 //
 enum AttributeType {
-   ATTRIBUTE8_2x4       = (PIXELS_2x4 << 2) | ATTRIBUTE8,
-   ATTRIBUTE8_2x4_PEN   = (PIXELS_2x4 << 2) | ATTRIBUTE8_PEN,
-   ATTRIBUTE8_2x4_PAPER = (PIXELS_2x4 << 2) | ATTRIBUTE8_PAPER,
-   ATTRIBUTE16_2x4      = (PIXELS_2x4 << 2) | ATTRIBUTE16,
-   ATTRIBUTE8_4x4       = (PIXELS_4x4 << 2) | ATTRIBUTE8,
-   ATTRIBUTE8_4x4_PEN   = (PIXELS_4x4 << 2) | ATTRIBUTE8_PEN,
-   ATTRIBUTE8_4x4_PAPER = (PIXELS_4x4 << 2) | ATTRIBUTE8_PAPER,
-   ATTRIBUTE16_4x4      = (PIXELS_4x4 << 2) | ATTRIBUTE16,
-   ATTRIBUTE8_4x8       = (PIXELS_4x8 << 2) | ATTRIBUTE8,
-   ATTRIBUTE8_4x8_PEN   = (PIXELS_4x8 << 2) | ATTRIBUTE8_PEN,
-   ATTRIBUTE8_4x8_PAPER = (PIXELS_4x8 << 2) | ATTRIBUTE8_PAPER,
-   ATTRIBUTE16_4x8      = (PIXELS_4x8 << 2) | ATTRIBUTE16,
-   ATTRIBUTE8_8x8       = (PIXELS_8x8 << 2) | ATTRIBUTE8,
-   ATTRIBUTE8_8x8_PEN   = (PIXELS_8x8 << 2) | ATTRIBUTE8_PEN,
-   ATTRIBUTE8_8x8_PAPER = (PIXELS_8x8 << 2) | ATTRIBUTE8_PAPER,
-   ATTRIBUTE16_8x8      = (PIXELS_8x8 << 2) | ATTRIBUTE16,
+   ATTRIBUTE8_2x4       = (PIXELS_2x4 << 2) | ATTRIBUTE8_COLOR,
+   ATTRIBUTE8_2x4_PEN   = (PIXELS_2x4 << 2) | ATTRIBUTE8_COLOR_PEN,
+   ATTRIBUTE8_2x4_PAPER = (PIXELS_2x4 << 2) | ATTRIBUTE8_COLOR_PAPER,
+   ATTRIBUTE16_2x4      = (PIXELS_2x4 << 2) | ATTRIBUTE16_COLOR,
+   ATTRIBUTE8_4x4       = (PIXELS_4x4 << 2) | ATTRIBUTE8_COLOR,
+   ATTRIBUTE8_4x4_PEN   = (PIXELS_4x4 << 2) | ATTRIBUTE8_COLOR_PEN,
+   ATTRIBUTE8_4x4_PAPER = (PIXELS_4x4 << 2) | ATTRIBUTE8_COLOR_PAPER,
+   ATTRIBUTE16_4x4      = (PIXELS_4x4 << 2) | ATTRIBUTE16_COLOR,
+   ATTRIBUTE8_4x8       = (PIXELS_4x8 << 2) | ATTRIBUTE8_COLOR,
+   ATTRIBUTE8_4x8_PEN   = (PIXELS_4x8 << 2) | ATTRIBUTE8_COLOR_PEN,
+   ATTRIBUTE8_4x8_PAPER = (PIXELS_4x8 << 2) | ATTRIBUTE8_COLOR_PAPER,
+   ATTRIBUTE16_4x8      = (PIXELS_4x8 << 2) | ATTRIBUTE16_COLOR,
+   ATTRIBUTE8_8x8       = (PIXELS_8x8 << 2) | ATTRIBUTE8_COLOR,
+   ATTRIBUTE8_8x8_PEN   = (PIXELS_8x8 << 2) | ATTRIBUTE8_COLOR_PEN,
+   ATTRIBUTE8_8x8_PAPER = (PIXELS_8x8 << 2) | ATTRIBUTE8_COLOR_PAPER,
+   ATTRIBUTE16_8x8      = (PIXELS_8x8 << 2) | ATTRIBUTE16_COLOR,
 };
 
 // Attributes' dimensions (value as `enum VideoElementDimension`).
@@ -85,12 +95,12 @@ enum AttributeType {
 #define ATTRIBUTE_COUNT_PIXELS       (8 << ATTRIBUTE_DIMENSION)
 #define ATTRIBUTE_COUNT_COLOR        (1 << ATTRIBUTE_COUNT_COLOR_LOG2)
 
-#define ATTRIBUTE_SIZE_LOG2          (ATTRIBUTE_COLOR_TYPE == ATTRIBUTE16)
+#define ATTRIBUTE_SIZE_LOG2          (ATTRIBUTE_COLOR_TYPE == ATTRIBUTE16_COLOR)
 #define ATTRIBUTE_WIDTH_LOG2         ((ATTRIBUTE_DIMENSION + 3) >> 1)
 #define ATTRIBUTE_HEIGHT_LOG2        (2 + BITS_GET_BIT(VIDEO_MODE, 3))
-#define ATTRIBUTE_COUNT_BITS_LOG2    (3 + (ATTRIBUTE_COLOR_TYPE == ATTRIBUTE16))
+#define ATTRIBUTE_COUNT_BITS_LOG2    (3 + (ATTRIBUTE_COLOR_TYPE == ATTRIBUTE16_COLOR))
 #define ATTRIBUTE_COUNT_PIXELS_LOG2  (ATTRIBUTE_DIMENSION + 3)
-#define ATTRIBUTE_COUNT_COLOR_LOG2   (4 << (ATTRIBUTE_COLOR_TYPE != ATTRIBUTE8))
+#define ATTRIBUTE_COUNT_COLOR_LOG2   (4 << (ATTRIBUTE_COLOR_TYPE != ATTRIBUTE8_COLOR))
    // Note: ATTRIBUTE_SIZE_LOG2 can also been seen as a boolean which is true
    //       iff Attributes have two bytes.
 
@@ -102,23 +112,26 @@ enum AttributeType {
 //              |1|***|..|..|
 //                     ^  ^
 //      Dimension  <---'  '--->  ColorType
-//  00: PIXELS_2x4 = 0       00: ATTRIBUTE8       = 0
-//  01: PIXELS_4x4 = 1       01: ATTRIBUTE8_PEN   = 1
-//  10: PIXELS_4x8 = 2       10: ATTRIBUTE8_PAPER = 2
-//  11: PIXELS_8x8 = 3       11: ATTRIBUTE16      = 3
+//  00: PIXELS_2x4 = 0       00: ATTRIBUTE8_COLOR       = 0
+//  01: PIXELS_4x4 = 1       01: ATTRIBUTE8_COLOR_PEN   = 1
+//  10: PIXELS_4x8 = 2       10: ATTRIBUTE8_COLOR_PAPER = 2
+//  11: PIXELS_8x8 = 3       11: ATTRIBUTE16_COLOR      = 3
 //
 // * Notice that Height only depends on bit #3 of the Video.mode bit, thus:
 //       Height       := 4 << BITS_GET_BIT(Mode, 3)
 //       log2(Height) := 2 + BITS_GET_BIT(Mode, 3)
 //
-// * Attributes' Size depends on color type being ATTRIBUTE16, thus:
-//   log2(Size)   :=   ColorType == ATTRIBUTE16
+// * Attributes' Size depends on color type being ATTRIBUTE16_COLOR, thus:
+//   log2(Size)   :=   ColorType == ATTRIBUTE16_COLOR
 //
-// * Attributes' Color depth is 4/8 depending on color type being ATTRIBUTE8:
-//   log2(#Color) :=   4 << (ColorType != ATTRIBUTE8)
+// * Attributes' Color depth is 4/8 depending on color type being ATTRIBUTE8_COLOR:
+//   log2(#Color) :=   4 << (ColorType != ATTRIBUTE8_COLOR)
 
 
-// v-- Measurements for Attribute<8|16> C types:
+//------------------------------------------------------------------------------
+// Attributes measurement macros optimized for when the Attribute<8|16> C type
+// is known.
+//------------------------------------------------------------------------------
 
 #define ATTRIBUTE8_SIZE                1
 #define ATTRIBUTE8_WIDTH               ATTRIBUTE_WIDTH
@@ -131,7 +144,7 @@ enum AttributeType {
 #define ATTRIBUTE8_HEIGHT_LOG2         ATTRIBUTE_HEIGHT_LOG2
 #define ATTRIBUTE8_COUNT_BITS_LOG2     3
 #define ATTRIBUTE8_COUNT_PIXELS_LOG2   ATTRIBUTE_COUNT_PIXELS_LOG2
-#define ATTRIBUTE8_COUNT_COLOR_LOG2    (4 << (ATTRIBUTE_COLOR_TYPE != ATTRIBUTE8))
+#define ATTRIBUTE8_COUNT_COLOR_LOG2    (4 << (ATTRIBUTE_COLOR_TYPE != ATTRIBUTE8_COLOR))
 
 #define ATTRIBUTE16_SIZE               2
 #define ATTRIBUTE16_WIDTH              ATTRIBUTE_WIDTH
@@ -148,18 +161,106 @@ enum AttributeType {
 
 
 //------------------------------------------------------------------------------
+
+/*
+
+Use or not?
+
+// _Generic statement for Attibutes
+// It selects `F<8|16>_` based on which Attribute<8|16> type `glyph` really is.
+// Extra code may be be inserted in the _Generic via the ... parameter(s).
+#define ATTRIBUTE_Generic(attr, F, ...)  \
+   _Generic((attr)                    ,  \
+      Attribute16: F##16_             ,  \
+      Attribute8:  F##8_   __VA_OPT__(,) \
+      __VA_ARGS__                        \
+   )
+
+Probably, it should be more like this below,
+to allow
+
+// _Generic statement for Attibutes
+// It selects `F16_` if `attr` is of type Attribute16, or selects `F8_`
+// otherwise. Extra code may be inserted in the _Generic via the ...
+// parameter(s).
+#define ATTRIBUTE_Generic(attr, F, ...)  \
+   _Generic((attr)                    ,  \
+      Attribute16: F##16_             ,  \
+      __VA_ARGS__          __VA_OPT__(,) \
+      default:     F##8_                 \
+   )
+
+
+*/
+
+//------------------------------------------------------------------------------
 // Attributes Access: Get(), Set(), ...
 //
 // Attributes are manipulated here via byte pointers to the framebuffer
 //------------------------------------------------------------------------------
 
-// Offset (to the start of the framebuffer) where the Attributes start
-#define VIDEO_ATTRIBUTE_OFFSET_  (VIDEO_COUNT_PIXELS >> 3)
+// void AttributeSetAll([Video|Rectangle r], Attribute<8|16> attribute);
+// Set all the Attributes in the surface.
+#define AttributeSetAll(...) \
+   UTIL_OVERLOAD(PRIVATE_AttributeSetAll, __VA_ARGS__)
+#  define PRIVATE_AttributeSetAll_1_(attribute)  \
+      PRIVATE_AttributeSetAll_Rectangle_(Video.active, (attribute))
+#  define PRIVATE_AttributeSetAll_2_(surface, attribute)                       \
+      _Generic((surface)                                                     , \
+         VideoSurface_: PRIVATE_AttributeSetAll_Video_((attribute))          , \
+         Rectangle:     PRIVATE_AttributeSetAll_Rectangle_(RECTANGLE((surface)), (attribute))  \
+      )
+#  define PRIVATE_AttributeSetAll_Video_(attribute)                            \
+      _Generic((attribute)                                                   , \
+         Attribute16: PRIVATE_AttributeSetAll_Video_16_                      , \
+         default:     PRIVATE_AttributeSetAll_Video_8_                         \
+      )((attribute))
+#  define PRIVATE_AttributeSetAll_Rectangle_(rectangle, attribute)             \
+      _Generic((attribute)                                                   , \
+         Attribute16: PRIVATE_AttributeSetAll_Rectangle_16_                  , \
+         default:     PRIVATE_AttributeSetAll_Rectangle_8_                     \
+      )((rectangle), (attribute))
+   static inline void PRIVATE_AttributeSetAll_Video_8_(int a8) {
+      assert(ATTRIBUTE_COLOR_TYPE != ATTRIBUTE16_COLOR);
+      memset(VIDEO_ATTRIBUTE_START_, a8, VIDEO_ATTRIBUTES_SIZE);
+   }
+   static inline void PRIVATE_AttributeSetAll_Video_16_(Attribute16 a16) {
+      assert(ATTRIBUTE_COLOR_TYPE == ATTRIBUTE16_COLOR);
+      for (int i = 0; i < VIDEO_COUNT_ATTRIBUTE16; i++)
+         VIDEO_ATTRIBUTE16_START_[i] = a16;
+   }
+   static inline void
+   PRIVATE_AttributeSetAll_Rectangle_8_(Rectangle r, int a8) {
+      assert(ATTRIBUTE_COLOR_TYPE != ATTRIBUTE16_COLOR);
+      r = RectangleIntersection(r,
+         (Rectangle){ 0,0, VIDEO_WIDTH_ATTRIBUTE8, VIDEO_HEIGHT_ATTRIBUTE8 }
+      );
+      VideoArray attr = VIDEO_ATTRIBUTE(8, r.x0, r.y0);
+      for (int y = 0; y < r.height; y++)
+         for (int x = 0; x < r.width; x++) {
+            attr[y][x] = a8;
+         }
+   }
+   static inline void
+   PRIVATE_AttributeSetAll_Rectangle_16_(Rectangle r, Attribute16 a16) {
+      assert(ATTRIBUTE_COLOR_TYPE == ATTRIBUTE16_COLOR);
+      r = RectangleIntersection(r,
+         (Rectangle){ 0,0, VIDEO_WIDTH_ATTRIBUTE16, VIDEO_HEIGHT_ATTRIBUTE16 }
+      );
+      VideoArray attr = VIDEO_ATTRIBUTE(16, r.x0, r.y0);
+      for (int y = 0; y < r.height; y++)
+         for (int x = 0; x < r.width; x++)
+            attr[y][x] = a16;
+   }
 
-// Start of the Attributes in the Video framebuffer
-// (only make sense if the framebuffer has attributes)
-#define VIDEO_ATTRIBUTE_START_   (Video.frame + VIDEO_ATTRIBUTE_OFFSET_)
-
+// TODO: Deprecate?
+//
+// For Raw access,  prefer:
+//   VIDEO_ATTRIBUTE(<8|16>)[y][x];  // but this requires you know the type)
+// For Safe access, prefer:
+//   AttributeGet(Video, x,y) or AttributeSet(Video, x,y, ...);
+ //  ^ TODO: implement those.
+//
 // Return pointer to attribute at (x,y)
 // No bound checking, x/y MUST be positive and < VIDEO_WIDTH/HEIGHT_ATTRIBUTE
 static inline uint8_t *VideoAttributeAt_(int x, int y)
@@ -175,10 +276,10 @@ static inline uint8_t *VideoAttributeAt_(int x, int y)
 static inline uint8_t AttributeGetPen(const uint8_t *attr)
 {
    switch (ATTRIBUTE_COLOR_TYPE) {
-      case ATTRIBUTE16:      // fallthrough
-      case ATTRIBUTE8_PEN:   return *attr;
-      case ATTRIBUTE8:       return *attr >> 4;
-      case ATTRIBUTE8_PAPER: return Video.attr_default_pen;
+      case ATTRIBUTE16_COLOR:      // fallthrough
+      case ATTRIBUTE8_COLOR_PEN:   return *attr;
+      case ATTRIBUTE8_COLOR:       return *attr >> 4;
+      case ATTRIBUTE8_COLOR_PAPER: return Video.attr_default_pen;
       default: unreachable();
    }
 }
@@ -187,10 +288,10 @@ static inline uint8_t AttributeGetPen(const uint8_t *attr)
 static inline void AttributeSetPen(uint8_t *attr, uint8_t color)
 {
    switch (ATTRIBUTE_COLOR_TYPE) {
-      case ATTRIBUTE16:      // fallthrough
-      case ATTRIBUTE8_PEN:   *attr = color; break;
-      case ATTRIBUTE8:       *attr = (color << 4) | (*attr & 0xF); break;
-      case ATTRIBUTE8_PAPER: break;
+      case ATTRIBUTE16_COLOR:      // fallthrough
+      case ATTRIBUTE8_COLOR_PEN:   *attr = color; break;
+      case ATTRIBUTE8_COLOR:       *attr = (color << 4) | (*attr & 0xF); break;
+      case ATTRIBUTE8_COLOR_PAPER: break;
       default: unreachable();
    }
 }
@@ -199,10 +300,10 @@ static inline void AttributeSetPen(uint8_t *attr, uint8_t color)
 static inline uint8_t AttributeGetPaper(const uint8_t *attr)
 {
    switch (ATTRIBUTE_COLOR_TYPE) {
-      case ATTRIBUTE8:       return *attr & 0xF;
-      case ATTRIBUTE8_PAPER: return *attr;
-      case ATTRIBUTE16:      return attr[1];
-      case ATTRIBUTE8_PEN:   return Video.attr_default_paper;
+      case ATTRIBUTE8_COLOR:       return *attr & 0xF;
+      case ATTRIBUTE8_COLOR_PAPER: return *attr;
+      case ATTRIBUTE16_COLOR:      return attr[1];
+      case ATTRIBUTE8_COLOR_PEN:   return Video.attr_default_paper;
       default: unreachable();
    }
 }
@@ -211,10 +312,10 @@ static inline uint8_t AttributeGetPaper(const uint8_t *attr)
 static inline void AttributeSetPaper(uint8_t *attr, uint8_t color)
 {
    switch (ATTRIBUTE_COLOR_TYPE) {
-      case ATTRIBUTE8:       *attr = (*attr & 0xF0) | color; break;
-      case ATTRIBUTE8_PAPER: *attr = color;   break;
-      case ATTRIBUTE16:      attr[1] = color; break;
-      case ATTRIBUTE8_PEN:   break;
+      case ATTRIBUTE8_COLOR:       *attr = (*attr & 0xF0) | color; break;
+      case ATTRIBUTE8_COLOR_PAPER: *attr = color;   break;
+      case ATTRIBUTE16_COLOR:      attr[1] = color; break;
+      case ATTRIBUTE8_COLOR_PEN:   break;
       default: unreachable();
    }
 }
@@ -224,10 +325,10 @@ static inline void
 AttributeSet(uint8_t *attr, uint8_t pen_color, uint8_t paper_color)
 {
    switch (ATTRIBUTE_COLOR_TYPE) {
-      case ATTRIBUTE16:      attr[1] = paper_color; // fallthrough
-      case ATTRIBUTE8_PEN:   *attr = pen_color;   break;
-      case ATTRIBUTE8_PAPER: *attr = paper_color; break;
-      case ATTRIBUTE8:       *attr = (pen_color << 4) | paper_color; break;
+      case ATTRIBUTE16_COLOR:       attr[1] = paper_color; // fallthrough
+      case ATTRIBUTE8_COLOR_PEN:   *attr = pen_color;   break;
+      case ATTRIBUTE8_COLOR_PAPER: *attr = paper_color; break;
+      case ATTRIBUTE8_COLOR: *attr = (pen_color << 4) | paper_color; break;
       default: unreachable();
    }
 }
@@ -236,15 +337,15 @@ AttributeSet(uint8_t *attr, uint8_t pen_color, uint8_t paper_color)
 static inline void AttributeReverse(uint8_t *attr)
 {
    switch (ATTRIBUTE_COLOR_TYPE) {
-      case ATTRIBUTE8:
+      case ATTRIBUTE8_COLOR:
          *attr = (*attr << 4) | (*attr >> 4);
          break;
-      case ATTRIBUTE16:
+      case ATTRIBUTE16_COLOR:
          { uint8_t tmp = attr[0]; attr[1] = attr[0]; attr[0] = tmp; }
          break;
       // We cannot video-reverse those:
-      case ATTRIBUTE8_PEN:   break;
-      case ATTRIBUTE8_PAPER: break;
+      case ATTRIBUTE8_COLOR_PEN:   break;
+      case ATTRIBUTE8_COLOR_PAPER: break;
       default: unreachable();
    }
 }

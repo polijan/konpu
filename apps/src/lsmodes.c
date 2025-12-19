@@ -13,7 +13,7 @@ int AppInit(void)
    int valid = 0;
    Printer("Mode Sz8x8   Res.  #Colors Framebuffer content and layout\n");
    for (int i = 0; i < 255; i++) {
-      int nbytes = VideoMode_(i);
+      int nbytes = VideoMode_DryRun_(i);
       if (nbytes == 0) continue;
 
       valid++;

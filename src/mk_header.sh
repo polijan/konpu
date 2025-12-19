@@ -44,13 +44,12 @@ echo "#endif // End of Konpu's External Dependencies'"
 include  config.h platform.h c.h                                               \
          bits.h util.h character.h time.h random.h options.h                   \
          var.h arch.h                                                          \
-         video_mode.h keyboard.h video_mode_auto.h                             \
+         printer.h \
+         rectangle.h form.h video_mode.h keyboard.h video_mode_auto.h          \
          glyph.h tile.h strip.h attribute.h color.h                            \
          video.h pixel.h tile.h                                                \
-         rectangle.h draw.h                                                    \
-         error.h heap.h stack.h                                                \
-         \
-         printer.h
+         draw.h                                                                \
+         error.h heap.h stack.h
 
 # Extra Resources
 include  glyph_constants/glyph_patterns_blocks.h    \

@@ -1,6 +1,7 @@
 #ifndef  KONPU_ARCH_H_
 #define  KONPU_ARCH_H_
 #include "c.h"
+#include "printer.h" //TODO: Remove this, but for now, it's useful for debugging
 
 // Konpu Version - We aren't there yet, but we eventually want to follow a
 // "semantic version" scheme, where:
@@ -21,6 +22,20 @@
 // Essential Types: Video Elements
 //------------------------------------------------------------------------------
 
+// Forms types ("Forms" are elements that may be Glyphs, Tiles, or Strips)
+typedef uint8_t  Form8;
+typedef uint16_t Form16;
+typedef uint32_t Form32;
+typedef uint64_t Form64;
+typedef struct { uint64_t  top, bottom; } Form128;
+typedef struct { uint64_t  top_left,    top_right,
+                           bottom_left, bottom_right; } Form256;
+
+// Attribute types (hold pen and/or paper color(s))
+typedef uint8_t  Attribute8;
+typedef struct { uint8_t pen, paper; } Attribute16;
+
+/* TODO: MOVE/REMOVE
 struct GlyphOrTile128 { uint64_t top, bottom; };
 struct GlyphOrTile256 { uint64_t top_left,    top_right,
                                  bottom_left, bottom_right; };
@@ -41,13 +56,9 @@ typedef uint64_t              Tile64;  // Tile 2x4 256c or 4x4 16c or 4x8 4c
 typedef struct GlyphOrTile128 Tile128; // Tile 4x4 256c or 4x8 16c or 8x8 4c
 typedef struct GlyphOrTile256 Tile256; // Tile 4x8 256c or 8x16 4c or 8x8 16c
 
-
-// Strip type (packed pixels byte, see pixel.h)
+// Strip type (a byte containing packed pixels, see pixel.h)
 typedef uint8_t  Strip; // Strip = 1,2,4,or 8 pixels packed in a byte
-
-// Attribute types (hold pen and/or paper color(s), see attribute.h)
-typedef uint8_t  Attribute8;
-typedef struct { uint8_t pen, paper; } Attribute16;
+*/
 
 
 // Hold information (64-bits) about the Konpu 256 possible colors
@@ -72,26 +83,23 @@ typedef struct Rectangle {
 
 
 typedef struct Window {
-   Rectangle geometry;    // the windows' geometry
+   /* first 64 bits */
+   Rectangle rectangle;  // the Window's geometry
 
-   // Window's current "cursor"
-   uint16_t  x, y;        // cursor coordinates
-   uint8_t   bit_pixel;   // glyph/tiles only: active bit can indicate a pixel
+   /* second 64 bits */
+   uint16_t  x, y;       // current "cursor" coordinates
+   uint8_t   pen, paper; // a pen and paper color
+   uint8_t   px;         // location of a single pixel within the current Form
+   uint8_t   planes;     // active planes
 
-   // pen and paper color
-   uint8_t   pen, paper;
-
-   // (text) properties
-   // TODO: font, and other props (bold, etc), etc.
-
-   // note:
-   // geometry's rectangle occupies the first 64 bits,
-   // cursor and pen/paper occupies the second 64 bits,
-   // properties occupy... the rest of the struct Window.
+   /* thris 64 bits: properties (font, modes (bold/underline), wrappe (etc))*/
+   uint8_t   font;       // font
+   uint8_t   flags;
 } Window;
 
+
 //------------------------------------------------------------------------------
-// Video card
+// Video card (see video.h)
 //------------------------------------------------------------------------------
 
 #define VIDEO_LCM_SZ_    2880 // 2^6 * 3^2 * 5
@@ -100,111 +108,100 @@ typedef struct Window {
 #endif
 #define VIDEO_SIZE       (VIDEO_FACTOR_ * VIDEO_LCM_SZ_)
 
-
-struct _VideoMemory {
+typedef struct {
 
    // Framebuffer
    union {
-      // Raw framebuffer
-      uint8_t     frame[VIDEO_SIZE];
+      // The raw framebuffer
+      uint8_t    frame[VIDEO_SIZE];
 
-      // Names for convenient Glyph access:
-      // The Glyph<N> at (x,y) is located at: Video.glyph<N>[x + y * VIDEO_WIDTH_GLYPH<N>]
-      // (But, it is simpler tho use VIDEO_GLYPH(N)[y][x])
-      Glyph8      glyph8  [VIDEO_SIZE / 1];
-      Glyph16     glyph16 [VIDEO_SIZE / 2];
-      Glyph32     glyph32 [VIDEO_SIZE / 4];
-      Glyph64     glyph64 [VIDEO_SIZE / 8];
-      Glyph128    glyph128[VIDEO_SIZE / 16];
-      Glyph256    glyph256[VIDEO_SIZE / 32];
+      // Form elements
+      // Note: To access an Element located at (x,y), it is possible to use
+      // Video.<element>[x +y * VIDEO_WIDTH_<ELEMENT>], but it is easier and
+      // more convenient to use the VIDEO_<ELEMENT>(...)[y][x] 2D arrays.
+      Form8   form8[VIDEO_SIZE/1],    glyph8[VIDEO_SIZE/1] ,   strip[VIDEO_SIZE/1];
+      Form16  form16[VIDEO_SIZE/2],   glyph16[VIDEO_SIZE/2],   tile16[VIDEO_SIZE/2];
+      Form32  form32[VIDEO_SIZE/4],   glyph32[VIDEO_SIZE/4],   tile32[VIDEO_SIZE/4];
+      Form64  form64[VIDEO_SIZE/8],   glyph64[VIDEO_SIZE/8],   tile64[VIDEO_SIZE/8];
+      Form128 form128[VIDEO_SIZE/16], glyph128[VIDEO_SIZE/16], tile128[VIDEO_SIZE/16];
+      Form256 form256[VIDEO_SIZE/32], glyph256[VIDEO_SIZE/32];
 
-      // Names for convenient Tile access
-      // The Tile<N> at (x,y) is located at: Video.tile<N>[x + y * VIDEO_WIDTH_TILE<N>]
-      // (But, it is simpler tho use VIDEO_TILE(N)[y][x])
-      Tile16      tile16 [VIDEO_SIZE / 2];
-      Tile32      tile32 [VIDEO_SIZE / 4];
-      Tile64      tile64 [VIDEO_SIZE / 8];
-      Tile128     tile128[VIDEO_SIZE / 16];
-      Tile256     tile256[VIDEO_SIZE / 32];
-
-      // Names for convenient Strip access
-      // (But, it is simpler tho use VIDEO_STRIP()[y][x])
-      Strip       strip[VIDEO_SIZE / 1];
-
-      // Name specifically for the full color pixel mode (mode 123)
-      // In that mode you can access the pixel (x,y) with: Video.pixel[x + y * Video.width]
-      uint8_t     pixel[VIDEO_SIZE];
-
-      // Just to make sure it can contain this type
-      Attribute8  DO_NOT_USE_THIS_FIELD_attr8_[VIDEO_SIZE / 1];
-      Attribute16 DO_NOT_USE_THIS_FIELD_attr16_[VIDEO_SIZE / 2];
+      // The fields below are simply to make sure the framebuffer contains the
+      // C Attribute types. But for (raw) access to Attribute at (x,y), use the
+      // VIDEO_ATTRIBUTE(N)[y][x] 2D array.
+      Attribute8  DONT_USE_THIS_FIELD_Attribute8_[VIDEO_SIZE / 1];
+      Attribute16 DONT_USE_THIS_FIELD_Attribute16_[VIDEO_SIZE / 2];
 
       // Names for convenient access when the framebuffer is divided into planes
-      // (video elements are then either Glyphs or Strip8 (aka bit pixels))
-#     define VIDEO_DECLARE_PLANES_(N)              \
-      union {                                      \
-         Strip     strip8   [VIDEO_SIZE / 1  / N]; \
-         Glyph8    glyph8   [VIDEO_SIZE / 1  / N]; \
-         Glyph16   glyph16  [VIDEO_SIZE / 2  / N]; \
-         Glyph32   glyph32  [VIDEO_SIZE / 4  / N]; \
-         Glyph64   glyph64  [VIDEO_SIZE / 8  / N]; \
-         Glyph128  glyph128 [VIDEO_SIZE / 16 / N]; \
-         Glyph256  glyph256 [VIDEO_SIZE / 32 / N]; \
-      } UTIL_CAT(planes, N) [N];
+      // (video elements are then either Glyphs or Strip8 (aka bit-Strips))
+#     define VIDEO_DECLARE_PLANES_(N)                                    \
+         union {                                                         \
+            Form8   form8[VIDEO_SIZE/N], glyph8[VIDEO_SIZE/N],           \
+                    strip[VIDEO_SIZE/N], strip8[VIDEO_SIZE/N];           \
+            Form16  form16[VIDEO_SIZE/2/N],   glyph16[VIDEO_SIZE/2/N];   \
+            Form32  form32[VIDEO_SIZE/4/N],   glyph32[VIDEO_SIZE/4/N];   \
+            Form64  form64[VIDEO_SIZE/8/N],   glyph64[VIDEO_SIZE/8/N];   \
+            Form128 form128[VIDEO_SIZE/16/N], glyph128[VIDEO_SIZE/16/N]; \
+            Form256 form256[VIDEO_SIZE/32/N], glyph256[VIDEO_SIZE/32/N]; \
+         } UTIL_CAT(planes, N) [N];
       VIDEO_DECLARE_PLANES_(1)
       VIDEO_DECLARE_PLANES_(2)
       VIDEO_DECLARE_PLANES_(3)
       VIDEO_DECLARE_PLANES_(4)
       VIDEO_DECLARE_PLANES_(5)
       VIDEO_DECLARE_PLANES_(6)
-#if (VIDEO_FACTOR_ % 7 == 0)
+#     if (VIDEO_FACTOR_ % 7 == 0)
       VIDEO_DECLARE_PLANES_(7)
-#endif
+#     endif
       VIDEO_DECLARE_PLANES_(8)
 #     undef  VIDEO_DECLARE_PLANES_
-
    };
 
-      // Current palettes.
-      // Note: palette of n=2,4,6,8,16,32,64 colors starts at: Video.palettes + n
-      union {
-         uint8_t     palettes  [128]; // the palettes whole-area, which
-         uint8_t     palette128[128]; // is also the 128-color palette.
-         struct {
-            uint8_t  palette128_0_;   // = Ram.video.palette128[0]
-            uint8_t  palette128_1_;   // = Ram.video.palette128[1]
-            uint8_t  palette2  [ 2];  // the  2-color palette
-            uint8_t  palette4  [ 4];  // the  4-color palette
-            uint8_t  palette8  [ 8];  // the  8-color palette
-            uint8_t  palette16 [16];  // the 16-color palette
-            uint8_t  palette32 [32];  // the 32-color palette
-            uint8_t  palette64 [64];  // the 64-color palette
-         };
+   // Current palettes.
+   // Note: palette of n=2,4,6,8,16,32,64 colors starts at: Video.palettes + n
+   union {
+      uint8_t     palettes  [128]; // the palettes whole-area, which
+      uint8_t     palette128[128]; // is also the 128-color palette.
+      struct {
+         uint8_t  palette128_0_;   // = Ram.video.palette128[0]
+         uint8_t  palette128_1_;   // = Ram.video.palette128[1]
+         uint8_t  palette2  [ 2];  // the  2-color palette
+         uint8_t  palette4  [ 4];  // the  4-color palette
+         uint8_t  palette8  [ 8];  // the  8-color palette
+         uint8_t  palette16 [16];  // the 16-color palette
+         uint8_t  palette32 [32];  // the 32-color palette
+         uint8_t  palette64 [64];  // the 64-color palette
       };
+   };
 
-      // TODO: finalize what we keep here:
-      // Out of bound parameters: border color and "stray" elements
-      uint8_t      border;            // border color (true color)
-      union {                         // stray Attributes parameters
-         uint8_t   stray_attr[2];
-         struct {
-            // is also used as default pen/paper
-            // when attributes' color type is FG256 or G256
-            uint8_t attr_default_pen;          // true color
-            uint8_t attr_default_paper;        // true color
-         };
-      };
-      union {  // stray Glyph, Tile, or Strip
-         Strip     stray_strip;
-         Glyph8    stray_glyph8;
-         Glyph16   stray_glyph16;
-         Glyph32   stray_glyph32;
-         Glyph64   stray_glyph64;
-         Glyph128  stray_glyp128;
-         Glyph256  stray_glyp256;
-      };
+   uint8_t      border;            // border color (always a full-color)
 
-   // Active Window
+   // TODO: "stray" elements - is this needed???
+   union { // stray Form
+      Form8   stray_form8,   stay_glyph8,   stray_strip;
+      Form16  stray_form16,  stay_glyph16,  stray_tile16;
+      Form32  stray_form32,  stay_glyph32,  stray_tile32;
+      Form64  stray_form64,  stay_glyph64,  stray_tile64;
+      Form128 stray_form128, stay_glyph128, stray_tile128;
+      Form256 stray_form256, stay_glyph256, stray_tile256;
+   };
+   union {
+      uint8_t   stray_attr[2]; // stray Attribute
+      struct { // also used as default pen/paper for Attributes with a single color
+         uint8_t attr_default_pen;          // true color
+         uint8_t attr_default_paper;        // true color
+      };
+   };
+
+   // "Active" Rectangle / Window
+   Rectangle active; // active area (Form)
+   union {
+      Rectangle active_form, active_glyph, active_tile, active_strip;
+   };
+   union {
+      Rectangle active_attribute;  // only used in attribute mode
+      int8_t    active_plane;      // only used in bit plane mode
+   };
    Window   active_window;
 
    // Parameter related to the video layout.
@@ -212,8 +209,8 @@ struct _VideoMemory {
    // modify them (without a proper understanding of the video framebuffer).
    // To change the video mode, use the `VideoMode()` function.
    const uint8_t   mode;        // video mode
-   const int16_t   width;       // framebuffer's width in pixels
-   const int16_t   height;      // framebuffer's height in pixels
+   const int16_t   width;       // framebuffer's width  in PIXELS
+   const int16_t   height;      // framebuffer's height in PIXELS
 
    // TODO: not used for now, just an idea to explore or Remove!
 #if KONPU_MODEL < 86
@@ -224,15 +221,11 @@ struct _VideoMemory {
 #endif
 
    const uint32_t  errors;      // number of errors //TODO:remove?
-};
-
+} VideoSurface_;
 
 //------------------------------------------------------------------------------
-// Sub-systems / Peripherals
+// Other (i.e. non-Video) sub-systems or peripherals
 //------------------------------------------------------------------------------
-
-// Videocard parameters (see: tools/resfinder)
-#define Video                Ram.video
 
 // Soundcard parameters
 #define Audio                Ram.audio
@@ -306,7 +299,7 @@ struct RAM_
 {
    // Memory-mapped I/O systems
 
-   struct _VideoMemory video;
+   VideoSurface_ video;
 
    struct {
       uint8_t  samples[128];       // .....  PCM samples to play

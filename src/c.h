@@ -469,10 +469,10 @@
    // C23: nothing to do (`static_assert` is a C keyword)
    // C11 and C17 (and gcc) have _Static_assert(expression, message)
 #  undef  static_assert // <-- undef as this has been defined by <assert.h>
-#  define static_assert(...)   UTIL_OVERLOAD(STATIC_ASSERT, __VA_ARGS__)
-#     define STATIC_ASSERT_2_(condition, string_lit)  \
-         _Static_assert((condition), string_lit)
-#     define STATIC_ASSERT_1_(condition) \
+#  define static_assert(...)   UTIL_OVERLOAD(PRIVATE_STATIC_ASSERT, __VA_ARGS__)
+#     define PRIVATE_STATIC_ASSERT_2_(condition, string_literal)               \
+         _Static_assert((condition), string_literal)
+#     define PRIVATE_STATIC_ASSERT_1_(condition)                               \
          _Static_assert((condition), UTIL_STRINGIFY(__LINE__))
 #endif
 

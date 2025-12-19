@@ -7,26 +7,26 @@
 // Helper function implementing the flood fill algorithm.
 // Use DrawFill() instead.
 static void // no inline, because recursive
-DrawFill_(int x, int y, int old_color, uint8_t new_color) {
+PrivateDrawFill_(int x, int y, int old_color, uint8_t new_color) {
    // This is the simple 4-ways recursive flood fill algorithm.
    // See: https://en.wikipedia.org/wiki/Flood_fill
    if (x < 0 || x >= VIDEO_WIDTH || y < 0 || y >= VIDEO_HEIGHT) return;
    if (PixelGet_(x,y) == old_color)  {
       PixelSet_(x,y, new_color);
-      DrawFill_(x - 1, y, old_color, new_color);
-      DrawFill_(x + 1, y, old_color, new_color);
-      DrawFill_(x, y - 1, old_color, new_color);
-      DrawFill_(x, y + 1, old_color, new_color);
+      PrivateDrawFill_(x - 1, y, old_color, new_color);
+      PrivateDrawFill_(x + 1, y, old_color, new_color);
+      PrivateDrawFill_(x, y - 1, old_color, new_color);
+      PrivateDrawFill_(x, y + 1, old_color, new_color);
    }
 }
 
 // Paint the "connected area" at pixel (x,y) with the given color.
 // Connected area = all the pixels with same color as the pixel (x,y) and which
 //                  you can access from (x,y) by going up,left,right,down.
-// Note: implementtaion of the flood fill here is good for code size, but
+// Note: this implementaion of the flood fill is good for code size, but
 // not optimized for performance, and uses a lot of C stack space.
 static inline void DrawFill(int x, int y, uint8_t color)
-{ DrawFill_(x, y, PixelGet(x,y), color); }
+{ PrivateDrawFill_(x, y, PixelGet(x,y), color); }
 
 
 // Draw the line between (x0,y0) and (x1,y1) with pixels of the given color
@@ -70,6 +70,32 @@ static inline void DrawLine(int x0, int y0, int x1, int y1, uint8_t color)
          (e2_ <  dy_)? (err_ += dx_, VARNAME_Y += sy_) : 0   )
 
 
+// Draw the given Rectangle with pixels of the given color
+static inline void DrawRectangle(Rectangle r, uint8_t color)
+{
+   // non-optimized for now, especially as DrawLine isn't optimized for
+   // horizontal/vertical lines
+   int x0 = r.x0;
+   int y0 = r.y0;
+   int x1 = x0 + r.width  - 1;
+   int y1 = y0 + r.height - 1;
+   DrawLine(x0,y0, x1,y0, color); // top
+   DrawLine(x0,y1, x1,y1, color); // bottom
+   DrawLine(x0,y0, x0,y1, color); // left
+   DrawLine(x1,y0, x1,y1, color); // right
+}
+
+// Draw the given Rectangle with pixels of the given color
+static inline void DrawRectangleFilled(Rectangle r, uint8_t color)
+{
+   // Not optimized for speed as there would be way to outperform this,
+   // using the real elements instead of drawing pixels by pixels.
+   for (int y = r.y0; y < r.y0 + r.height; y++) {
+      for (int x = r.x0; x < r.x0 + r.width; x++) {
+         PixelSet(x, y, color);
+      }
+   }
+}
 
 // Draw the circle of the given radius centered as (x0,y0) and (x1,y1)
 // with pixels of the given color

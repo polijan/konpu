@@ -4,10 +4,96 @@
 #include "printer.h"
 #include "pixel.h"
 
+
+// Initialize video
+// - assuming the glyph area is zero'ed out
+// - the video mode is set to default
+static void video_init_(void)
+{
+// memset(&Video, 0, sizeof(Video));
+
+   // Reset palette
+   ColorResetPalette();
+
+   // Reset border / stray
+   Video.border = COLOR_CSS_DARK_GRAY;
+   Video.active = (Rectangle){ 0,0, VIDEO_WIDTH_GLYPH32, VIDEO_HEIGHT_GLYPH32 };
+
+   // needs to be set in the video mode function!!!
+   Video.active_window = (Window){
+      .rectangle = { 0,0, VIDEO_WIDTH_GLYPH32, VIDEO_HEIGHT_GLYPH32 },
+         // VIDEO_RECTANGLE_FORM,
+      .pen = COLOR_TTY_WHITE, // <-- TODO
+   };
+
+   // Set attribute area with the pen 1 and paper 0
+   int attr_offset = VideoAttributeOffset();
+   int attr =  Video.active_window.pen << 4 | Video.active_window.paper;
+   //int attr = 0x10;
+   memset(Video.frame + attr_offset, attr, VIDEO_SIZE - attr_offset);
+
+   // Render the video
+   VideoRender();
+}
+
+void VideoInit(void)
+{
+   // We assume the whole video area is zero'ed out.
+   VideoMode_DoNotClear_(VIDEO_MODE_DEFAULT);
+   video_init_();
+}
+
+void VideoReset(void)
+{
+   // Zero out the framebuffer area occupied by the Glyphs in the default mode
+   VideoMode_DoNotClear_(VIDEO_MODE_DEFAULT);
+   memset(Video.frame, 0, VIDEO_GLYPHS_SIZE);
+
+   video_init_();
+}
+
+
+//------------------------------------------------------------------------------
+// VideoClear*() functions
+//------------------------------------------------------------------------------
+
+void VideoClearAttributes(void)
+{
+   int attr8;
+   switch (ATTRIBUTE_COLOR_TYPE) {
+      default: unreachable();
+      case ATTRIBUTE16_COLOR:
+         AttributeSetAll(ATTRIBUTE16(Video.attr_default_pen, Video.attr_default_paper));
+         return;
+
+      case ATTRIBUTE8_COLOR:
+         attr8 = (Video.attr_default_pen << 4) | Video.attr_default_paper;
+         break;
+      case ATTRIBUTE8_COLOR_PEN:   attr8 = Video.attr_default_pen;   break;
+      case ATTRIBUTE8_COLOR_PAPER: attr8 = Video.attr_default_paper; break;
+   }
+   AttributeSetAll(attr8);
+}
+
+void VideoClear(void)
+{
+   if (VideoModeHasAttributes()) {
+      memset(Video.frame, 0, VIDEO_FORMS_SIZE);
+      VideoClearAttributes();
+   } else {
+      memset(Video.frame, 0, VIDEO_SIZE);
+   }
+}
+
+
+//------------------------------------------------------------------------------
+// VideoMode*() functions
+//------------------------------------------------------------------------------
+
 // For Debugging purpose, display the video mode and related info on the Printer
 static void VideoModePrint(void)
 {
-   int sz8x8 = VideoMode_(VIDEO_MODE);
+   int sz8x8 = VideoMode_DryRun_(VIDEO_MODE);
    if (sz8x8 == 0) {
       Printer("Invalid Video Mode: %3d\n", VIDEO_MODE);
       return;
@@ -67,51 +153,7 @@ static void VideoModePrint(void)
    Printer(")\n");
 }
 
-// Initialize video
-// - assuming the glyph area is zero'ed out
-// - the video mode is set to default
-static void video_init_(void)
-{
-// memset(&Video, 0, sizeof(Video));
-
-   // Reset palette
-   ColorResetPalette();
-
-   // Reset border / stray
-   Video.border = COLOR_CSS_DARK_GRAY;
-
-   // needs to be set in the video mode function!!!
-   Video.active_window = (Window){
-      .geometry = VIDEO_RECTANGLE,
-      .pen = 15, // <-- TODO
-   };
-
-   // Set attribute area with the pen 1 and paper 0
-   int attr_offset = VideoAttributeOffset();
-   int attr =  Video.active_window.pen << 4 | Video.active_window.paper;
-   //int attr = 0x10;
-   memset(Video.frame + attr_offset, attr, VIDEO_SIZE - attr_offset);
-
-   // Render the video
-   VideoRender();
-}
-
-void VideoInit(void)
-{
-   // We assume the whole video area is zero'ed out.
-   VideoMode(VIDEO_MODE_DEFAULT);
-   video_init_();
-}
-
-void VideoReset(void)
-{
-   // Zero out the framebuffer area occupied by the Glyphs in the default mode
-   VideoMode(VIDEO_MODE_DEFAULT);
-   memset(Video.frame, 0, VIDEO_GLYPHS_SIZE);
-   video_init_();
-}
-
-int VideoMode_(int mode)
+int VideoMode_DryRun_(int mode)
 {
    if (mode < 0 || mode > 255) return 0;
    unsigned element_descriptor = (mode >> 4) & 0x7;
@@ -121,7 +163,7 @@ int VideoMode_(int mode)
 
    // Glyph and Attribute mode
    if (attribute_bit) {
-      int attr_nbytes_log2  = (low_nibble & 3) == ATTRIBUTE16;
+      int attr_nbytes_log2  = (low_nibble & 3) == ATTRIBUTE16_COLOR;
       int attr_npixels_log2 = low_nibble >> 2;
       return 8 + ((8 >> attr_npixels_log2) << attr_nbytes_log2);
    }
@@ -159,10 +201,11 @@ int VideoMode_(int mode)
    return 0;
 }
 
-int VideoMode(int mode)
+
+int VideoMode_DoNotClear_(int mode)
 {
    int index;
-   int res = VideoMode_(mode);
+   int res = VideoMode_DryRun_(mode);
    switch (res) {
       case  0: return res;
       case  8: index =  0 * 2; break;
