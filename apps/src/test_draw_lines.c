@@ -1,4 +1,4 @@
-#include "konpu.h"
+#include <konpu.h>
 
 // Draw lines at random on the screen using a random color.
 // This works in any mode. (Of course in attribute modes, it starts out well but
@@ -12,11 +12,11 @@
 
 static void draw_random_line(void)
 {
-   int x1    = UtilRandom32(VIDEO_WIDTH);
-   int y1    = UtilRandom32(VIDEO_HEIGHT);
-   int x2    = UtilRandom32(VIDEO_WIDTH);
-   int y2    = UtilRandom32(VIDEO_HEIGHT);
-   int color = UtilRandom32(1 << ColorDepth());
+   int x1    = Random32(VIDEO_WIDTH);
+   int y1    = Random32(VIDEO_HEIGHT);
+   int x2    = Random32(VIDEO_WIDTH);
+   int y2    = Random32(VIDEO_HEIGHT);
+   int color = Random32(1 << ColorDepth());
    DrawLine(x1,y1, x2,y2, color);
 }
 

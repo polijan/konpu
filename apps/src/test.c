@@ -1,7 +1,7 @@
 // FIXME: Seeting up the VIDEO_MODE doesn't work. Find Out why.
 // #define KONPU_OPTION_OPTIMIZE_VIDEO_MODE 221
 
-#include "konpu.h"
+#include <konpu.h>
 
 int AppInit(void)
 {
@@ -10,7 +10,7 @@ int AppInit(void)
    VideoMode(VIDEO_MODE_GLYPH(64));
    for (int i = 0; i < 120; i++) {
       for (int n = 0; n < VIDEO_COUNT_GLYPH64; n++) {
-         Video.glyph64[n] = UtilRandom64();
+         Video.glyph64[n] = Random64();
       }
       VideoRender();
    }
@@ -68,7 +68,7 @@ int AppInit(void)
    for (int n = 0; n < VIDEO_ATTRIBUTES_SIZE; n++) {
       Video.frame[n + VideoAttributeOffset()] = (n % 16) << 4;
       if (n % VIDEO_WIDTH_ATTRIBUTE == 0) { // <-- once per line
-         VideoRender(); UtilSleep(100);
+         VideoRender(); TimeSleep(100);
       }
       assert(n + VideoAttributeOffset() < VIDEO_SIZE);
    }
@@ -80,7 +80,7 @@ int AppInit(void)
       *VideoGlyph256(0,0) = GlyphRotate270(*VideoGlyph256(0,0));
       *VideoAttribute(4,4) = i%256;
 
-      VideoRender(); UtilSleep(100);
+      VideoRender(); TimeSleep(100);
       Video.border++;
    }
    return 0;

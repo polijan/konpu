@@ -1,4 +1,4 @@
-#include "../../../src/glyph_constants/glyph_cpc.h"
+#include "glyph_cpc.h"
 
 
 // 3000    GLYPH64_CPC_20 // From CJK Symbols and Punctuation

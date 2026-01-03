@@ -7,13 +7,13 @@
 #endif
 
 #include  <locale.h>
-#include  "../external/termbox2/termbox2.h"
+#include  "termbox2/termbox2.h"
 
 #include "glyph_tools.h"
 #include <stdio.h>
 
 C_ATTRIBUTE_NORETURN
-void Usage(const char* argv0, bool fail)
+static void Usage(const char* argv0, bool fail)
 {
    const char *prog = UtilBasename(argv0);
    if (fprintf(stderr, "Usage: %s [GLYPH]\n", prog) <= 0) fail = true;
@@ -192,6 +192,7 @@ int main(int argc, char *argv[])
 
          case TB_EVENT_KEY:
             switch (ev.key) {
+               default: break;
                case TB_KEY_CTRL_Q: goto quit;
                case TB_KEY_CTRL_L:
                   tb_clear();
@@ -282,5 +283,6 @@ quit:
 #define  TB_IMPL
 #pragma  GCC diagnostic push
 #pragma  GCC diagnostic ignored "-Wsuggest-attribute=format"
-#include "../external/termbox2/termbox2.h"
+#pragma  GCC diagnostic ignored "-Wswitch-default"
+#include "termbox2/termbox2.h"
 #pragma  GCC diagnostic pop

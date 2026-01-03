@@ -1,0 +1,34 @@
+         _                     _
+ _____ _| |_ ___ _ _ _ _  __ _| |
+/ -_) \ /  _/ -_) '_| ' \/ _` | |
+\___/_\_\\__\___|_| |_||_\__,_|_|
+
+CONTENT OF THE DIRECTORY:
+
+jtckdint-1.0/
+   From: https://github.com/jart/jtckdint
+   Header providing the C23 Checked Arithmetic functionalities.
+   Not tested. Code is activated only when using another compiler than GCC or
+   CLANG, and when C standard is prior to C23.
+   TODO: Probably should be removed as target for Konpu will be either C23 or
+         GCC/CLANG (which has builtins for that). Removing this will also
+         simplify the konpu*.h dev headers.
+
+pcg-c-basic-0.9/
+   From: https://www.pcg-random.org/
+   The PCG random number generator (RNG). Supposed to be simple, fast, good.
+   Minimal C Implementation, 0.9
+   Embedded in the Core where it is used as the main RNG for Konpu.
+
+sokol/
+   From: https://github.com/floooh/sokol
+   Minimal cross-platform standalone graphic library.
+   Used as konpu backend
+
+termbox2/
+   From: https://github.com/termbox/termbox2
+   Single-header-style small terminal I/O library. It is a slim alternative to
+   the ubiquitous ncurses library. Unlike ncurses, it has a tighter API, and
+   comes with built-in support for popular terminals if a terminfo db is not
+   present on the system.
+

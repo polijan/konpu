@@ -1,16 +1,15 @@
-#include "../../../src/glyph.h"
+//------------------------------------------------------------------------------
+// Misc. Utilities
+//------------------------------------------------------------------------------
 
+#include "core84/glyph.h"            // Glyph   from Konpu's core
+#include "backend-common/options.c"  // Options from Konpu's backend
+// C includes:
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
-//------------------------------------------------------------------------------
-// Misc. Utilities
-//------------------------------------------------------------------------------
-
-// Include 'Options' from Konpu's core (includes the *implementation*)
-#include "../../../src/options.c"
 
 #define COUNTOF(array)      (sizeof(array) / sizeof(0[array]))
 
@@ -350,6 +349,9 @@ Symbol SymbolInit(const char *string)
                &s.glyph256.bottom_left, &s.glyph256.bottom_right) == 4)
             s.size = 32;
          break;
+      default:
+         fprintf(stderr, "Invalid Glyph format: %s\n", string);
+         exit(EXIT_FAILURE);
    }
 
    // if we knew the size already (in the GLYPHn(...) case), then we checked
@@ -468,8 +470,8 @@ void SymbolPrintDecimal(Symbol s, bool mirror)
 // (This prints a rather long string, not optimized from compression)
 void SymbolPrintKbitxBitmap(Symbol s)
 {
-   uint8_t w, h; // Width and height of the symbol's glyph
-   uint64_t g;   // The glyph is <= 64bits
+   uint64_t g = 0;   // The glyph is <= 64bits
+   uint8_t w, h;     // Width and height of the symbol's glyph
    switch (s.size) {
       case  1: w =  2; h =  4; g = s.glyph8;  break;
       case  2: w =  4; h =  4; g = s.glyph16; break;

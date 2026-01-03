@@ -1,4 +1,4 @@
-#include "konpu.h"
+#include <konpu.h>
 
 int AppInit(void)
 {
@@ -17,6 +17,6 @@ int AppInit(void)
       VideoRender();
    }
 
-   UtilSleep(2000);
+   TimeSleep(2000);
    return 0;
 }

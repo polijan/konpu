@@ -4,7 +4,7 @@
 // See: https://en.wikipedia.org/wiki/CJK_Symbols_and_Punctuation
 //      https://en.wikipedia.org/wiki/East_Asian_punctuation_(disambiguation)
 
-#include "../../../src/glyph_constants/glyph_tokipona.h"
+#include "glyph_tokipona.h"
 
 3000  GLYPH64_TOKIPONA7_SPACE // IDEOGRAPHIC SPACE
 // 3001  IDEOGRAPHIC COMMA

@@ -1,4 +1,4 @@
-#include "konpu.h"
+#include <konpu.h>
 
 
 // Linear interpolation (aka "lerp") utility function
@@ -33,12 +33,12 @@ int AppInit(void)
    Video.border = COLOR_CSS_BLACK;
 
    while (true) {
-      gradient(UtilRandom32(0x1000000), UtilRandom32(0x1000000));
+      gradient(Random32(0x1000000), Random32(0x1000000));
       VideoRender();
       for (int i = 0; i < 90; i++) {
          KeyboardUpdate();
          if (KEY_IS_ANY_DOWN()) return 0;
-         UtilSleep(10);
+         TimeSleep(10);
       }
    }
 }

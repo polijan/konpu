@@ -1,4 +1,4 @@
-#include "konpu.h"
+#include <konpu.h>
 
 static const uint64_t pattern[] = {
    GLYPH64_PATTERN_DITHER_BAYER_DITHER00, GLYPH64_PATTERN_DITHER_BAYER_DITHER01,
@@ -55,7 +55,7 @@ static int Show(int number_of_planes)
       //GLYPH64_PATTERN_ARCHITECTURE_ARBOR;
    }
 
-   //*VideoGlyph64(2,2) = SOWELI; VideoRender(); UtilSleep(4000); //Just to show
+   //*VideoGlyph64(2,2) = SOWELI; VideoRender(); TimeSleep(4000); //Just to show
 
    // Set some Pattern as initial glyphs and show it
 //   VideoGlyphSetAll(GLYPH64_PATTERN_WAVES_ZIGZAG_BOLD_SHADED);
@@ -75,10 +75,10 @@ static int Show(int number_of_planes)
          Video.glyph64[j] = (j % 7)? g : (g ^ SOWELI);
       }
       VideoRender();
-      UtilSleep(100);
+      TimeSleep(100);
    }
 
-   UtilSleep(1000);
+   TimeSleep(1000);
    return 0;
 }
 

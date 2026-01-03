@@ -1,22 +1,8 @@
-CC = gcc
-
-CWARN = -Wall -Wextra -pedantic -Wformat=2                           \
-        -Wundef -Wcast-align                                         \
-        -Wmissing-format-attribute -Wnested-externs -Wpointer-arith  \
-        -Wreturn-type -Wswitch -Wcast-qual -Wwrite-strings           \
-        -Wformat=2 -Wpointer-sign -Wmissing-noreturn                 \
-        -Wvla -Wshadow
-
-CFLAGS  = -std=c11 -fdiagnostics-color $(CWARN)
-LDFLAGS =
+-include $(KONPU_HOME)/tools/dev/makefiles/common.mk
 
 #===============================================================================
 
-# disable implicit rules and builtin variables, I prefer to be explicit.
-MAKEFLAGS += -rR
-
-.PHONY: all tools clean cleanall print-%
-
+.PHONY: all tools clean cleanall
 all: tools
 
 clean: #nothing to clean
@@ -25,23 +11,23 @@ clean: #nothing to clean
 cleanall:
 	rm -f bin/*
 
-print-%: # Use make print-<VARIABLE> to print out a variable from this Makefile
-	@echo '$(subst ','\'',$*=$($*))'
-
-
 #-------------------------------------------------------------------------------
 # Tools in src/ are single .c file and re-use the same few headers
 #-------------------------------------------------------------------------------
-GLYPHS_SRCS = $(wildcard src/*.c)
-GLYPHS_DEPS = $(wildcard src/*.h) $(KONPU_HOME)/src/options.h $(KONPU_HOME)/src/options.c external/termbox2/termbox2.h
-GLYPHS_BINS = $(patsubst src/%.c, bin/%, $(GLYPHS_SRCS))
-GLYPHS_CFLAGS = $(CFLAGS) -O2
-GLYPHS_LDFLAGS = $(LDFLAGS)
+CFLAGS_GLYPHS  = -std=c11 $(CFLAGS) -I$(KONPU_HOME)/src -I$(KONPU_HOME)/src/external
+LDFLAGS_GLYPHS = $(LDFLAGS)
+
+GLYPHS_SRCS  = $(wildcard src/*.c)
+GLYPHS_DEPS  = $(wildcard src/*.h)
+GLYPHS_DEPS += $(KONPU_HOME)/src/backend-common/options.h
+GLYPHS_DEPS += $(KONPU_HOME)/src/backend-common/options.c
+GLYPHS_DEPS += $(KONPU_HOME)/src/external/termbox2/termbox2.h
+GLYPHS_BINS  = $(patsubst src/%.c, bin/%, $(GLYPHS_SRCS))
 
 bin/%: src/%.c $(GLYPHS_DEPS)
 	@printf "\033[33mcreating tool %s:\033[m " $@
 	@mkdir -p $(@D)
-	$(CC) $(GLYPHS_CFLAGS) -o $@ $< $(GLYPHS_LDFLAGS)
+	$(CC) $(CFLAGS_GLYPHS) -o $@ $< $(LDFLAGS_GLYPHS)
 
 #-------------------------------------------------------------------------------
 # Stand-alone scripts

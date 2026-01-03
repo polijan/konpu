@@ -1,4 +1,4 @@
-#include "../../../src/glyph_constants/glyph_tokipona.h"
+#include "glyph_tokipona.h"
 
 #ifndef   SITELENPONA_SIZE
 #  define SITELENPONA_SIZE 6

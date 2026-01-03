@@ -8,3 +8,17 @@
      ||  || |   |_|_|  | ' </ _ \ ' \| '_ \ || |
      ||  || |___  |    |_|\_\___/_||_| .__/\_,_|
                                      |_|
+
+Makefile     Makefile to creating files in font.out/
+scripts/     Scripts: utilities and scripts to output a .selo file
+fonts.in/    C Preprocessor rules building parts of .selo fonts
+fonts.out/   Generated Fonts:
+
+               - .selo : generated font consisting of lines:
+                         <UTF-codepoint> <Description of a Konpu Glyph>
+                         Can be previewed with selo-view script
+
+               - .flf  : FIGlet fonts generated from the .selo font
+                         Can be used with FIGlet (and selo-figlet wrapper)
+
+               - .kbitx: Bits'n'Picas file generated from the .selo font

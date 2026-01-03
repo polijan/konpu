@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Usage: $0
+# Print the number of processing cores available (or 1 if cannot be determined)
+# This is used to pass to the -j option of Makefile (to speed up compilation)
+
+. "$KONPU_HOME"/tools/dev/lib/common.sh
+
+if exists nproc; then
+   nproc
+elif [ -f /proc/cpuinfo ]; then
+   cat /proc/cpuinfo | grep -c '^processor'
+else
+   # Cannot find out, so just print '1'
+   echo 1
+fi

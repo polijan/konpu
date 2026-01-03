@@ -1,8 +1,11 @@
-
-# disable implicit rules and builtin variables, I prefer to be explicit.
+# Disable implicit rules and builtin variables, I prefer to be explicit.
 MAKEFLAGS += -rR
+# Try to compile faster by running in parallel
+MAKEFLAGS += -j $(shell dev-nproc)
 
 .PHONY: all fonts clean cleanall print-%
+
+#-------------------------------------------------------------------------------
 
 all: fonts
 
@@ -20,13 +23,16 @@ print-%: # Use make print-<VARIABLE> to print out a variable from this Makefile
 # FONTS
 #-------------------------------------------------------------------------------
 
-FONTS       = $(wildcard scripts/selo-generate-*)
-FONTS_SELO  = $(patsubst scripts/selo-generate-%, fonts.out/%.selo,  $(FONTS))
-FONTS_FLF   = $(patsubst scripts/selo-generate-%, fonts.out/%.flf,   $(FONTS))
-FONTS_KBITX = $(patsubst scripts/selo-generate-%, fonts.out/%.kbitx, $(FONTS))
-FONTS_OUT   = $(FONTS_SELO) $(FONTS_KBITX) $(FONTS_FLF)
+FONTS_IN     = $(wildcard fonts.in/selo*)
+FONTS_GLYPHS = $(wildcard $(KONPU_HOME)/src/glyph_constants/glyph_*.h)
 
-fonts.out/%.selo: scripts/selo-generate-% ../../src/glyph_constants/glyph_*.h fonts.in/selo*
+FONTS        = $(wildcard scripts/selo-generate-*)
+FONTS_SELO   = $(patsubst scripts/selo-generate-%, fonts.out/%.selo,  $(FONTS))
+FONTS_FLF    = $(patsubst scripts/selo-generate-%, fonts.out/%.flf,   $(FONTS))
+FONTS_KBITX  = $(patsubst scripts/selo-generate-%, fonts.out/%.kbitx, $(FONTS))
+FONTS_OUT    = $(FONTS_SELO) $(FONTS_KBITX) $(FONTS_FLF)
+
+fonts.out/%.selo: scripts/selo-generate-% $(FONTS_IN) $(FONTS_GLYPHS)
 	@printf "\033[33mgenerating selo font '%s':\033[m " $@
 	@mkdir -p $(@D)
 	$< > $@

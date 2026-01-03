@@ -5,7 +5,7 @@
 
 . "$KONPU_HOME"/tools/dev/lib/common.sh
 
-cd "$KONPU_HOME"/tests/bin || die 'Cannot cd to tests/bin directory'
+cd "$KONPU_HOME"/bin/tests/ || die 'Cannot cd to bin/tests directory'
 set -- *
 [ "$1" = '*' ] && die 'tests/bin directory is empty'
 

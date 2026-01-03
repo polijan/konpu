@@ -1,6 +1,6 @@
 // Titi Tula: Tuki Tiki's Logograms
 
-#include "../../../src/glyph_constants/glyph_tukitiki.h"
+#include "glyph_tukitiki.h"
 
 #ifndef    TITIPULA_SIZE
 #   define TITIPULA_SIZE 7

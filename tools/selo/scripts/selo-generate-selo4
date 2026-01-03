@@ -7,7 +7,7 @@
 cd "$KONPU_HOME"/tools/selo/fonts.in || die 'cannot cd into fonts.in'
 requires glyph-generate-octants
 
-dev-cpp << EOF
+dev-cpp -I"$KONPU_HOME"/src/core84/glyph_constants << EOF
 #include "selo"
 #define  ASCII_SIZE 4
 #include "selo_ascii"

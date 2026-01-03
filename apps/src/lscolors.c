@@ -1,4 +1,4 @@
-#include "konpu.h"
+#include <konpu.h>
 
 // Display colors 0..n of the given palette as a nx * ny grid
 // if palette is null, show the given color.
@@ -44,7 +44,7 @@ int AppInit(void)
          default: kule(256,  16, 16, NULL); break;
       }
       VideoRender();
-      UtilSleep(30);
+      TimeSleep(30);
       KeyboardUpdate();
       if (KEY_IS_DOWN(KEY_SCANCODE_ESCAPE)) {
          return 0;

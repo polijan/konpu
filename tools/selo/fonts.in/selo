@@ -2,16 +2,12 @@
 #define UTIL_CAT(item, ...)        UTIL_CAT_(item, __VA_ARGS__)
    #define UTIL_CAT_(item, ...)    item##__VA_ARGS__
 
-#ifndef KONPU_GLYPH_H_
-   #define KONPU_GLYPH_H_  DEFINED_BY_SELO_TO_PREVENT_INCLUSION_OF_GLYPH_H
-   #define GLYPH8(x)   x
-   #define GLYPH16(x)  x
-   #define GLYPH32(x)  x
-   #define GLYPH64(x)  x
-   #define GLYPH128(x,y)     x:y
-   #define GLYPH256(w,x,y,z) w:x:y:z
-#endif
-
+#define GLYPH8(x)          x
+#define GLYPH16(x)         x
+#define GLYPH32(x)         x
+#define GLYPH64(x)         x
+#define GLYPH128(x,y)      x:y
+#define GLYPH256(w,x,y,z)  w:x:y:z
 
 //------------------------------------------------------------------------------
 

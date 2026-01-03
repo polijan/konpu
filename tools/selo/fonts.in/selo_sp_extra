@@ -102,6 +102,9 @@ FFD67   GLYPH64_TOKIPONA7_SOKO_CROSS
 // Common-ish names which are not (yet?) mapped in UCSUR Sitelen Pona
 //------------------------------------------------------------------------------
 FFAC4   GLYPH64_TOKIPONA7_LINLUWI
+FFAC5   GLYPH64_TOKIPONA7_LINLUWI_KULUPU1
+FFAC6   GLYPH64_TOKIPONA7_LINLUWI_KULUPU2
+
 FFB2F   GLYPH64_TOKIPONA7_SU         //  su is su1 in Fairfax
 // TODO GLYPH64_TOKIPONA7_SU_GENERIC --> assign a codepoint
 // TODO GLYPH64_TOKIPONA7_SU1        --> assign a codepoint
@@ -475,7 +478,7 @@ FFE05  GLYPH64_TOKIPONA7_TAN_
 ////////////////////////////////////////////////////////////////////////////////
 // "nimi pu" (original 120)
 //------------------------------------------------------------------------------
-#include "../../../src/glyph_constants/glyph_tokipona_halfwidth.c"
+#include "glyph_tokipona_halfwidth.h"
 100500   GLYPH32_TOKIPONA7_A
 100501   GLYPH32_TOKIPONA7_AKESI
 100502   GLYPH32_TOKIPONA7_ALA

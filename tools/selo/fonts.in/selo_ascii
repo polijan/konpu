@@ -1,4 +1,4 @@
-#include "../../../src/glyph_constants/glyph_ascii.h"
+#include "glyph_ascii.h"
 
 #ifndef ASCII_SIZE
 #define ASCII_SIZE 6
@@ -148,7 +148,7 @@
 #define GLYPH16_LATIN4_ESZETT             GLYPH16(1773)
 
 //Glyph64 (in same style as CPC)
-// #include "../../../src/glyph_constants/glyph_cpc.h"
+// #include "glyph_cpc.h"
 // TODO: should umlaut be tighten on o and u (36 instead of 66)?
 //00C4  0063637F633E0063  // Umlaut A
 //00D6  003E6363633E0063  // Umlaut O

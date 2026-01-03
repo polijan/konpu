@@ -1,5 +1,5 @@
 // #define KONPU_OPTION_OPTIMIZE_VIDEO_MODE
-#include "konpu.h"
+#include <konpu.h>
 
 
 #define K_LEFT   GLYPH32(0EEEEEE0)
@@ -37,11 +37,11 @@ int AppInit(void)
       }
       VideoRender();
       KeyboardUpdate();
-      UtilSleep(30);
+      TimeSleep(30);
    }
 
 MOVE:
-   UtilSleep(500);
+   TimeSleep(500);
    KeyboardUpdate(); // wait for reset
    int x = VIDEO_WIDTH_GLYPH  / 2;
    int y = VIDEO_HEIGHT_GLYPH / 2;
@@ -59,7 +59,7 @@ MOVE:
       *VideoGlyph32(x,y) = GLYPH32_PATTERN_FULL;
       VideoRender();
       KeyboardUpdate();
-      UtilSleep(30);
+      TimeSleep(30);
    }
    return 0;
 }
