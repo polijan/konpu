@@ -5,4 +5,4 @@
 
 . "$KONPU_HOME"/tools/dev/lib/common.sh
 
-grep -osh 'KONPU_OPTION_[a-zA-Z0-9_]*' "$KONPU_HOME"/src/* | sort | uniq
+grep -osh 'KONPU_OPTION_[a-zA-Z0-9_]*' "$KONPU_HOME"/src/core*/* | sort | uniq
