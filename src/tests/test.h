@@ -100,6 +100,7 @@ int main(int argc, char* argv[])
 
 
 // <konpu.h> Header:
+#define KONPU_OPTION_NO_STDIO
 #include <konpu.h>
 
 // Extra headers we want tests to have access to

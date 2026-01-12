@@ -49,7 +49,7 @@ include  config.h c.h                                                          \
          rectangle.h form.h video_mode.h keyboard.h video_mode_auto.h          \
          glyph.h tile.h strip.h attribute.h color.h                            \
          video.h pixel.h tile.h                                                \
-         draw.h                                                                \
+         io.h draw.h                                                           \
          error.h heap.h stack.h app.h
 
 # Extra Resources

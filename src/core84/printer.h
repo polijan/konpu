@@ -1,3 +1,6 @@
+//TODO: `Printer` should become just a stream object and be manipulated with
+//      stream/stdio functions
+
 //------------------------------------------------------------------------------
 // The Printer port (often just referred to as printer) is a fast interface
 // through which ilo Konpu can send data out (to a printer or other device).

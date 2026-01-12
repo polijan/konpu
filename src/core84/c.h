@@ -19,7 +19,7 @@
 //   * bits functionalities like C23 (actually defined in the file "bits.h")
 //     - macros like in the <stdbit.h> header
 //     - the BITS(...) macro to write binary literals
-//   * UTIL_VA_OPT_COMMA(...) as a functional equivalent to __VA_OPT__(,)
+//   * TODO(review)   UTIL_VA_OPT_COMMA(...) as a functional equivalent to __VA_OPT__(,)
 //   * misc...
 // - Declare (or even implement) some functionalities similar to
 //   (non-freestanding) C headers:
@@ -186,6 +186,7 @@
    UTIL_CAT(UTIL_CAT(function##_, UTIL_COUNT_ARGUMENTS(__VA_ARGS__)), _) \
    (__VA_ARGS__)
 
+// TODO: remove or review/improve or what?
 // UTIL_VA_OPT_COMMA(__VA_ARGS__): Expands to nothing if there's no arguments,
 // otherwise, expands to a comma. It serves as the equivalent of __VA_OPT__(,)
 // without requiring C23... or maybe it still can't be used well, keep reading:
@@ -212,7 +213,7 @@
 // Note: typically you should just use `inline` (when you think it's worth it)
 //       and trust the compiler to do the right thing. Abusing ALWAYS_INLINE may
 //       result in code bloat and no performance gain.
-#if defined(__GNUC__)
+#ifdef __GNUC__
 #  define C_HINT_ALWAYS_INLINE    inline __attribute__((always_inline))
 #elif defined(_MSC_VER)
 #  define C_HINT_ALWAYS_INLINE    inline __forceinline
@@ -225,7 +226,7 @@
 // branch. If the user prediction is wrong, this will be a performance penalty.
 // Note: [[likely]] and [[unlikely]] are standard attributes in C++20.
 //       (perhaps it will come in some future C version ?)
-#if defined(__GNUC__)
+#ifdef __GNUC__
 #  define C_HINT_LIKELY(...)      (__builtin_expect((__VA_ARGS__), 1))
 #  define C_HINT_UNLIKELY(...)    (__builtin_expect((__VA_ARGS__), 0))
 #else
@@ -417,7 +418,7 @@
    //   case  2: ...  break;
    //   default: unreachable();
    // }
-#  if defined(__GNUC__)
+#  ifdef __GNUC__
 #     define unreachable()   (__builtin_unreachable())
 #  elif defined(_MSC_VER)
 #     define unreachable()   (__assume(false))
@@ -846,18 +847,18 @@ static_assert(sizeof(uint_least64_t) == 8);
 // if a program does not set the state of the FENV_ACCESS pragma to ON)
 double atof(const char* nptr);
 int atoi(const char* nptr);
-long int atol(const char* nptr);
-long long int atoll(const char* nptr);
+long atol(const char* nptr);
+long long atoll(const char* nptr);
 int strfromd(char* restrict s, size_t n, const char* restrict format, double fp);
 int strfromf(char* restrict s, size_t n, const char* restrict format, float fp);
 int strfroml(char* restrict s, size_t n, const char* restrict format, long double fp);
 double strtod(const char* restrict nptr, char** restrict endptr);
 float strtof(const char* restrict nptr, char** restrict endptr);
 long double strtold(const char* restrict nptr, char** restrict endptr);
-long int strtol(const char* restrict nptr, char** restrict endptr, int base);
-long long int strtoll(const char* restrict nptr, char** restrict endptr, int base);
-unsigned long int strtoul(const char* restrict nptr, char** restrict endptr, int base);
-unsigned long long int strtoull(const char* restrict nptr, char** restrict endptr, int base);
+long strtol(const char* restrict nptr, char** restrict endptr, int base);
+long long strtoll(const char* restrict nptr, char** restrict endptr, int base);
+unsigned long strtoul(const char* restrict nptr, char** restrict endptr, int base);
+unsigned long long strtoull(const char* restrict nptr, char** restrict endptr, int base);
 
 // `strtoimax`/`strtoumax` (from inttypes.h)
 #  if (INTMAX_MAX > LLONG_MAX) || (INTMAX_MIN < LLONG_MIN) || (UINTMAX_MAX > ULLONG_MAX)
@@ -887,13 +888,13 @@ static inline int c_system_(const char* command) {
 
 // Integer functions ("div" and "abs", also those <inttypes.h>)
 // -  int abs(int j);
-// -  long int labs(long int j);
-// -  long long int llabs(long long int j);
+// -  long labs(long j);
+// -  long long llabs(long long j);
 // -   intmax_t imaxabs( intmax_t n ); [from <inttypes.h>]
 // ^- Note: taking the absolute value of the most negative integer isn't defined
 // -  div_t     div(int numer, int denom);
-// -  ldiv_t    ldiv(long int numer, long int denom);
-// -  lldiv_t   lldiv(long long int numer, long long int denom);
+// -  ldiv_t    ldiv(long numer, long denom);
+// -  lldiv_t   lldiv(long long numer, long long denom);
 // -  imaxdiv_t imaxdiv( intmax_t x, intmax_t y ); [from <inttypes.h>]
 #ifdef KONPU_H_
 #  define div_t              c_div_t_
@@ -970,38 +971,14 @@ static inline c_imaxdiv_t_ c_imaxdiv_(intmax_t num, intmax_t den)  { return (c_i
 
 
 //------------------------------------------------------------------------------
-// <time.h> - very partial
+// Other C standard headers
+//------------------------------------------------------------------------------
+// <time.h> (very partial support)
+// type `time_t` and function `time_t time(time_t *t)` define in "timing.h"
+//
+// <stdio.h> (most functions are supported)
 //------------------------------------------------------------------------------
 // type `time_t` and function `time_t time(time_t *t)` define in "timing.h"
-
-
-//------------------------------------------------------------------------------
-// <stdio.h> header
-//
-// Konpu does NOT include <stdio.h> but provides it own implementation for a
-// few functions from it:
-// `putchar`, `puts`, `printf` ...
-//
-// (They might be a bit different in that they never fail (don't return "EOF"),
-// and printf's format may be very slightly different (extra, etc.))
-//------------------------------------------------------------------------------
-#ifdef KONPU_H_
-   // Write the character c on screen.
-#  define putchar(c)       c_putchar_(c)
-   // Write string s and a trailing newline on screen.
-#  define puts(cstring)    c_puts_(cstring)
-   // Write on screen according to the given format string and parameters.
-#  define printf(...)      c__printf_(__VA_ARGS__)
-#endif
-
-int c_putchar_(int c);
-int c_puts_(const char* s);
-int c_printf_(const char* restrict format, ...);
-#  define c__printf_(format, ...) \
-   c_printf_(format UTIL_VA_OPT_COMMA(__VA_ARGS__) __VA_ARGS__)
-
-
-
 
 //------------------------------------------------------------------------------
 // <ctype.h> - character type features
